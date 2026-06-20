@@ -1,0 +1,105 @@
+// TOEIC Learning Platform schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Anonymous learner (identified by a localStorage id on the client)
+model Learner {
+  id        String   @id @default(cuid())
+  name      String?
+  targetScore Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  attempts  TestAttempt[]
+}
+
+// Vocabulary word bank
+model Vocab {
+  id           String   @id @default(cuid())
+  word         String
+  phonetic     String?
+  partOfSpeech String
+  definition   String
+  example      String
+  translation  String?
+  category     String   // business, office, travel, finance, marketing, hr, tech, general
+  difficulty   Int      @default(1) // 1-5
+  createdAt    DateTime @default(now())
+}
+
+// Grammar lesson
+model GrammarLesson {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  category  String   // tenses, conditionals, articles, prepositions, etc.
+  level     String   @default("intermediate") // beginner, intermediate, advanced
+  summary   String
+  content   String   // markdown body
+  example   String
+  createdAt DateTime @default(now())
+}
+
+// Strategy / tip article
+model Strategy {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  section   String   // listening, reading, general, test-day
+  content   String   // markdown
+  createdAt DateTime @default(now())
+}
+
+// TOEIC practice question
+model Question {
+  id           String   @id @default(cuid())
+  part         Int      // 1-7
+  passage      String?  // shared text for part 6/7 (group)
+  groupId      String?  // links questions sharing a passage
+  audioScript  String?  // listening transcript
+  imagePrompt  String?  // description of the photo (part 1)
+  question     String
+  options      String   // JSON array of 4 strings
+  answer       Int      // 0-3 correct index
+  explanation  String?
+  difficulty   Int      @default(2) // 1-5
+  category     String?  // grammar, vocab, inference, detail, main-idea...
+  createdAt    DateTime @default(now())
+}
+
+// A curated test set (collection of questions)
+model TestSet {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  durationMin Int      @default(40)
+  type        String   @default("mini") // mini, full, part5, part6, part7, listening
+  questionIds String   // JSON array of question ids in order
+  createdAt   DateTime @default(now())
+}
+
+// Saved test attempt result
+model TestAttempt {
+  id              String   @id @default(cuid())
+  learnerId       String
+  learner         Learner  @relation(fields: [learnerId], references: [id])
+  testSetId       String?
+  testSetTitle    String?
+  type            String
+  startedAt       DateTime @default(now())
+  finishedAt      DateTime?
+  durationSec     Int?
+  answers         String   // JSON: [{questionId, selected}]
+  totalQuestions  Int      @default(0)
+  correctCount    Int      @default(0)
+  listeningCorrect Int?
+  readingCorrect  Int?
+  score           Int?     // estimated TOEIC score 5-990
+  listeningScore  Int?
+  readingScore    Int?
+}

@@ -1,0 +1,103 @@
+'use client'
+
+import { BookOpen, Brain, Lightbulb, Headphones, FileText, ArrowRight, GraduationCap, PenLine } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
+import { useRouter } from '@/lib/router'
+import { GrammarList } from './grammar-list'
+import { GrammarDetail } from './grammar-detail'
+import { VocabFlashcards } from './vocab-flashcards'
+import { StrategiesView } from './strategies-view'
+
+export function LearnView() {
+  const { view, navigate } = useRouter()
+
+  // Single grammar lesson
+  if (view.name === 'grammar' && view.slug) {
+    return <GrammarDetail slug={view.slug} />
+  }
+  if (view.name === 'vocab') {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+        <VocabFlashcards />
+      </div>
+    )
+  }
+
+  const hubCards = [
+    { icon: BookOpen, title: 'Grammar Lessons', desc: 'Clear explanations of the grammar points tested on the TOEIC, with examples and audio.', cta: 'Browse lessons', view: 'grammar' as const },
+    { icon: Brain, title: 'Vocabulary Flashcards', desc: 'Flip, listen and review high-frequency business English words with spaced repetition.', cta: 'Start flashcards', view: 'vocab' as const },
+    { icon: Lightbulb, title: 'Test Strategies', desc: 'Section-by-section tactics for Listening and Reading — plus test-day tips.', cta: 'See strategies', view: 'strategies' as const },
+    { icon: PenLine, title: 'AI Writing Check', desc: 'Get your sentences corrected instantly by AI and learn from the feedback.', cta: 'Try AI tools', view: 'tools' as const },
+  ]
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      {/* Hub header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">Learning Center</h1>
+        <p className="mt-2 text-muted-foreground">
+          Build the skills behind a high TOEIC score — grammar, vocabulary and exam strategy.
+        </p>
+      </div>
+
+      {/* Hub cards */}
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-10">
+        {hubCards.map((c) => (
+          <Card key={c.title} className="group cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md" onClick={() => navigate({ name: c.view })}>
+            <CardHeader>
+              <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <c.icon className="h-5 w-5" />
+              </div>
+              <CardTitle className="text-base">{c.title}</CardTitle>
+              <CardDescription className="text-sm">{c.desc}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center text-xs font-medium text-primary">
+                {c.cta} <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Default tabs: Grammar + Strategies combined */}
+      <Tabs defaultValue="grammar">
+        <TabsList>
+          <TabsTrigger value="grammar" className="gap-1.5"><BookOpen className="h-4 w-4" /> Grammar</TabsTrigger>
+          <TabsTrigger value="strategies" className="gap-1.5"><Lightbulb className="h-4 w-4" /> Strategies</TabsTrigger>
+        </TabsList>
+        <TabsContent value="grammar" className="mt-6"><GrammarList /></TabsContent>
+        <TabsContent value="strategies" className="mt-6"><StrategiesView /></TabsContent>
+      </Tabs>
+
+      {/* TOEIC overview band */}
+      <Card className="mt-10 border-primary/20 bg-secondary/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <GraduationCap className="h-5 w-5 text-primary" /> What is the TOEIC test?
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-6 md:grid-cols-2">
+          <div>
+            <p className="text-sm text-muted-foreground">
+              The <strong>TOEIC</strong> (Test of English for International Communication) measures everyday English
+              skills used in the workplace. The Listening &amp; Reading test lasts 2 hours and contains 200
+              multiple-choice questions.
+            </p>
+            <ul className="mt-3 space-y-1.5 text-sm">
+              <li className="flex items-center gap-2"><Headphones className="h-4 w-4 text-teal-500" /> Listening: 100 questions · 45 min</li>
+              <li className="flex items-center gap-2"><FileText className="h-4 w-4 text-amber-500" /> Reading: 100 questions · 75 min</li>
+              <li className="flex items-center gap-2"><GraduationCap className="h-4 w-4 text-primary" /> Score range: 10 – 990</li>
+            </ul>
+          </div>
+          <div className="flex flex-col justify-center gap-3">
+            <Button onClick={() => navigate({ name: 'practice' })}>Take a practice test <ArrowRight className="ml-1.5 h-4 w-4" /></Button>
+            <Button variant="outline" onClick={() => navigate({ name: 'tutor' })}>Ask the AI tutor</Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
