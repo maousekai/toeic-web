@@ -1,6 +1,7 @@
 'use client'
 
 import { RouterProvider, useRouter } from '@/lib/router'
+import { AuthUIProvider } from '@/lib/auth/auth-ui-context'
 import { Navbar } from '@/components/site/navbar'
 import { Footer } from '@/components/site/footer'
 import { HomeView } from '@/components/home/home-view'
@@ -59,7 +60,9 @@ function Shell() {
 export default function Home() {
   return (
     <RouterProvider>
-      <Shell />
+      <AuthUIProvider>
+        <Shell />
+      </AuthUIProvider>
     </RouterProvider>
   )
 }

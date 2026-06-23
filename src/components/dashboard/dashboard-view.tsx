@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useRouter, getLearnerId } from '@/lib/router'
+import { useAuth } from '@/lib/auth/use-auth'
+import { useAuthUI } from '@/lib/auth/auth-ui-context'
 import { Skeleton } from '@/components/ui/skeleton'
 import { scoreBand } from '@/lib/score'
 import {
@@ -36,18 +38,21 @@ function fmtDate(iso: string) {
 
 export function DashboardView() {
   const { navigate } = useRouter()
+  const { user, isLoading: authLoading } = useAuth()
+  const { openAuth } = useAuthUI()
   const [attempts, setAttempts] = useState<Attempt[]>([])
   const [loading, setLoading] = useState(true)
   const [learnerId, setLearnerId] = useState('')
 
   useEffect(() => {
-    const id = getLearnerId()
+    if (authLoading) return
+    const id = getLearnerId(user?.id)
     setLearnerId(id)
     fetch(`/api/attempts/by-learner/${id}`)
       .then((r) => r.json())
       .then((d) => setAttempts(d.attempts || []))
       .finally(() => setLoading(false))
-  }, [])
+  }, [user?.id, authLoading])
 
   const scored = attempts.filter((a) => a.score !== null)
   const bestScore = scored.length ? Math.max(...scored.map((a) => a.score!)) : 0
@@ -82,7 +87,26 @@ export function DashboardView() {
         </Button>
       </div>
 
-      {loading ? (
+      {/* Auth gate */}
+      {!authLoading && !user ? (
+        <Card className="border-dashed border-primary/30 bg-primary/5">
+          <CardContent className="flex flex-col items-center gap-4 p-12 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/15 text-primary">
+              <BarChart3 className="h-8 w-8" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Sign in to view your dashboard</h3>
+              <p className="mt-1 max-w-md text-sm text-muted-foreground">
+                Create a free account to track your TOEIC scores across devices, save your progress, and unlock personalized AI study plans.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button onClick={() => openAuth('register')}>Create free account <ArrowRight className="ml-1.5 h-4 w-4" /></Button>
+              <Button variant="outline" onClick={() => openAuth('login')}>Sign in</Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 w-full" />)}
         </div>

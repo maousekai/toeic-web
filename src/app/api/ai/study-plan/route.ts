@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { aiChat, SYSTEM_PROMPTS } from '@/lib/ai'
+import { aiChat, SYSTEM_PROMPTS, type Language } from '@/lib/ai'
 
 export async function POST(req: NextRequest) {
   try {
-    const { currentLevel, targetScore, weeksAvailable, focusAreas, studyTimePerDay } = (await req.json()) as {
+    const { currentLevel, targetScore, weeksAvailable, studyTimePerDay, focusAreas, language } = (await req.json()) as {
       currentLevel?: string
       targetScore?: number
       weeksAvailable?: number
-      focusAreas?: string
       studyTimePerDay?: string
+      focusAreas?: string
+      language?: Language
     }
 
+    const lang: Language = language || 'vi'
     const userMsg = `Create a personalized TOEIC study plan.
 - Current level: ${currentLevel || 'unknown'}
 - Target TOEIC score: ${targetScore || 750}
@@ -21,7 +23,7 @@ export async function POST(req: NextRequest) {
 Format the response in clear markdown with weekly sections (Week 1, Week 2, ...) listing listening, reading, grammar and vocabulary tasks. End with a short motivational note.`
 
     const reply = await aiChat([
-      { role: 'assistant', content: SYSTEM_PROMPTS.plan },
+      { role: 'assistant', content: SYSTEM_PROMPTS.plan(lang) },
       { role: 'user', content: userMsg },
     ])
     return NextResponse.json({ plan: reply })

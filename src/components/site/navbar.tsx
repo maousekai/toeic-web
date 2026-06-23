@@ -5,6 +5,8 @@ import { Menu, X, GraduationCap, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter, View } from '@/lib/router'
 import { ThemeToggle } from './theme-toggle'
+import { LanguageToggle } from './language-toggle'
+import { UserMenu } from '@/components/auth/user-menu'
 import { cn } from '@/lib/utils'
 
 const NAV: { label: string; view: View }[] = [
@@ -57,16 +59,12 @@ export function Navbar() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          <LanguageToggle />
           <ThemeToggle />
-          <Button
-            size="sm"
-            onClick={() => go({ name: 'practice' })}
-            className="hidden sm:inline-flex"
-          >
-            <Sparkles className="mr-1.5 h-4 w-4" />
-            Start Practice
-          </Button>
+          <div className="hidden sm:block">
+            <UserMenu />
+          </div>
           <Button
             variant="ghost"
             size="icon"
@@ -96,6 +94,9 @@ export function Navbar() {
                 {item.label}
               </button>
             ))}
+            <div className="mt-2 border-t border-border/60 pt-3">
+              <UserMenu />
+            </div>
           </div>
         </nav>
       )}

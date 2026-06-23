@@ -41,8 +41,11 @@ export function useRouter() {
   return ctx
 }
 
-// Anonymous learner id stored in localStorage
-export function getLearnerId(): string {
+// Anonymous learner id stored in localStorage.
+// When a userId is provided (authenticated user), use a deterministic id so
+// attempts follow the account across devices.
+export function getLearnerId(userId?: string): string {
+  if (userId) return `learner_${userId}`
   if (typeof window === 'undefined') return 'guest'
   let id = localStorage.getItem('toeic_learner_id')
   if (!id) {

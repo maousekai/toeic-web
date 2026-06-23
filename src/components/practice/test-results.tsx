@@ -13,6 +13,7 @@ import { scoreBand } from '@/lib/score'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Markdown } from '@/components/site/markdown'
 import { useToast } from '@/hooks/use-toast'
+import { useLanguage } from '@/lib/use-language'
 import { motion } from 'framer-motion'
 import {
   Collapsible, CollapsibleContent, CollapsibleTrigger,
@@ -59,6 +60,7 @@ function fmtDur(sec: number | null) {
 export function TestResults({ attemptId }: { attemptId: string }) {
   const { navigate } = useRouter()
   const { toast } = useToast()
+  const { language } = useLanguage()
   const [attempt, setAttempt] = useState<Attempt | null>(null)
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
@@ -90,6 +92,7 @@ export function TestResults({ attemptId }: { attemptId: string }) {
           selectedAnswer: selected,
           passage: q.passage,
           part: q.part,
+          language,
         }),
       })
       const data = await res.json()
@@ -103,7 +106,7 @@ export function TestResults({ attemptId }: { attemptId: string }) {
     } finally {
       setLoadingAi((s) => ({ ...s, [q.id]: false }))
     }
-  }, [aiExplanations, loadingAi, toast])
+  }, [aiExplanations, loadingAi, toast, language])
 
   const speak = (text: string) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return

@@ -26,3 +26,41 @@ Stage Summary:
 - Practice engine supports Parts 2/5/6/7 with real timer, question palette, browser-TTS narration for listening, instant grading with estimated 10–990 score, and AI answer explanations.
 - Dashboard tracks progress with recharts visualizations and attempt history (keyed by anonymous learner id in localStorage).
 - Sticky footer, responsive design, dark mode, accessibility (semantic HTML, ARIA labels, keyboard-friendly controls) all implemented and browser-verified.
+
+---
+Task ID: 2
+Agent: main (Z.ai Code)
+Task: Add user registration & login functionality with beautiful UI and good scalability.
+
+Work Log:
+- Installed bcryptjs + @types/bcryptjs for password hashing.
+- Updated Prisma schema: added `User` model (email unique, passwordHash, name, image) + added `userId` optional FK on `Learner` to link accounts.
+- Ran `bun run db:push` and `bunx prisma generate` to sync schema.
+- Created NextAuth.js config at `src/lib/auth/auth-options.ts` with CredentialsProvider + JWT session strategy (30-day expiry). Passwords verified via `bcrypt.compare`. Throws descriptive errors for missing account / wrong password.
+- Added `src/types/next-auth.d.ts` to extend Session/JWT types with `user.id`.
+- Created `src/app/api/auth/[...nextauth]/route.ts` (NextAuth handler, GET+POST).
+- Created `src/app/api/auth/register/route.ts` with full validation (name ≥ 2 chars, email regex, password ≥ 6 chars), duplicate-email check (409), bcrypt hash (salt 10), creates User + linked Learner row.
+- Built `src/lib/auth/session-provider.tsx` (wraps next-auth SessionProvider).
+- Built `src/lib/auth/use-auth.ts` (`useAuth` hook exposing user/isLoading/isAuthenticated/login/logout).
+- Built `src/lib/auth/auth-ui-context.tsx` (AuthUIProvider) — global modal state so any component can call `openAuth('login'|'register', onSuccess)`.
+- Built `src/components/auth/auth-modal.tsx` — beautiful dialog with gradient header, tabs Sign In / Create Account, inline validation, password show/hide, password-strength meter (4 bars, weak/fair/good/strong), auto-login after register, feature bullets.
+- Built `src/components/auth/user-menu.tsx` — avatar with initials fallback + dropdown (Dashboard, AI Tutor, Sign Out) when authenticated; "Sign In" + "Get Started" buttons when not.
+- Updated `src/app/layout.tsx` to wrap app in SessionProvider.
+- Updated `src/app/page.tsx` to wrap app in AuthUIProvider.
+- Updated `src/components/site/navbar.tsx` — replaced "Start Practice" CTA with UserMenu; UserMenu also renders in mobile hamburger menu.
+- Updated `src/lib/router.tsx` `getLearnerId(userId?)` — deterministic `learner_<userId>` when authenticated (attempts follow account across devices), falls back to localStorage anonymous id otherwise.
+- Updated `src/components/practice/test-engine.tsx` — uses `user.id` from useAuth when submitting attempts.
+- Updated `src/components/practice/practice-list.tsx` — `startTest()` opens auth modal (with onSuccess callback → navigate to test) if not logged in; otherwise navigates directly.
+- Updated `src/components/dashboard/dashboard-view.tsx` — auth gate card ("Sign in to view your dashboard") when not authenticated; refetches attempts when user changes.
+- Updated `src/components/home/home-view.tsx` — primary CTA shows "Get Started — It's Free" (opens register) when logged out, "Start a Free Practice Test" when logged in; subtitle adapts to auth state.
+- Fixed lint: removed `useMemo` in useAuth (react-hooks/preserve-manual-memoization rule).
+- Restarted dev server to pick up regenerated Prisma client (global Prisma cache was holding pre-User-model instance).
+- Verified end-to-end with Agent Browser: register new account → auto-login → user menu shows name+email → logout → login with credentials → start practice test (no auth gate) → submit → dashboard shows the attempt linked to the user (`learner_<userId>`). Mobile hamburger menu shows auth buttons. Zero console/runtime errors. Lint passes clean.
+
+Stage Summary:
+- Production-grade auth layered on top of the existing TOEIC platform.
+- Stack: NextAuth.js v4 (JWT strategy) + bcryptjs (salt 10) + Prisma User model + SQLite.
+- UI: modal-based (login + register in one dialog with tabs) because sandbox only exposes the `/` route. Gradient header, password strength meter, show/hide password, inline validation, auto-login after register.
+- Scalability: deterministic `learner_<userId>` id means attempts follow the user across devices/browsers; JWT sessions work serverless/edge; existing anonymous localStorage behavior preserved as fallback so the site still works for guests.
+- Auth-gated features: Practice tests and Dashboard prompt login via the modal (with onSuccess callback). Home + Learn + AI Tutor + AI Tools remain open to guests.
+- All API routes for auth: `/api/auth/[...nextauth]` (NextAuth handler), `/api/auth/register` (custom register), `/api/auth/session` (NextAuth session check).

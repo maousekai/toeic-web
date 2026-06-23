@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useRouter } from '@/lib/router'
+import { useAuth } from '@/lib/auth/use-auth'
+import { useAuthUI } from '@/lib/auth/auth-ui-context'
 
 const features = [
   { icon: BookOpen, title: 'Complete TOEIC Curriculum', desc: 'Grammar lessons, vocabulary flashcards and proven strategies for all 7 parts of the test.', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
@@ -41,6 +43,14 @@ const stats = [
 
 export function HomeView() {
   const { navigate } = useRouter()
+  const { user } = useAuth()
+  const { openAuth } = useAuthUI()
+
+  const primaryCta = () => {
+    if (user) navigate({ name: 'practice' })
+    else openAuth('register', () => navigate({ name: 'practice' }))
+  }
+
   return (
     <div>
       {/* HERO */}
@@ -71,8 +81,8 @@ export function HomeView() {
               realistic practice exams, instant grading, and AI tutoring that explains every answer.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button size="lg" className="h-12 px-8 text-base" onClick={() => navigate({ name: 'practice' })}>
-                Start a Free Practice Test
+              <Button size="lg" className="h-12 px-8 text-base" onClick={primaryCta}>
+                {user ? 'Start a Free Practice Test' : 'Get Started — It\'s Free'}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <Button size="lg" variant="outline" className="h-12 px-8 text-base" onClick={() => navigate({ name: 'learn' })}>
@@ -80,7 +90,9 @@ export function HomeView() {
                 Explore Lessons
               </Button>
             </div>
-            <p className="mt-4 text-xs text-muted-foreground">No sign-up required · Practice instantly · Free forever</p>
+            <p className="mt-4 text-xs text-muted-foreground">
+              {user ? 'Welcome back — your progress is saved.' : 'No credit card required · Save progress across devices'}
+            </p>
           </motion.div>
 
           {/* Stats */}

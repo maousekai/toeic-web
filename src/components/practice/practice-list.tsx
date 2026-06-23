@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useRouter } from '@/lib/router'
+import { useAuth } from '@/lib/auth/use-auth'
+import { useAuthUI } from '@/lib/auth/auth-ui-context'
 import { Skeleton } from '@/components/ui/skeleton'
 
 type TestSet = {
@@ -28,6 +30,8 @@ const TYPE_META: Record<string, { icon: any; color: string; label: string }> = {
 
 export function PracticeList() {
   const { navigate } = useRouter()
+  const { user } = useAuth()
+  const { openAuth } = useAuthUI()
   const [tests, setTests] = useState<TestSet[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -37,6 +41,14 @@ export function PracticeList() {
       .then((d) => setTests(d.testSets || []))
       .finally(() => setLoading(false))
   }, [])
+
+  const startTest = (testId: string) => {
+    if (!user) {
+      openAuth('login', () => navigate({ name: 'test', testSetId: testId }))
+      return
+    }
+    navigate({ name: 'test', testSetId: testId })
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -72,7 +84,7 @@ export function PracticeList() {
                     <span className="flex items-center gap-1"><Layers className="h-3.5 w-3.5" /> {t.questionCount} Q</span>
                     <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {t.durationMin} min</span>
                   </div>
-                  <Button size="sm" onClick={() => navigate({ name: 'test', testSetId: t.id })}>
+                  <Button size="sm" onClick={() => startTest(t.id)}>
                     <Play className="mr-1 h-3.5 w-3.5" /> Start
                   </Button>
                 </CardContent>

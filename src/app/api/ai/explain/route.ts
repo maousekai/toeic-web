@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { aiChat, SYSTEM_PROMPTS } from '@/lib/ai'
+import { aiChat, SYSTEM_PROMPTS, type Language } from '@/lib/ai'
 
 export async function POST(req: NextRequest) {
   try {
-    const { question, options, correctAnswer, selectedAnswer, passage, part } = (await req.json()) as {
+    const { question, options, correctAnswer, selectedAnswer, passage, part, language } = (await req.json()) as {
       question: string
       options: string[]
       correctAnswer: number
       selectedAnswer?: number | null
       passage?: string
       part?: number
+      language?: Language
     }
 
+    const lang: Language = language || 'vi'
     const letters = ['A', 'B', 'C', 'D']
     const optsText = options.map((o, i) => `${letters[i]}. ${o}`).join('\n')
     const userMsg = `Part ${part || '?'} question:
@@ -25,7 +27,7 @@ ${selectedAnswer !== undefined && selectedAnswer !== null ? `Learner's answer: $
 Explain why the correct answer is correct and why the others are wrong.`
 
     const reply = await aiChat([
-      { role: 'assistant', content: SYSTEM_PROMPTS.explainer },
+      { role: 'assistant', content: SYSTEM_PROMPTS.explainer(lang) },
       { role: 'user', content: userMsg },
     ])
     return NextResponse.json({ explanation: reply })

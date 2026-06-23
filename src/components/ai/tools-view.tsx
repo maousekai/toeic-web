@@ -14,6 +14,8 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Markdown } from '@/components/site/markdown'
+import { LanguageToggle } from '@/components/site/language-toggle'
+import { useLanguage } from '@/lib/use-language'
 import { useToast } from '@/hooks/use-toast'
 
 // ---------- AI Question Generator ----------
@@ -29,6 +31,7 @@ type GenQuestion = {
 
 function QuestionGenerator() {
   const { toast } = useToast()
+  const { language } = useLanguage()
   const [part, setPart] = useState('5')
   const [topic, setTopic] = useState('')
   const [difficulty, setDifficulty] = useState('intermediate')
@@ -45,7 +48,7 @@ function QuestionGenerator() {
       const res = await fetch('/api/ai/generate-question', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ part: Number(part), topic, difficulty, count: Number(count) }),
+        body: JSON.stringify({ part: Number(part), topic, difficulty, count: Number(count), language }),
       })
       const data = await res.json()
       if (data.questions) {
@@ -59,7 +62,7 @@ function QuestionGenerator() {
     } finally {
       setLoading(false)
     }
-  }, [part, topic, difficulty, count, toast])
+  }, [part, topic, difficulty, count, language, toast])
 
   const speak = (text: string) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return
@@ -177,6 +180,7 @@ function QuestionGenerator() {
 // ---------- Writing & Grammar Checker ----------
 function WritingChecker() {
   const { toast } = useToast()
+  const { language } = useLanguage()
   const [text, setText] = useState('')
   const [feedback, setFeedback] = useState('')
   const [loading, setLoading] = useState(false)
@@ -189,7 +193,7 @@ function WritingChecker() {
       const res = await fetch('/api/ai/writing-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, language }),
       })
       const data = await res.json()
       if (data.feedback) setFeedback(data.feedback)
@@ -199,7 +203,7 @@ function WritingChecker() {
     } finally {
       setLoading(false)
     }
-  }, [text, toast])
+  }, [text, language, toast])
 
   return (
     <Card>
@@ -234,6 +238,7 @@ function WritingChecker() {
 // ---------- Study Plan Generator ----------
 function StudyPlan() {
   const { toast } = useToast()
+  const { language } = useLanguage()
   const [currentLevel, setCurrentLevel] = useState('intermediate')
   const [targetScore, setTargetScore] = useState('750')
   const [weeks, setWeeks] = useState('8')
@@ -250,7 +255,7 @@ function StudyPlan() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          currentLevel, targetScore: Number(targetScore), weeksAvailable: Number(weeks), studyTimePerDay: perDay, focusAreas: focus,
+          currentLevel, targetScore: Number(targetScore), weeksAvailable: Number(weeks), studyTimePerDay: perDay, focusAreas: focus, language,
         }),
       })
       const data = await res.json()
@@ -261,7 +266,7 @@ function StudyPlan() {
     } finally {
       setLoading(false)
     }
-  }, [currentLevel, targetScore, weeks, perDay, focus, toast])
+  }, [currentLevel, targetScore, weeks, perDay, focus, language, toast])
 
   const copyPlan = () => {
     navigator.clipboard.writeText(plan)
@@ -353,9 +358,12 @@ function StudyPlan() {
 export function ToolsView() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">AI Tools</h1>
-        <p className="mt-2 text-muted-foreground">Supercharge your TOEIC prep with on-demand AI — generate questions, check your writing, and get a study plan.</p>
+      <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">AI Tools</h1>
+          <p className="mt-2 text-muted-foreground">Supercharge your TOEIC prep with on-demand AI — generate questions, check your writing, and get a study plan.</p>
+        </div>
+        <LanguageToggle />
       </div>
       <Tabs defaultValue="generator">
         <TabsList className="flex flex-wrap h-auto">

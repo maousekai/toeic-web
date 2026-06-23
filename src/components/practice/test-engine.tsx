@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useRouter, getLearnerId } from '@/lib/router'
+import { useAuth } from '@/lib/auth/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -49,6 +50,7 @@ const PART_LABEL: Record<number, string> = {
 
 export function TestEngine({ testSetId }: { testSetId: string }) {
   const { navigate } = useRouter()
+  const { user } = useAuth()
   const { toast } = useToast()
   const [testSet, setTestSet] = useState<TestSet | null>(null)
   const [questions, setQuestions] = useState<Question[]>([])
@@ -87,7 +89,7 @@ export function TestEngine({ testSetId }: { testSetId: string }) {
     setSubmitting(true)
     const durationSec = Math.round((Date.now() - startedAtRef.current) / 1000)
     const payload = {
-      learnerId: getLearnerId(),
+      learnerId: getLearnerId(user?.id),
       testSetId: testSet?.id,
       testSetTitle: testSet?.title,
       type: testSet?.type || 'mini',

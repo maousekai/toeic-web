@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Markdown } from '@/components/site/markdown'
+import { LanguageToggle } from '@/components/site/language-toggle'
+import { useLanguage } from '@/lib/use-language'
 import { useToast } from '@/hooks/use-toast'
 
 type Msg = { role: 'user' | 'assistant'; content: string }
@@ -20,8 +22,9 @@ const SUGGESTIONS = [
 
 export function TutorView() {
   const { toast } = useToast()
+  const { language, labels } = useLanguage()
   const [messages, setMessages] = useState<Msg[]>([
-    { role: 'assistant', content: "Hi! I'm your **TOEIC Coach** 🎓\n\nAsk me anything about the TOEIC test — grammar, vocabulary, listening strategies, reading tips, or how the scoring works. How can I help you today?" },
+    { role: 'assistant', content: `Hi! I'm your **TOEIC Coach** 🎓\n\nAsk me anything about the TOEIC test — grammar, vocabulary, listening strategies, reading tips, or how the scoring works. How can I help you today?\n\n💡 I'm currently replying in **${labels.long}** — change this anytime from the top bar.` },
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -42,7 +45,12 @@ export function TutorView() {
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: next.filter((m) => !(m.role === 'assistant' && m.content.startsWith('Hi!'))).map((m) => ({ role: m.role, content: m.content })) }),
+        body: JSON.stringify({
+          language,
+          messages: next
+            .filter((m) => !(m.role === 'assistant' && m.content.startsWith('Hi!')))
+            .map((m) => ({ role: m.role, content: m.content })),
+        }),
       })
       const data = await res.json()
       if (data.reply) {
@@ -55,29 +63,33 @@ export function TutorView() {
     } finally {
       setLoading(false)
     }
-  }, [messages, loading, toast])
+  }, [messages, loading, language, toast])
 
   const reset = () => {
-    setMessages([{ role: 'assistant', content: "Hi! I'm your **TOEIC Coach** 🎓\n\nWhat would you like to learn today?" }])
+    setMessages([{ role: 'assistant', content: `Hi! I'm your **TOEIC Coach** 🎓\n\nWhat would you like to learn today?\n\n💡 Currently replying in **${labels.long}**.` }])
   }
 
   return (
     <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-4xl flex-col px-4 py-6 sm:px-6">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <GraduationCap className="h-6 w-6" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h1 className="text-xl font-bold">AI TOEIC Tutor</h1>
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> Online · ready to help
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="truncate">Online · replying in {labels.flag} {labels.long}</span>
             </p>
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={reset} className="gap-1.5">
-          <RotateCcw className="h-3.5 w-3.5" /> Reset
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <LanguageToggle />
+          <Button variant="ghost" size="sm" onClick={reset} className="gap-1.5">
+            <RotateCcw className="h-3.5 w-3.5" /> Reset
+          </Button>
+        </div>
       </div>
 
       <Card className="flex flex-1 flex-col overflow-hidden">
