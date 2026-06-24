@@ -13,6 +13,14 @@ import { useToast } from '@/hooks/use-toast'
 
 type Msg = { role: 'user' | 'assistant'; content: string }
 
+type ProviderInfo = {
+  provider: string
+  model: string
+  name: string
+  icon: string
+  isLocal: boolean
+}
+
 const SUGGESTIONS = [
   'Explain the difference between "since" and "for".',
   'Give me a tip for Part 2 listening questions.',
@@ -23,6 +31,7 @@ const SUGGESTIONS = [
 export function TutorView() {
   const { toast } = useToast()
   const { language, labels } = useLanguage()
+  const [providerInfo, setProviderInfo] = useState<ProviderInfo | null>(null)
   const [messages, setMessages] = useState<Msg[]>([
     { role: 'assistant', content: `Hi! I'm your **TOEIC Coach** 🎓\n\nAsk me anything about the TOEIC test — grammar, vocabulary, listening strategies, reading tips, or how the scoring works. How can I help you today?\n\n💡 I'm currently replying in **${labels.long}** — change this anytime from the top bar.` },
   ])
@@ -33,6 +42,14 @@ export function TutorView() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, loading])
+
+  // Fetch current AI provider info for badge
+  useEffect(() => {
+    fetch('/api/ai/provider')
+      .then((r) => r.json())
+      .then((d) => setProviderInfo(d))
+      .catch(() => {})
+  }, [])
 
   const send = useCallback(async (text: string) => {
     const trimmed = text.trim()
@@ -82,6 +99,12 @@ export function TutorView() {
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="truncate">Online · replying in {labels.flag} {labels.long}</span>
             </p>
+            {providerInfo && (
+              <Badge variant="outline" className="mt-1 gap-1 text-[10px]" title={`Model: ${providerInfo.model}`}>
+                {providerInfo.icon} {providerInfo.name}
+                {providerInfo.isLocal && <span className="text-emerald-500">· 100% offline</span>}
+              </Badge>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-1.5">

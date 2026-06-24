@@ -1,24 +1,115 @@
 import ZAI from 'z-ai-web-dev-sdk'
 
-let zaiInstance: Awaited<ReturnType<typeof ZAI.create>> | null = null
+export type Language = 'vi' | 'en' | 'bi'
 
-export async function getZAI() {
+// ===================================================================
+//  AI PROVIDER ADAPTER
+//  - Tự động chọn provider dựa trên biến môi trường
+//  - Thứ tự ưu tiên:
+//    1. OLLAMA_BASE_URL     → chạy AI local (Ollama, miễn phí)
+//    2. OPENAI_API_KEY      → OpenAI cloud
+//    3. OPENROUTER_API_KEY  → OpenRouter (1 key, nhiều model)
+//    4. GROQ_API_KEY        → Groq (cực nhanh, free)
+//    5. GEMINI_API_KEY      → Google Gemini (free tier hào phóng)
+//    6. (fallback) ZAI SDK  → sandbox Z.ai
+// ===================================================================
+
+type Provider = 'ollama' | 'openai' | 'openrouter' | 'groq' | 'gemini' | 'zai'
+
+function detectProvider(): Provider {
+  if (process.env.OLLAMA_BASE_URL) return 'ollama'
+  if (process.env.OPENAI_API_KEY) return 'openai'
+  if (process.env.OPENROUTER_API_KEY) return 'openrouter'
+  if (process.env.GROQ_API_KEY) return 'groq'
+  if (process.env.GEMINI_API_KEY) return 'gemini'
+  return 'zai'
+}
+
+const DEFAULT_MODELS: Record<Provider, string> = {
+  ollama: process.env.OLLAMA_MODEL || 'qwen2.5:7b',
+  openai: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+  openrouter: process.env.OPENROUTER_MODEL || 'qwen/qwen-2.5-7b-instruct:free',
+  groq: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+  gemini: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
+  zai: 'zai-default',
+}
+
+const BASE_URLS: Record<Provider, string | undefined> = {
+  ollama: process.env.OLLAMA_BASE_URL || 'http://localhost:11434/v1',
+  openai: undefined, // SDK default
+  openrouter: 'https://openrouter.ai/api/v1',
+  groq: 'https://api.groq.com/openai/v1',
+  gemini: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+  zai: undefined,
+}
+
+function getApiKey(provider: Provider): string {
+  switch (provider) {
+    case 'ollama': return 'ollama' // Ollama không cần key, dùng string bất kỳ
+    case 'openai': return process.env.OPENAI_API_KEY || ''
+    case 'openrouter': return process.env.OPENROUTER_API_KEY || ''
+    case 'groq': return process.env.GROQ_API_KEY || ''
+    case 'gemini': return process.env.GEMINI_API_KEY || ''
+    case 'zai': return ''
+  }
+}
+
+// Singleton instances
+let zaiInstance: Awaited<ReturnType<typeof ZAI.create>> | null = null
+const openaiClients = new Map<Provider, any>()
+
+function getOpenAIClient(provider: Provider) {
+  if (openaiClients.has(provider)) return openaiClients.get(provider)!
+  // Dynamic import để tránh load SDK khi không dùng
+  const { default: OpenAI } = require('openai')
+  const client = new OpenAI({
+    apiKey: getApiKey(provider),
+    baseURL: BASE_URLS[provider],
+  })
+  openaiClients.set(provider, client)
+  return client
+}
+
+async function getZAI() {
   if (!zaiInstance) {
     zaiInstance = await ZAI.create()
   }
   return zaiInstance
 }
 
-export async function aiChat(messages: { role: 'user' | 'assistant'; content: string }[]) {
-  const zai = await getZAI()
-  const completion = await zai.chat.completions.create({
-    messages: messages as any,
-    thinking: { type: 'disabled' },
+export async function aiChat(messages: { role: 'user' | 'assistant'; content: string }[]): Promise<string> {
+  const provider = detectProvider()
+
+  if (provider === 'zai') {
+    // ZAI SDK (sandbox Z.ai)
+    const zai = await getZAI()
+    const completion = await zai.chat.completions.create({
+      messages: messages as any,
+      thinking: { type: 'disabled' },
+    })
+    return completion.choices[0]?.message?.content ?? ''
+  }
+
+  // OpenAI-compatible providers (Ollama, OpenAI, OpenRouter, Groq, Gemini)
+  const client = getOpenAIClient(provider)
+  const model = DEFAULT_MODELS[provider]
+  const completion = await client.chat.completions.create({
+    model,
+    messages,
+    temperature: 0.7,
   })
   return completion.choices[0]?.message?.content ?? ''
 }
 
-export type Language = 'vi' | 'en' | 'bi'
+// Cho UI hiển thị provider hiện tại (debug/info)
+export function getCurrentProvider(): { provider: Provider; model: string } {
+  const provider = detectProvider()
+  return { provider, model: DEFAULT_MODELS[provider] }
+}
+
+// ===================================================================
+//  SYSTEM PROMPTS (có thể nhận language)
+// ===================================================================
 
 const LANG_NAME: Record<Language, string> = {
   vi: 'Vietnamese (Tiếng Việt)',
@@ -63,7 +154,6 @@ Format the plan in clear markdown with weekly sections. Keep it realistic and mo
 ${langLine(lang)}`,
 }
 
-// Helper to build the system prompt for the generator (which needs language for the explanation field)
 export function generatorPrompt(lang: Language) {
   return `${SYSTEM_PROMPTS.generator}
 For the "explanation" field of each generated question, write it in ${LANG_NAME[lang]}.`
