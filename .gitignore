@@ -52,3 +52,12 @@ prompt
 server.log
 # Skills directory
 /skills/
+# Database files (contain user data — never commit)
+db/*.db
+db/*.db-journal
+
+# Local env (use .env.example as template)
+.env
+.env.local
+.env.*.local
+!.env.example
