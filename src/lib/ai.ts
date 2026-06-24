@@ -58,10 +58,10 @@ function getApiKey(provider: Provider): string {
 let zaiInstance: Awaited<ReturnType<typeof ZAI.create>> | null = null
 const openaiClients = new Map<Provider, any>()
 
-function getOpenAIClient(provider: Provider) {
+async function getOpenAIClient(provider: Provider) {
   if (openaiClients.has(provider)) return openaiClients.get(provider)!
   // Dynamic import để tránh load SDK khi không dùng
-  const { default: OpenAI } = require('openai')
+  const { default: OpenAI } = await import('openai')
   const client = new OpenAI({
     apiKey: getApiKey(provider),
     baseURL: BASE_URLS[provider],
@@ -91,7 +91,7 @@ export async function aiChat(messages: { role: 'user' | 'assistant'; content: st
   }
 
   // OpenAI-compatible providers (Ollama, OpenAI, OpenRouter, Groq, Gemini)
-  const client = getOpenAIClient(provider)
+  const client = await getOpenAIClient(provider)
   const model = DEFAULT_MODELS[provider]
   const completion = await client.chat.completions.create({
     model,

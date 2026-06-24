@@ -64,3 +64,23 @@ Stage Summary:
 - Scalability: deterministic `learner_<userId>` id means attempts follow the user across devices/browsers; JWT sessions work serverless/edge; existing anonymous localStorage behavior preserved as fallback so the site still works for guests.
 - Auth-gated features: Practice tests and Dashboard prompt login via the modal (with onSuccess callback). Home + Learn + AI Tutor + AI Tools remain open to guests.
 - All API routes for auth: `/api/auth/[...nextauth]` (NextAuth handler), `/api/auth/register` (custom register), `/api/auth/session` (NextAuth session check).
+
+---
+Task ID: 4
+Agent: main (Z.ai Code)
+Task: Add multi-provider AI adapter (Ollama/OpenAI/OpenRouter/Groq/Gemini) while keeping ZAI as default.
+
+Work Log:
+- Installed `openai` SDK (OpenAI-compatible — works with Ollama, Groq, OpenRouter, Gemini too).
+- Refactored `src/lib/ai.ts` into adapter pattern with priority: OLLAMA_BASE_URL → OPENAI_API_KEY → OPENROUTER_API_KEY → GROQ_API_KEY → GEMINI_API_KEY → ZAI (fallback).
+- Each provider has sensible default model (e.g. `qwen2.5:7b` for Ollama, `gpt-4o-mini` for OpenAI, `gemini-1.5-flash` for Gemini, `llama-3.3-70b-versatile` for Groq, `qwen/qwen-2.5-7b-instruct:free` for OpenRouter). All overridable via env vars.
+- Used dynamic `import('openai')` so SDK is only loaded when a non-ZAI provider is active — keeps ZAI path lightweight.
+- Added `/api/ai/provider` GET endpoint returning current provider info (name, model, isLocal).
+- Updated `TutorView` to fetch + display a provider badge (e.g. "🤖 ZAI Cloud" or "🦙 Ollama (Local AI) · 100% offline") under the header.
+- Fixed lint: converted `require()` to `await import()` for `@typescript-eslint/no-require-imports`.
+- Verified with Agent Browser: badge shows "🤖 ZAI Cloud", AI Tutor still answers in Vietnamese via ZAI endpoint (POST /api/ai/chat 200 in 11.7s). No regressions.
+
+Stage Summary:
+- ZAI remains the default provider (no env vars set in sandbox → falls back to ZAI).
+- Project is now deploy-ready: on Vercel/local, user just sets ONE env var (e.g. `OLLAMA_BASE_URL` or `GEMINI_API_KEY`) and the app switches AI provider automatically — no code changes needed.
+- Ollama support means users can run the entire app 100% offline with a local AI model (qwen2.5:7b recommended for Vietnamese TOEIC tutoring).
