@@ -1,114 +1,114 @@
-# 📋 TEAM_TASKS.md — Phân chia nhiệm vụ 3 thành viên
+# 📋 PHÂN CHIA NHIỆM VỤ — 3 THÀNH VIÊN
 
-> **Dự án:** TOEIC Ace AI — Web học TOEIC tích hợp AI
-> **Cập nhật:** 2026-06-24
-> **Tổng số thành viên:** 3 người
-> **Thời gian dự kiến:** 4-6 tuần
+> **Dự án:** TOEIC Ace AI — Website học TOEIC tích hợp AI
+> **Ngày cập nhật:** 24/06/2026
+> **Số thành viên:** 3 người
+> **Thời gian dự kiến:** 4–6 tuần
 
 ---
 
-## 🎯 Tổng quan phân chia
+## 🎯 TỔNG QUAN PHÂN CHIA
 
-| Thành viên | Vai trò | Module phụ trách | LOC hiện có | LOC dự kiến thêm |
+| Thành viên | Vai trò | Module phụ trách | Số dòng code hiện có | Số dòng dự kiến thêm |
 |---|---|---|---|---|
-| **A** | Practice & Scoring Engine Builder | Luyện thi + Chấm điểm | ~812 | ~600 |
-| **B** | AI & Smart Features Developer | AI Tutor + Smart tools | ~569 | ~800 |
-| **C** | UX & Growth Engineer | Trải nghiệm + Gamification | ~1.345 | ~700 |
+| **A** | Người xây dựng phần Luyện thi & Chấm điểm | Đề thi + Chấm điểm + Xem lại | ~812 | ~600 |
+| **B** | Người phát triển tính năng AI thông minh | AI Tutor + Công cụ AI | ~569 | ~800 |
+| **C** | Kỹ sư Trải nghiệm & Tăng trưởng | Giao diện + Game hóa | ~1.345 | ~700 |
 
-### 🛡️ Nguyên tắc chung
+### 🛡️ Nguyên tắc chung cho cả 3 người
 
-1. **Mỗi người chỉ đụng code trong scope của mình** — tránh conflict
-2. **Tạo branch riêng** theo format: `feat/<tên-module>` (vd: `feat/practice-engine`)
-3. **Commit nhỏ, có ý nghĩa** — theo Conventional Commits (`feat:`, `fix:`, `refactor:`...)
-4. **Tạo Pull Request** trước khi merge vào main — team review ít nhất 1 người
-5. **Không push thẳng lên `main`** — vi phạm sẽ bị revert
-6. **Code review trên PR** — comment cụ thể, lịch sự
-7. **Test trước khi push:** `bun run lint` + test thủ công bằng browser
+1. **Mỗi người chỉ sửa code trong phạm vi của mình** — tránh xung đột code
+2. **Tạo nhánh riêng** theo cú pháp: `feat/<tên-module>` (ví dụ: `feat/luyen-thi`)
+3. **Commit nhỏ, có ý nghĩa** — theo chuẩn Conventional Commits (`feat:`, `fix:`, `refactor:`...)
+4. **Tạo Pull Request** trước khi gộp vào nhánh chính — cần ít nhất 1 người review
+5. **Không đẩy code trực tiếp lên nhánh `main`** — vi phạm sẽ bị hoàn tác
+6. **Review code trên PR** — bình luận cụ thể, lịch sự
+7. **Kiểm tra trước khi đẩy:** chạy `bun run lint` + test bằng trình duyệt
 
 ---
 
-## 👤 THÀNH VIÊN A — Practice & Scoring Engine Builder
+## 👤 THÀNH VIÊN A — Người xây dựng phần Luyện thi & Chấm điểm
 
 ### 🎯 Vai trò
-A phụ trách **phần cốt lõi nhất của web TOEIC** — toàn bộ flow từ lúc user bấm "Start Practice" → làm bài → nộp bài → xem điểm → review đáp án.
+Thành viên A phụ trách **phần cốt lõi nhất của website TOEIC** — toàn bộ luồng từ lúc người dùng bấm "Bắt đầu luyện tập" → làm bài → nộp bài → xem điểm → xem lại đáp án.
 
-### 📦 Files phụ trách
+### 📦 Các file phụ trách
 
 ```
-src/components/practice/              ← Frontend (UI làm bài test)
+src/components/practice/              ← Giao diện làm bài test
 ├── practice-list.tsx                 ← Danh sách bộ đề
-├── test-engine.tsx                   ← Engine làm bài (timer, palette, TTS)
-└── test-results.tsx                  ← Trang kết quả + review
+├── test-engine.tsx                   ← Bộ máy làm bài (đồng hồ, bảng câu hỏi, TTS)
+└── test-results.tsx                  ← Trang kết quả + xem lại
 
 src/app/api/attempts/                 ← API lưu kết quả
 ├── route.ts                          ← POST nộp bài + chấm điểm
 ├── [id]/route.ts                     ← GET xem lại 1 lần thi
-└── by-learner/[learnerId]/route.ts   ← GET lịch sử thi
+└── by-learner/[learnerId]/route.ts   ← GET lịch sử thi của 1 người
 
 src/app/api/tests/                    ← API lấy đề thi
-├── route.ts                          ← List bộ đề
-└── [id]/route.ts                     ← Chi tiết bộ đề
+├── route.ts                          ← Danh sách bộ đề
+└── [id]/route.ts                     ← Chi tiết 1 bộ đề
 
-prisma/schema.prisma                  ← Models: Question, TestSet, TestAttempt
-scripts/seed.ts                       ← Phần thêm câu hỏi + bộ đề
+prisma/schema.prisma                  ← Các model: Question, TestSet, TestAttempt
+scripts/seed.ts                       ← Phần thêm câu hỏi + bộ đề mới
 ```
 
 ### ✅ Tình trạng hiện tại (đã có sẵn)
 
 - 61 câu hỏi (Part 2, 5, 6, 7)
-- 6 bộ đề (Part 5 mini, Part 5 set 2, Part 2 listening, Part 6, Part 7, Full mock 40 câu)
-- Test engine với timer, question palette, TTS cho listening
-- Chấm điểm tự động + ước lượng điểm TOEIC 10-990
-- Review answers sau thi + AI explain
+- 6 bộ đề (Part 5 mini, Part 5 set 2, Part 2 listening, Part 6, Part 7, Mock 40 câu)
+- Bộ máy làm bài với đồng hồ đếm ngược, bảng câu hỏi, TTS cho listening
+- Chấm điểm tự động + ước lượng điểm TOEIC 10–990
+- Xem lại đáp án sau thi + AI giải thích
 
-### 🔨 Tasks chi tiết
+### 🔨 Danh sách công việc chi tiết
 
-#### **Phase 1 — Bổ sung nội dung đề (Tuần 1-2)**
+#### **Giai đoạn 1 — Bổ sung nội dung đề (Tuần 1–2)**
 
-| ID | Task | Mô tả | Output | Độ khó |
+| Mã | Công việc | Mô tả | Kết quả | Độ khó |
 |---|---|---|---|---|
-| A.1.1 | Thêm Part 1 (Photographs) | 6 câu hỏi mô tả ảnh (hiện chưa có) | Seed thêm ~10 câu Part 1 | ⭐⭐ |
-| A.1.2 | Thêm Part 3 (Conversations) | Short conversations, 3 câu hỏi mỗi đoạn | Seed thêm ~15 câu Part 3 | ⭐⭐⭐ |
-| A.1.3 | Thêm Part 4 (Talks) | Monologues (announcements, voicemails) | Seed thêm ~15 câu Part 4 | ⭐⭐⭐ |
-| A.1.4 | Thêm câu hỏi advanced | Câu khó difficulty 4-5 | Seed thêm 20 câu khó | ⭐⭐ |
-| A.1.5 | Tạo Full Mock 100 câu | Bộ đề giả lập đề TOEIC thật (100 câu, 2 tiếng) | 1-2 bộ đề mới | ⭐⭐ |
+| A.1.1 | Thêm Part 1 (Mô tả ảnh) | 6 câu hỏi mô tả ảnh (hiện chưa có) | Thêm ~10 câu Part 1 | ⭐⭐ |
+| A.1.2 | Thêm Part 3 (Hội thoại) | Hội thoại ngắn, 3 câu hỏi mỗi đoạn | Thêm ~15 câu Part 3 | ⭐⭐⭐ |
+| A.1.3 | Thêm Part 4 (Bài nói) | Độc thoại (thông báo, thư thoại) | Thêm ~15 câu Part 4 | ⭐⭐⭐ |
+| A.1.4 | Thêm câu hỏi khó | Câu difficulty 4–5 cho người học giỏi | Thêm 20 câu khó | ⭐⭐ |
+| A.1.5 | Tạo Mock 100 câu | Bộ đề giả lập đề TOEIC thật (100 câu, 2 tiếng) | 1–2 bộ đề mới | ⭐⭐ |
 
-#### **Phase 2 — Engine nâng cao (Tuần 3-4)**
+#### **Giai đoạn 2 — Nâng cấp bộ máy làm bài (Tuần 3–4)**
 
-| ID | Task | Mô tả | Độ khó |
+| Mã | Công việc | Mô tả | Độ khó |
 |---|---|---|---|
-| A.2.1 | Exam Mode | Chế độ thi thật: không xem transcript, không replay, không hint | ⭐⭐⭐ |
-| A.2.2 | Review Mode nâng cao | Sau thi, replay audio unlimited, có AI explain per question | ⭐⭐ |
-| A.2.3 | Adaptive Difficulty | Câu đúng → câu sau khó hơn; câu sai → dễ hơn (như GMAT) | ⭐⭐⭐⭐ |
-| A.2.4 | Bookmark câu hỏi | User đánh dấu câu muốn xem lại | ⭐⭐ |
-| A.2.5 | Pause/Resume test | Lưu trạng thái, cho user pause rồi continue | ⭐⭐⭐ |
+| A.2.1 | Chế độ thi thật | Không xem transcript, không nghe lại, không gợi ý | ⭐⭐⭐ |
+| A.2.2 | Chế độ xem lại nâng cao | Sau thi, nghe lại không giới hạn, có AI giải thích từng câu | ⭐⭐ |
+| A.2.3 | Độ khó thích ứng | Câu đúng → câu sau khó hơn; câu sai → dễ hơn (như GMAT) | ⭐⭐⭐⭐ |
+| A.2.4 | Đánh dấu câu hỏi | Người dùng đánh dấu câu muốn xem lại sau | ⭐⭐ |
+| A.2.5 | Tạm dừng/Tiếp tục bài thi | Lưu trạng thái, cho người dùng tạm dừng rồi làm tiếp | ⭐⭐⭐ |
 
-#### **Phase 3 — Export & Reporting (Tuần 5-6)**
+#### **Giai đoạn 3 — Xuất kết quả & Báo cáo (Tuần 5–6)**
 
-| ID | Task | Mô tả | Độ khó |
+| Mã | Công việc | Mô tả | Độ khó |
 |---|---|---|---|
-| A.3.1 | Export kết quả PDF | Tải certificate/báo cáo điểm về máy | ⭐⭐⭐ |
+| A.3.1 | Xuất kết quả PDF | Tải chứng nhận/báo cáo điểm về máy | ⭐⭐⭐ |
 | A.3.2 | So sánh tiến độ | Biểu đồ so sánh điểm 5 lần thi gần nhất | ⭐⭐ |
-| A.3.3 | Phân tích điểm yếu | "Bạn yếu Part 5 grammar, cần ôn lại tenses" | ⭐⭐⭐ |
+| A.3.3 | Phân tích điểm yếu | "Bạn yếu Part 5 ngữ pháp, cần ôn lại thì" | ⭐⭐⭐ |
 
-### 📊 KPIs của A
+### 📊 Chỉ tiêu của A
 
-| KPI | Target |
+| Chỉ tiêu | Mục tiêu |
 |---|---|
-| Số câu hỏi trong DB | ≥ 120 câu (hiện 61) |
+| Số câu hỏi trong database | ≥ 120 câu (hiện 61) |
 | Số bộ đề | ≥ 9 bộ (hiện 6) |
 | Độ phủ 7 Parts | 7/7 Parts (hiện 4/7) |
 | Tính năng mới hoàn thành | ≥ 3 tính năng |
-| Bug critical | 0 |
+| Lỗi nghiêm trọng | 0 |
 
-### 🎤 Template báo cáo A
+### 🎤 Mẫu báo cáo của A
 
 ```markdown
-## Tuần [X] — Thành viên A — Practice & Scoring Engine
+## Tuần [X] — Thành viên A — Phần Luyện thi & Chấm điểm
 
 ### Đã làm:
-- ✅ [Task ID] — mô tả — commit hash
-- 🔄 [Task đang làm] — % hoàn thành
+- ✅ [Mã công việc] — mô tả — mã commit
+- 🔄 [Công việc đang làm] — % hoàn thành
 
 ### Số liệu:
 - Tổng câu hỏi: X/120 câu
@@ -119,7 +119,7 @@ scripts/seed.ts                       ← Phần thêm câu hỏi + bộ đề
 - [Nếu có]
 
 ### Tuần sau sẽ làm:
-- [Task tiếp theo]
+- [Công việc tiếp theo]
 
 ### Cần hỗ trợ:
 - [Từ B hoặc C nếu cần]
@@ -127,373 +127,373 @@ scripts/seed.ts                       ← Phần thêm câu hỏi + bộ đề
 
 ---
 
-## 👤 THÀNH VIÊN B — AI & Smart Features Developer
+## 👤 THÀNH VIÊN B — Người phát triển tính năng AI thông minh
 
 ### 🎯 Vai trò
-B phụ trách **toàn bộ tính năng AI thông minh** — AI Tutor chat, AI giải thích đáp án, AI sinh câu hỏi, AI chấm viết, AI study plan, và các tính năng AI mới (speaking, conversation practice...).
+Thành viên B phụ trách **toàn bộ tính năng AI thông minh** — AI Tutor chat, AI giải thích đáp án, AI sinh câu hỏi, AI chấm viết, AI lập kế hoạch học, và các tính năng AI mới (speaking, hội thoại thực hành...).
 
-### 📦 Files phụ trách
+### 📦 Các file phụ trách
 
 ```
-src/components/ai/                    ← Frontend AI
-├── tutor-view.tsx                    ← AI Tutor chat UI
-└── tools-view.tsx                    ← AI Tools (3 tabs: Generator, Writing, Plan)
+src/components/ai/                    ← Giao diện AI
+├── tutor-view.tsx                    ← Chat với AI Tutor
+└── tools-view.tsx                    ← Công cụ AI (3 tab: Sinh câu hỏi, Chấm viết, Lập kế hoạch)
 
 src/app/api/ai/                       ← API AI
-├── chat/route.ts                     ← AI Tutor chat
+├── chat/route.ts                     ← Chat với AI Tutor
 ├── explain/route.ts                  ← AI giải thích đáp án
 ├── generate-question/route.ts        ← AI sinh câu hỏi
 ├── writing-check/route.ts            ← AI chấm viết
-├── study-plan/route.ts               ← AI study plan
-└── provider/route.ts                 ← Info về AI provider đang dùng
+├── study-plan/route.ts               ← AI lập kế hoạch học
+└── provider/route.ts                 ← Thông tin AI đang dùng
 
-src/lib/ai.ts                         ← Adapter 6 AI providers
-src/lib/use-language.tsx              ← Language toggle (VI/EN/BI)
+src/lib/ai.ts                         ← Bộ chuyển đổi 6 nhà cung cấp AI
+src/lib/use-language.tsx              ← Nút chọn ngôn ngữ AI (VN/EN/Song ngữ)
 ```
 
 ### ✅ Tình trạng hiện tại (đã có sẵn)
 
-- 5 tính năng AI đã hoạt động: chat, explain, generate-question, writing-check, study-plan
-- Multi-provider adapter (ZAI/Ollama/OpenAI/OpenRouter/Groq/Gemini)
+- 5 tính năng AI đã hoạt động: chat, giải thích, sinh câu hỏi, chấm viết, lập kế hoạch
+- Hỗ trợ 6 nhà cung cấp AI (ZAI/Ollama/OpenAI/OpenRouter/Groq/Gemini)
 - 3 ngôn ngữ AI trả lời: Tiếng Việt / Song ngữ / English
-- Provider badge trong UI
+- Huy hiệu hiển thị AI đang dùng trong giao diện
 
-### 🔨 Tasks chi tiết
+### 🔨 Danh sách công việc chi tiết
 
-#### **Phase 1 — Research & Setup (Tuần 1)**
+#### **Giai đoạn 1 — Nghiên cứu & Chuẩn bị (Tuần 1)**
 
-| ID | Task | Mô tả | Output | Độ khó |
+| Mã | Công việc | Mô tả | Kết quả | Độ khó |
 |---|---|---|---|---|
-| B.1.1 | Research Web Speech API | Tìm hiểu SpeechRecognition + SpeechSynthesis | Document technical | ⭐⭐ |
-| B.1.2 | Research AI Speech Scoring | Cách chấm phát âm (pronunciation, fluency) | Document approach | ⭐⭐⭐⭐ |
-| B.1.3 | Test multi-provider trên local | Verify Ollama/OpenAI/Gemini hoạt động | Test report | ⭐⭐ |
-| B.1.4 | Thiết kế API contract mới | `POST /api/ai/speaking-score`, `POST /api/ai/conversation` | API spec doc | ⭐⭐⭐ |
+| B.1.1 | Nghiên cứu Web Speech API | Tìm hiểu SpeechRecognition + SpeechSynthesis | Tài liệu kỹ thuật | ⭐⭐ |
+| B.1.2 | Nghiên cứu chấm điểm phát âm | Cách chấm phát âm (độ chính xác, độ trôi chảy) | Tài liệu phương pháp | ⭐⭐⭐⭐ |
+| B.1.3 | Test đa nhà cung cấp trên máy | Kiểm tra Ollama/OpenAI/Gemini hoạt động | Báo cáo test | ⭐⭐ |
+| B.1.4 | Thiết kế API mới | `POST /api/ai/speaking-score`, `POST /api/ai/conversation` | Tài liệu đặc tả API | ⭐⭐⭐ |
 
-#### **Phase 2 — AI Speaking & Writing Test (Tuần 2-3)**
+#### **Giai đoạn 2 — AI Speaking & Writing Test (Tuần 2–3)**
 
-| ID | Task | Mô tả | Độ khó |
+| Mã | Công việc | Mô tả | Độ khó |
 |---|---|---|---|
-| B.2.1 | AI Speaking Test UI | Record audio, hiển thị waveform, playback | ⭐⭐⭐⭐ |
-| B.2.2 | AI Speaking Scoring | API chuyển speech→text, so sánh với text chuẩn, chấm điểm | ⭐⭐⭐⭐⭐ |
-| B.2.3 | AI Writing Test | UI soạn đoạn văn theo prompt TOEIC, AI chấm theo rubric | ⭐⭐⭐⭐ |
-| B.2.4 | Writing rubric | AI chấm theo 4 tiêu chí: Grammar, Vocabulary, Coherence, Task | ⭐⭐⭐ |
+| B.2.1 | Giao diện AI Speaking Test | Ghi âm, hiển thị waveform, phát lại | ⭐⭐⭐⭐ |
+| B.2.2 | Chấm điểm Speaking | API chuyển giọng nói → văn bản, so sánh với text chuẩn, chấm điểm | ⭐⭐⭐⭐⭐ |
+| B.2.3 | AI Writing Test | Giao diện soạn đoạn văn theo đề bài TOEIC, AI chấm theo rubric | ⭐⭐⭐⭐ |
+| B.2.4 | Rubric chấm viết | AI chấm theo 4 tiêu chí: Ngữ pháp, Từ vựng, Mạch lạc, Đúng yêu cầu | ⭐⭐⭐ |
 
-#### **Phase 3 — Smart Learning (Tuần 4-5)**
+#### **Giai đoạn 3 — Học thông minh (Tuần 4–5)**
 
-| ID | Task | Mô tả | Độ khó |
+| Mã | Công việc | Mô tả | Độ khó |
 |---|---|---|---|
-| B.3.1 | AI Conversation Practice | Chat scenario-based (đặt nhà hàng, họp, phỏng vấn...) | ⭐⭐⭐⭐ |
-| B.3.2 | AI Vocabulary Recommender | Gợi ý từ vựng dựa trên câu user hay sai | ⭐⭐⭐ |
-| B.3.3 | AI Difficulty Adapter | Algorithm tăng/giảm difficulty theo năng lực | ⭐⭐⭐⭐ |
-| B.3.4 | AI Progress Insights | AI phân tích tiến độ, suggest下一步 | ⭐⭐⭐ |
+| B.3.1 | AI Hội thoại thực hành | Chat theo tình huống (đặt nhà hàng, họp, phỏng vấn...) | ⭐⭐⭐⭐ |
+| B.3.2 | AI Gợi ý từ vựng | Gợi ý từ vựng dựa trên câu người dùng hay sai | ⭐⭐⭐ |
+| B.3.3 | AI Điều chỉnh độ khó | Thuật toán tăng/giảm độ khó theo năng lực | ⭐⭐⭐⭐ |
+| B.3.4 | AI Phân tích tiến độ | AI phân tích tiến độ, gợi ý bước tiếp theo | ⭐⭐⭐ |
 
-#### **Phase 4 — Polish (Tuần 6)**
+#### **Giai đoạn 4 — Hoàn thiện (Tuần 6)**
 
-| ID | Task | Mô tả | Độ khó |
+| Mã | Công việc | Mô tả | Độ khó |
 |---|---|---|---|
-| B.4.1 | Streaming response | AI Tutor stream text realtime (đỡ wait) | ⭐⭐⭐ |
-| B.4.2 | Conversation history | Lưu lịch sử chat vào DB, tiếp tục lần sau | ⭐⭐⭐ |
-| B.4.3 | Voice selection | Cho user chọn giọng TTS (nam/nữ, US/UK) | ⭐⭐ |
+| B.4.1 | Phản hồi streaming | AI Tutor trả text realtime (đỡ phải chờ) | ⭐⭐⭐ |
+| B.4.2 | Lưu lịch sử hội thoại | Lưu lịch sử chat vào database, tiếp tục lần sau | ⭐⭐⭐ |
+| B.4.3 | Chọn giọng đọc | Cho người dùng chọn giọng TTS (nam/nữ, Mỹ/Anh) | ⭐⭐ |
 
-### 📊 KPIs của B
+### 📊 Chỉ tiêu của B
 
-| KPI | Target |
+| Chỉ tiêu | Mục tiêu |
 |---|---|
-| Tính năng AI mới | ≥ 4 tính năng (Speaking, Writing, Conversation, Recommender) |
-| AI providers hỗ trợ | ≥ 6 (đã có) |
-| Độ trễ AI response | ≤ 10s (đã có streaming) |
+| Tính năng AI mới | ≥ 4 tính năng (Speaking, Writing, Hội thoại, Gợi ý từ vựng) |
+| Nhà cung cấp AI hỗ trợ | ≥ 6 (đã có) |
+| Độ trễ phản hồi AI | ≤ 10 giây (có streaming) |
 | Lưu lịch sử chat | Có |
-| Bug AI | 0 (timeout, parse error) |
+| Lỗi AI | 0 (timeout, lỗi parse) |
 
-### 🎤 Template báo cáo B
+### 🎤 Mẫu báo cáo của B
 
 ```markdown
-## Tuần [X] — Thành viên B — AI & Smart Features
+## Tuần [X] — Thành viên B — AI & Tính năng thông minh
 
 ### Đã làm:
-- ✅ [Task ID] — mô tả — commit hash
-- 🔄 [Task đang làm] — % hoàn thành
+- ✅ [Mã công việc] — mô tả — mã commit
+- 🔄 [Công việc đang làm] — % hoàn thành
 
 ### Số liệu:
 - Tính năng AI: X/9 tính năng
-- Provider hỗ trợ: 6/6
-- Avg AI response time: Xs
+- Nhà cung cấp hỗ trợ: 6/6
+- Thời gian phản hồi AI trung bình: X giây
 
 ### Khó khăn:
-- [Nếu có — đặc biệt API rate limit, model quality]
+- [Nếu có — đặc biệt giới hạn API, chất lượng model]
 
 ### Tuần sau sẽ làm:
-- [Task tiếp theo]
+- [Công việc tiếp theo]
 
 ### Cần hỗ trợ:
-- [Từ A: cần API attempt data cho vocabulary recommender]
-- [Từ C: cần UI cho speaking test]
+- [Từ A: cần API dữ liệu attempt cho bộ gợi ý từ vựng]
+- [Từ C: cần giao diện cho speaking test]
 ```
 
 ---
 
-## 👤 THÀNH VIÊN C — UX & Growth Engineer
+## 👤 THÀNH VIÊN C — Kỹ sư Trải nghiệm & Tăng trưởng
 
 ### 🎯 Vai trò
-C phụ trách **trải nghiệm người dùng + tăng trưởng** — trang chủ, dashboard, auth flow, learning hub, gamification, leaderboard, achievements, notifications, mobile PWA.
+Thành viên C phụ trách **trải nghiệm người dùng + tăng trưởng** — trang chủ, dashboard, luồng đăng nhập, trung tâm học, game hóa, bảng xếp hạng, thành tựu, thông báo, mobile PWA.
 
-### 📦 Files phụ trách
+### 📦 Các file phụ trách
 
 ```
 src/components/home/                   ← Trang chủ
-└── home-view.tsx                      ← Landing page
+└── home-view.tsx                      ← Trang landing
 
-src/components/site/                   ← Shell website
-├── navbar.tsx                         ← Header + nav
-├── footer.tsx                         ← Footer sticky
-├── theme-provider.tsx                 ← Dark mode
-├── theme-toggle.tsx                   ← Nút toggle dark/light
+src/components/site/                   ← Khung website
+├── navbar.tsx                         ← Thanh điều hướng + menu
+├── footer.tsx                         ← Chân trang sticky
+├── theme-provider.tsx                 ← Chế độ tối
+├── theme-toggle.tsx                   ← Nút bật/tắt tối/sáng
 └── language-toggle.tsx                ← Nút chọn ngôn ngữ AI
 
 src/components/dashboard/              ← Bảng theo dõi tiến trình
-└── dashboard-view.tsx                 ← Stats + charts + recent attempts
+└── dashboard-view.tsx                 ← Số liệu + biểu đồ + lịch sử thi
 
-src/components/auth/                   ← Auth flow
-├── auth-modal.tsx                     ← Modal login/register
-└── user-menu.tsx                      ← Avatar dropdown
+src/components/auth/                   ← Luồng đăng nhập
+├── auth-modal.tsx                     ← Hộp thoại đăng nhập/đăng ký
+└── user-menu.tsx                      ← Menu thả xuống avatar
 
-src/components/learn/                  ← Learning hub
-├── learn-view.tsx                     ← Hub chính
-├── grammar-list.tsx                  ← List grammar lessons
-├── grammar-detail.tsx                ← Chi tiết 1 bài grammar
-├── vocab-flashcards.tsx              ← Flashcard flip + spaced repetition
-└── strategies-view.tsx               ← TOEIC strategies
+src/components/learn/                  ← Trung tâm học tập
+├── learn-view.tsx                     ← Trang hub chính
+├── grammar-list.tsx                  ← Danh sách bài ngữ pháp
+├── grammar-detail.tsx                ← Chi tiết 1 bài ngữ pháp
+├── vocab-flashcards.tsx              ← Thẻ từ vựng lật + ôn tập gián đoạn
+└── strategies-view.tsx               ← Chiến thuật TOEIC
 ```
 
 ### ✅ Tình trạng hiện tại (đã có sẵn)
 
-- Trang chủ đẹp với hero, features, TOEIC structure overview
-- Dashboard với 4 stat cards + 2 charts (Recharts)
-- Auth modal (login/register tabs, password strength meter)
-- User menu dropdown (avatar, logout)
-- Learning hub (grammar lessons, vocab flashcards, strategies)
-- Dark mode + language toggle
+- Trang chủ đẹp với hero, tính năng, tổng quan cấu trúc TOEIC
+- Dashboard với 4 thẻ số liệu + 2 biểu đồ (Recharts)
+- Hộp thoại đăng nhập (tab đăng nhập/đăng ký, thước đo độ mạnh mật khẩu)
+- Menu người dùng thả xuống (avatar, đăng xuất)
+- Trung tâm học (bài ngữ pháp, thẻ từ vựng, chiến thuật)
+- Chế độ tối + nút chọn ngôn ngữ
 
-### 🔨 Tasks chi tiết
+### 🔨 Danh sách công việc chi tiết
 
-#### **Phase 1 — Profile & User Management (Tuần 1-2)**
+#### **Giai đoạn 1 — Hồ sơ & Quản lý người dùng (Tuần 1–2)**
 
-| ID | Task | Mô tả | Output | Độ khó |
+| Mã | Công việc | Mô tả | Kết quả | Độ khó |
 |---|---|---|---|---|
-| C.1.1 | Profile page | Xem/sửa thông tin user, target score, avatar | New view + route | ⭐⭐⭐ |
-| C.1.2 | Avatar upload | Cho user upload ảnh đại diện | File upload API | ⭐⭐⭐ |
-| C.1.3 | Change password | Form đổi mật khẩu | New modal | ⭐⭐ |
-| C.1.4 | Account settings | Language preference, notification prefs | Settings page | ⭐⭐ |
+| C.1.1 | Trang hồ sơ | Xem/sửa thông tin, điểm mục tiêu, avatar | Trang mới | ⭐⭐⭐ |
+| C.1.2 | Tải avatar lên | Cho người dùng tải ảnh đại diện | API tải file | ⭐⭐⭐ |
+| C.1.3 | Đổi mật khẩu | Form đổi mật khẩu | Hộp thoại mới | ⭐⭐ |
+| C.1.4 | Cài đặt tài khoản | Ngôn ngữ ưa thích, tùy chọn thông báo | Trang cài đặt | ⭐⭐ |
 
-#### **Phase 2 — Gamification (Tuần 3-4)**
+#### **Giai đoạn 2 — Game hóa (Tuần 3–4)**
 
-| ID | Task | Mô tả | Độ khó |
+| Mã | Công việc | Mô tả | Độ khó |
 |---|---|---|---|
-| C.2.1 | DB schema gamification | Thêm bảng Achievement, UserAchievement, Streak | ⭐⭐⭐ |
-| C.2.2 | Streak counter | Đếm chuỗi ngày học liên tục, hiển thị ở navbar | ⭐⭐⭐ |
-| C.2.3 | Achievements system | Badge: "First Test", "7-day streak", "Score 800+", "100 questions" | ⭐⭐⭐⭐ |
-| C.2.4 | Achievements UI | Hiển thị badges trong profile + toast khi unlock | ⭐⭐⭐ |
-| C.2.5 | XP & Level system | Tích điểm XP, lên level theo mốc | ⭐⭐⭐ |
+| C.2.1 | Schema database game hóa | Thêm bảng Achievement, UserAchievement, Streak | ⭐⭐⭐ |
+| C.2.2 | Bộ đếm chuỗi ngày học | Đếm số ngày học liên tục, hiển thị ở thanh điều hướng | ⭐⭐⭐ |
+| C.2.3 | Hệ thống thành tựu | Huy hiệu: "Bài test đầu tiên", "Học 7 ngày liên tiếp", "Điểm 800+", "100 câu hỏi" | ⭐⭐⭐⭐ |
+| C.2.4 | Giao diện thành tựu | Hiển thị huy hiệu trong hồ sơ + thông báo khi mở khóa | ⭐⭐⭐ |
+| C.2.5 | Hệ thống điểm XP & Cấp độ | Tích điểm XP, lên cấp theo mốc | ⭐⭐⭐ |
 
-#### **Phase 3 — Social & Growth (Tuần 5)**
+#### **Giai đoạn 3 — Xã hội & Tăng trưởng (Tuần 5)**
 
-| ID | Task | Mô tả | Độ khó |
+| Mã | Công việc | Mô tả | Độ khó |
 |---|---|---|---|
-| C.3.1 | Leaderboard | Xếp hạng người học theo điểm trung bình | ⭐⭐⭐ |
-| C.3.2 | Leaderboard filters | Filter theo tuần/tháng/toàn thời gian, theo part | ⭐⭐ |
-| C.3.3 | Share result | Share điểm lên social media (image card) | ⭐⭐⭐ |
-| C.3.4 | Friends system | Add friend, xem tiến độ bạn bè | ⭐⭐⭐⭐ |
+| C.3.1 | Bảng xếp hạng | Xếp hạng người học theo điểm trung bình | ⭐⭐⭐ |
+| C.3.2 | Bộ lọc bảng xếp hạng | Lọc theo tuần/tháng/toàn thời gian, theo part | ⭐⭐ |
+| C.3.3 | Chia sẻ kết quả | Chia sẻ điểm lên mạng xã hội (dạng ảnh card) | ⭐⭐⭐ |
+| C.3.4 | Hệ thống bạn bè | Thêm bạn, xem tiến độ bạn bè | ⭐⭐⭐⭐ |
 
-#### **Phase 4 — Mobile & Notifications (Tuần 6)**
+#### **Giai đoạn 4 — Mobile & Thông báo (Tuần 6)**
 
-| ID | Task | Mô tả | Độ khó |
+| Mã | Công việc | Mô tả | Độ khó |
 |---|---|---|---|
-| C.4.1 | PWA setup | Manifest.json, service worker, installable | ⭐⭐⭐ |
-| C.4.2 | Push notifications | Nhắc nhở học hàng ngày qua browser notification | ⭐⭐⭐⭐ |
-| C.4.3 | Mobile UX polish | Bottom nav, touch targets, gestures | ⭐⭐⭐ |
-| C.4.4 | Offline mode | Cache lessons/vocab để xem không cần internet | ⭐⭐⭐⭐ |
+| C.4.1 | Thiết lập PWA | Manifest.json, service worker, có thể cài đặt | ⭐⭐⭐ |
+| C.4.2 | Thông báo đẩy | Nhắc nhở học hàng ngày qua browser notification | ⭐⭐⭐⭐ |
+| C.4.3 | Tinh chỉnh mobile | Thanh điều hướng dưới, vùng chạm, cử chỉ | ⭐⭐⭐ |
+| C.4.4 | Chế độ offline | Cache bài học/từ vựng để xem không cần internet | ⭐⭐⭐⭐ |
 
-### 📊 KPIs của C
+### 📊 Chỉ tiêu của C
 
-| KPI | Target |
+| Chỉ tiêu | Mục tiêu |
 |---|---|
-| Trang mới | ≥ 3 (Profile, Leaderboard, Settings) |
-| Tính năng gamification | ≥ 5 (Streak, Achievements, XP, Leaderboard, Share) |
-| PWA installable | Có |
-| Mobile responsive | 100% (test trên iPhone SE, iPad) |
-| Lighthouse score | ≥ 90 (Performance, Accessibility, PWA) |
+| Trang mới | ≥ 3 (Hồ sơ, Bảng xếp hạng, Cài đặt) |
+| Tính năng game hóa | ≥ 5 (Chuỗi ngày, Thành tựu, XP, Bảng xếp hạng, Chia sẻ) |
+| PWA có thể cài đặt | Có |
+| Responsive mobile | 100% (test trên iPhone SE, iPad) |
+| Điểm Lighthouse | ≥ 90 (Hiệu năng, Trợ năng, PWA) |
 
-### 🎤 Template báo cáo C
+### 🎤 Mẫu báo cáo của C
 
 ```markdown
-## Tuần [X] — Thành viên C — UX & Growth
+## Tuần [X] — Thành viên C — Trải nghiệm & Tăng trưởng
 
 ### Đã làm:
-- ✅ [Task ID] — mô tả — commit hash
-- 🔄 [Task đang làm] — % hoàn thành
+- ✅ [Mã công việc] — mô tả — mã commit
+- 🔄 [Công việc đang làm] — % hoàn thành
 
 ### Số liệu:
 - Trang mới: X/3
-- Tính năng gamification: X/5
-- Lighthouse score: X/100
-- Mobile responsive: Yes/No
+- Tính năng game hóa: X/5
+- Điểm Lighthouse: X/100
+- Responsive mobile: Có/Không
 
 ### Khó khăn:
-- [Nếu có — đặc biệt PWA setup]
+- [Nếu có — đặc biệt thiết lập PWA]
 
 ### Tuần sau sẽ làm:
-- [Task tiếp theo]
+- [Công việc tiếp theo]
 
 ### Cần hỗ trợ:
-- [Từ A: cần API endpoint /api/leaderboard]
-- [Từ B: cần AI insight cho progress page]
+- [Từ A: cần API /api/leaderboard]
+- [Từ B: cần AI insight cho trang tiến độ]
 ```
 
 ---
 
 ## 🔗 ĐIỂM GIAO TIẾP GIỮA 3 THÀNH VIÊN
 
-### A ↔ B (Practice ↔ AI)
+### A ↔ B (Luyện thi ↔ AI)
 
 | Giao tiếp | Chi tiết |
 |---|---|
-| A gọi B | A dùng `/api/ai/explain` (đã có) để AI giải thích câu sai trong results |
+| A gọi B | A dùng `/api/ai/explain` (đã có) để AI giải thích câu sai trong trang kết quả |
 | A cần B thêm | A làm Speaking Test → nhờ B tạo `/api/ai/speaking-score` |
-| B cần A | B làm AI Difficulty Adapter → cần A chia sẻ logic chấm điểm hiện tại |
-| **API contract** | B须 commit API spec trước khi A integrate |
+| B cần A | B làm AI Điều chỉnh độ khó → cần A chia sẻ logic chấm điểm hiện tại |
+| **Quy tắc API** | B phải commit đặc tả API trước khi A tích hợp |
 
-### A ↔ C (Practice ↔ UX)
-
-| Giao tiếp | Chi tiết |
-|---|---|
-| A lưu → C đọc | A lưu `TestAttempt` vào DB → C đọc để hiển thị Dashboard (đã có) |
-| C cần A | C làm Leaderboard → cần A thêm API `/api/leaderboard` hoặc C tự query từ TestAttempt |
-| A cần C | A làm Exam Mode → nhờ C thiết kế UI cho mode switcher |
-| **Quy tắc** | Không sửa schema của nhau — nếu cần thêm field → discuss trước |
-
-### B ↔ C (AI ↔ UX)
+### A ↔ C (Luyện thi ↔ Trải nghiệm)
 
 | Giao tiếp | Chi tiết |
 |---|---|
-| B làm component → C integrate | B tạo `<SpeakingTest />` → C import vào Practice list hoặc Tools page |
-| C cần B | C làm Profile page → cần B thêm API `/api/user/stats` (AI insights) |
-| B cần C | B làm conversation history → cần C thiết kế UI history list |
+| A lưu → C đọc | A lưu `TestAttempt` vào database → C đọc để hiển thị Dashboard (đã có) |
+| C cần A | C làm Bảng xếp hạng → cần A thêm API `/api/leaderboard` hoặc C tự query từ TestAttempt |
+| A cần C | A làm Chế độ thi thật → nhờ C thiết kế giao diện cho nút chuyển chế độ |
+| **Quy tắc** | Không sửa schema của nhau — nếu cần thêm trường → thảo luận trước |
+
+### B ↔ C (AI ↔ Trải nghiệm)
+
+| Giao tiếp | Chi tiết |
+|---|---|
+| B làm component → C tích hợp | B tạo `<SpeakingTest />` → C import vào trang Practice hoặc Tools |
+| C cần B | C làm trang Hồ sơ → cần B thêm API `/api/user/stats` (AI insights) |
+| B cần C | B làm lịch sử hội thoại → cần C thiết kế giao diện danh sách lịch sử |
 | **Quy tắc** | Component của B phải có props rõ ràng, C chỉ việc import + render |
 
-### 🤝 Họp sync hàng tuần
+### 🤝 Họp đồng bộ hàng tuần
 
 **Thứ 2 hàng tuần — 30 phút:**
 - Mỗi người báo cáo: đã làm gì, khó khăn, kế hoạch tuần tới
-- Discuss các API contract mới
-- Resolve conflict nếu có
+- Thảo luận các API contract mới
+- Giải quyết xung đột nếu có
 
-**Daily standup (optional) — 10 phút mỗi sáng:**
+**Standup hằng ngày (tùy chọn) — 10 phút mỗi sáng:**
 - Hôm qua làm gì
 - Hôm nay làm gì
 - Có vướng mắc gì không
 
 ---
 
-## 📅 TIMELINE TỔNG QUAN
+## 📅 LỊCH TRÌNH TỔNG QUAN
 
 ```
-Tuần 1  │ A: Seed Part 1,3,4     │ B: Research speech API   │ C: Profile page UI
-        │ A: Tạo Full Mock 100   │ B: API contract design   │ C: Avatar upload
-        │                        │                          │
-Tuần 2  │ A: Exam Mode           │ B: AI Speaking Test UI   │ C: Streak counter
-        │ A: Review Mode nâng cao│ B: Speaking scoring API  │ C: Achievements schema
-        │                        │                          │
-Tuần 3  │ A: Adaptive Difficulty │ B: AI Writing Test       │ C: Achievements UI
-        │ A: Bookmark câu hỏi    │ B: Writing rubric        │ C: XP & Level system
-        │                        │                          │
-Tuần 4  │ A: Pause/Resume test   │ B: AI Conversation       │ C: Leaderboard
-        │ A: Export PDF          │ B: Vocab Recommender     │ C: Share result
-        │                        │                          │
-Tuần 5  │ A: So sánh tiến độ     │ B: AI Difficulty Adapter │ C: PWA setup
-        │ A: Phân tích điểm yếu  │ B: AI Progress Insights  │ C: Push notifications
-        │                        │                          │
-Tuần 6  │ 🎉 TÍCH HỢP + TEST + POLISH + BÁO CÁO                              │
-        │ Cả 3: Merge branches, fix conflicts, E2E test, demo
+Tuần 1  │ A: Thêm Part 1,3,4      │ B: Nghiên cứu speech API  │ C: Giao diện trang hồ sơ
+        │ A: Tạo Mock 100 câu     │ B: Thiết kế API contract │ C: Tải avatar lên
+        │                         │                          │
+Tuần 2  │ A: Chế độ thi thật      │ B: Giao diện Speaking    │ C: Bộ đếm chuỗi ngày
+        │ A: Xem lại nâng cao     │ B: API chấm speaking      │ C: Schema thành tựu
+        │                         │                          │
+Tuần 3  │ A: Độ khó thích ứng     │ B: AI Writing Test        │ C: Giao diện thành tựu
+        │ A: Đánh dấu câu hỏi     │ B: Rubric chấm viết       │ C: Hệ thống XP & Cấp độ
+        │                         │                          │
+Tuần 4  │ A: Tạm dừng/Tiếp tục    │ B: AI Hội thoại           │ C: Bảng xếp hạng
+        │ A: Xuất PDF             │ B: Gợi ý từ vựng          │ C: Chia sẻ kết quả
+        │                         │                          │
+Tuần 5  │ A: So sánh tiến độ      │ B: AI Điều chỉnh độ khó   │ C: Thiết lập PWA
+        │ A: Phân tích điểm yếu   │ B: AI Phân tích tiến độ   │ C: Thông báo đẩy
+        │                         │                          │
+Tuần 6  │ 🎉 TÍCH HỢP + TEST + HOÀN THIỆN + BÁO CÁO                          │
+        │ Cả 3: Gộp nhánh, sửa xung đột, test end-to-end, demo
 ```
 
 ---
 
-## 🛡️ WORKFLOW GIT AN TOÀN
+## 🛡️ QUY TRÌNH GIT AN TOÀN
 
-### Setup ban đầu (mỗi người làm 1 lần)
+### Thiết lập ban đầu (mỗi người làm 1 lần)
 
 ```bash
-# Clone repo
+# Tải repo về
 git clone https://github.com/username/toeic-ace-ai.git
 cd toeic-ace-ai
 
 # Cài dependencies
 bun install
 
-# Setup env (copy từ .env.example)
+# Thiết lập env (copy từ .env.example)
 cp .env.example .env
-# Edit .env: thêm NEXTAUTH_SECRET + chọn AI provider
+# Sửa .env: thêm NEXTAUTH_SECRET + chọn nhà cung cấp AI
 
-# Setup database
+# Thiết lập database
 bun run db:push
 bun run db:generate
 bun run scripts/seed.ts
 
-# Chạy dev server verify
+# Chạy dev server để kiểm tra
 bun run dev
 ```
 
-### Quy trình hàng ngày
+### Quy trình hằng ngày
 
 ```bash
-# 1. Đầu ngày: sync code mới nhất
+# 1. Đầu ngày: đồng bộ code mới nhất
 git checkout main
 git pull origin main
 
-# 2. Tạo/chuyển sang branch của mình
-git checkout -b feat/practice-engine    # A
-git checkout -b feat/ai-features        # B
-git checkout -b feat/ux-growth          # C
+# 2. Tạo/chuyển sang nhánh của mình
+git checkout -b feat/luyen-thi        # A
+git checkout -b feat/ai-features       # B
+git checkout -b feat/trai-nghiem       # C
 
 # 3. Làm việc + commit nhỏ
 git add .
-git commit -m "feat(thành viên A): thêm Part 1 photographs"
+git commit -m "feat(A): thêm Part 1 mô tả ảnh"
 
-# 4. Push lên branch
-git push origin feat/practice-engine
+# 4. Đẩy lên nhánh
+git push origin feat/luyen-thi
 
 # 5. Cuối task: tạo Pull Request trên GitHub
-#    → Điền template PR (xem dưới)
+#    → Điền mẫu PR (xem dưới)
 #    → Tag 2 người kia review
 ```
 
-### Template Pull Request
+### Mẫu Pull Request
 
 ```markdown
 ## PR: [Tên tính năng]
 
 ### Mô tả
-[Brief mô tả tính năng]
+[Mô tả ngắn gọn tính năng]
 
 ### Loại thay đổi
-- [ ] Feature mới
-- [ ] Bug fix
-- [ ] Refactor
-- [ ] Documentation
+- [ ] Tính năng mới
+- [ ] Sửa lỗi
+- [ ] Tái cấu trúc
+- [ ] Tài liệu
 
-### Files thay đổi
-- `src/components/practice/test-engine.tsx` — thêm Exam Mode
-- `src/app/api/attempts/route.ts` — thêm field mode
+### Các file thay đổi
+- `src/components/practice/test-engine.tsx` — thêm Chế độ thi thật
+- `src/app/api/attempts/route.ts` — thêm trường mode
 
-### Screenshots
-[Nếu có UI change]
+### Ảnh chụp màn hình
+[Nếu có thay đổi giao diện]
 
-### Test
+### Kiểm tra
 - [x] `bun run lint` pass
 - [x] Test thủ công pass
-- [x] Không break existing features
+- [x] Không phá tính năng hiện có
 
-### Reviewer
+### Người review
 @teammate-b @teammate-c
 ```
 
@@ -503,29 +503,29 @@ git push origin feat/practice-engine
 
 Mỗi người làm 1 phần báo cáo:
 
-### Template báo cáo cuối kỳ
+### Mẫu báo cáo cuối kỳ
 
 ```markdown
 # Báo cáo cuối kỳ — [Tên thành viên] — [Module]
 
 ## 1. Tổng quan
 - Module phụ trách: [tên module]
-- Thời gian: [start date] — [end date]
+- Thời gian: [ngày bắt đầu] — [ngày kết thúc]
 - Số commit: X
-- Số PR merged: X
+- Số PR đã gộp: X
 
 ## 2. Tính năng đã hoàn thành
-| ID | Tên tính năng | Status | Link PR |
+| Mã | Tên tính năng | Trạng thái | Link PR |
 |---|---|---|---|
-| A.1.1 | Part 1 photographs | ✅ Done | #12 |
-| A.1.2 | Part 3 conversations | ✅ Done | #15 |
+| A.1.1 | Part 1 mô tả ảnh | ✅ Xong | #12 |
+| A.1.2 | Part 3 hội thoại | ✅ Xong | #15 |
 | ... | ... | ... | ... |
 
 ## 3. Số liệu
-- LOC code mới: X dòng
-- Files mới: X
-- Files sửa: X
-- Tests pass: X%
+- Số dòng code mới: X dòng
+- File mới: X
+- File sửa: X
+- Test pass: X%
 
 ## 4. Khó khăn & giải pháp
 - [Khó khăn 1] → [giải pháp]
@@ -533,11 +533,11 @@ Mỗi người làm 1 phần báo cáo:
 
 ## 5. Đóng góp cho team
 - Review PR của [tên]: X lần
-- Hỗ trợ [tên] fix bug: [mô tả]
+- Hỗ trợ [tên] sửa lỗi: [mô tả]
 
 ## 6. Bài học
-- [Technical lesson]
-- [Soft skill lesson]
+- [Bài học kỹ thuật]
+- [Bài học kỹ năng mềm]
 
 ## 7. Định hướng tương lai
 - [Tính năng muốn phát triển tiếp]
@@ -545,14 +545,14 @@ Mỗi người làm 1 phần báo cáo:
 
 ---
 
-## 📞 CONTACT & HỖ TRỢ
+## 📞 LIÊN HỆ & HỖ TRỢ
 
-| Vấn đề | Liên hệ |
+| Vấn đề | Cách xử lý |
 |---|---|
-| Conflict code | Họp nhóm 3 người giải quyết |
-| Bug không fix được | Tạo issue trên GitHub, tag team |
+| Xung đột code | Họp nhóm 3 người giải quyết |
+| Lỗi không sửa được | Tạo issue trên GitHub, tag team |
 | Cần review gấp | Nhắn trên Discord/Slack |
-| Đổi schema DB | **BẮT BUỘC** họp nhóm 3 người trước |
+| Đổi schema database | **BẮT BUỘC** họp nhóm 3 người trước |
 | Đổi API contract | **BẮT BUỘC** báo cho người dùng API đó biết |
 
 ---
@@ -561,12 +561,12 @@ Mỗi người làm 1 phần báo cáo:
 
 | Tài liệu | Link |
 |---|---|
-| Next.js 16 docs | https://nextjs.org/docs |
-| Prisma docs | https://www.prisma.io/docs |
+| Next.js 16 | https://nextjs.org/docs |
+| Prisma | https://www.prisma.io/docs |
 | shadcn/ui | https://ui.shadcn.com |
 | NextAuth.js | https://next-auth.js.org |
 | Tailwind CSS 4 | https://tailwindcss.com |
-| ZAI SDK | (internal) |
+| ZAI SDK | (nội bộ) |
 | Ollama | https://ollama.com |
 | OpenAI API | https://platform.openai.com/docs |
 | Recharts | https://recharts.org |
@@ -576,16 +576,16 @@ Mỗi người làm 1 phần báo cáo:
 
 ## ✅ CHECKLIST TRƯỚC KHI BÁO CÁO
 
-Mỗi cuối tuần, mỗi thành viên check:
+Mỗi cuối tuần, mỗi thành viên kiểm tra:
 
-- [ ] Tất cả tasks tuần này đã commit + push
+- [ ] Tất cả công việc tuần này đã commit + push
 - [ ] Đã tạo PR cho các task hoàn thành
 - [ ] Đã review ít nhất 1 PR của đồng đội
 - [ ] `bun run lint` pass
-- [ ] Test thủ công trên browser pass
+- [ ] Test thủ công trên trình duyệt pass
 - [ ] Cập nhật TEAM_TASKS.md (đánh dấu task ✅)
-- [ ] Viết báo cáo tuần theo template
-- [ ] Không có bug critical chưa fix
+- [ ] Viết báo cáo tuần theo mẫu
+- [ ] Không có lỗi nghiêm trọng chưa sửa
 
 ---
 
