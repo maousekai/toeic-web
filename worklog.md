@@ -185,3 +185,44 @@ Stage Summary:
 - UI: dropdown selector in modal + test preview badges on card.
 - Auto-detection: file existence checked per-test, warning shows correct test number + folder path.
 - Ready for user to upload 40 files (4 files × 10 tests) to fully populate ETS 2024.
+
+---
+Task ID: 8
+Agent: main (Z.ai Code)
+Task: Rewrite all 10 grammar lessons in Vietnamese with detailed structure: explanation, signal words, examples, TOEIC tips.
+
+Work Log:
+- Rewrote all 10 grammar lessons in scripts/seed.ts with consistent 5-section Vietnamese structure:
+  1. 📖 Khái niệm — Vietnamese explanation of when/why to use
+  2. 📝 Cấu trúc & Công thức — Formulas + conjugation tables
+  3. 🔍 Dấu hiệu nhận biết — Signal words (e.g., "ago" → past simple, "since" → present perfect)
+  4. 💡 Ví dụ cụ thể — Tables with English sentence + Vietnamese translation
+  5. 🎯 Mẹo làm bài TOEIC & Bẫy thường gặp — Common traps + TOEIC Part 5 strategies
+- Lessons covered:
+  1. Present Simple vs. Present Continuous (Thì hiện tại đơn & tiếp diễn)
+  2. Present Perfect & Past Simple (Hiện tại hoàn thành & quá khứ đơn)
+  3. Conditionals (Câu điều kiện loại 0, 1, 2)
+  4. The Passive Voice (Câu bị động)
+  5. Articles (Mạo từ a/an/the)
+  6. Prepositions of Time & Place (Giới từ thời gian & địa điểm)
+  7. Gerunds vs. Infinitives (Danh động từ vs động từ nguyên mẫu)
+  8. Relative Clauses (Mệnh đề quan hệ)
+  9. Comparatives & Superlatives (So sánh hơn & nhất)
+  10. Modal Verbs (Động từ khuyết thiếu)
+- Each lesson includes:
+  - Vietnamese title with English original in parentheses
+  - Detailed Vietnamese explanation
+  - Signal words with Vietnamese translations
+  - 5-7 example sentences in table format with Vietnamese translations
+  - 3-4 common TOEIC traps (⚠️) with correct/incorrect examples
+  - Specific TOEIC Part 5 strategy (🎯)
+- Re-seeded database (10 grammar lessons updated).
+- Fixed Chinese characters that slipped in during editing (chỉ xuất hiện, có thể xảy ra).
+- Verified with Agent Browser: lesson list shows Vietnamese titles, lesson detail page displays all 5 sections correctly with proper Vietnamese formatting. Zero console errors. Lint passes.
+
+Stage Summary:
+- All 10 grammar lessons now in Vietnamese with consistent, comprehensive structure.
+- Each lesson has: Khái niệm, Cấu trúc, Dấu hiệu nhận biết, Ví dụ cụ thể (with translations), Mẹo TOEIC + Bẫy.
+- Signal words highlighted with Vietnamese translations (e.g., "since + mốc thời gian", "for + khoảng thời gian").
+- TOEIC-specific tips and traps included for each topic (e.g., "ago" never goes with present perfect, "must not" ≠ "don't have to").
+- Database updated, ready for use.
