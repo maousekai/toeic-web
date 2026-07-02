@@ -9,7 +9,7 @@ export type View =
   | { name: 'vocab' }
   | { name: 'strategies'; slug?: string }
   | { name: 'practice' }
-  | { name: 'test'; testSetId: string }
+  | { name: 'test'; testSetId: string; mode?: 'practice' | 'exam' }
   | { name: 'results'; attemptId: string }
   | { name: 'tutor' }
   | { name: 'tools' }

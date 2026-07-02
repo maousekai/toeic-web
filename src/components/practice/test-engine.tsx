@@ -1,7 +1,10 @@
 'use client'
 
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { Clock, ChevronLeft, ChevronRight, Flag, Volume2, AlertCircle, Headphones, CheckCircle2 } from 'lucide-react'
+import {
+  Clock, ChevronLeft, ChevronRight, Flag, Volume2, AlertCircle, Headphones,
+  CheckCircle2, Trophy, EyeOff, VolumeX, ShieldAlert,
+} from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +16,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
+import { motion } from 'framer-motion'
 
 type Question = {
   id: string
@@ -32,6 +36,8 @@ type TestSet = {
   questionIds: string[]
 }
 
+type TestMode = 'practice' | 'exam'
+
 function fmt(sec: number) {
   const m = Math.floor(sec / 60).toString().padStart(2, '0')
   const s = (sec % 60).toString().padStart(2, '0')
@@ -48,7 +54,8 @@ const PART_LABEL: Record<number, string> = {
   7: 'Part 7 · Reading Comprehension',
 }
 
-export function TestEngine({ testSetId }: { testSetId: string }) {
+export function TestEngine({ testSetId, mode = 'practice' }: { testSetId: string; mode?: TestMode }) {
+  const isExam = mode === 'exam'
   const { navigate } = useRouter()
   const { user } = useAuth()
   const { toast } = useToast()
@@ -59,6 +66,7 @@ export function TestEngine({ testSetId }: { testSetId: string }) {
   const [answers, setAnswers] = useState<Record<string, number | null>>({})
   const [timeLeft, setTimeLeft] = useState(0)
   const [submitting, setSubmitting] = useState(false)
+  const [showWarning5min, setShowWarning5min] = useState(false)
   const startedAtRef = useRef<number>(Date.now())
   const playedRef = useRef<Set<string>>(new Set())
 
@@ -84,6 +92,17 @@ export function TestEngine({ testSetId }: { testSetId: string }) {
     return () => clearTimeout(t)
   }, [timeLeft])
 
+  // Warning khi còn 5 phút (exam mode)
+  useEffect(() => {
+    if (isExam && timeLeft === 300 && !showWarning5min) {
+      setShowWarning5min(true)
+      toast({
+        title: '⚠️ Còn 5 phút!',
+        description: 'Bạn còn 5 phút để hoàn thành bài thi. Hãy kiểm tra lại các câu chưa trả lời.',
+      })
+    }
+  }, [timeLeft, isExam, showWarning5min, toast])
+
   const submit = useCallback(async () => {
     if (submitting) return
     setSubmitting(true)
@@ -104,7 +123,10 @@ export function TestEngine({ testSetId }: { testSetId: string }) {
       })
       const data = await res.json()
       if (data.attemptId) {
-        toast({ title: 'Test submitted!', description: `You scored ${data.correct}/${data.total} correct.` })
+        toast({
+          title: isExam ? '🎯 Nộp bài thi thành công!' : 'Test submitted!',
+          description: `Bạn đúng ${data.correct}/${data.total} câu.`,
+        })
         navigate({ name: 'results', attemptId: data.attemptId })
       } else {
         toast({ title: 'Submission failed', description: data.error || 'Unknown error', variant: 'destructive' })
@@ -114,15 +136,18 @@ export function TestEngine({ testSetId }: { testSetId: string }) {
       toast({ title: 'Submission failed', description: e.message, variant: 'destructive' })
       setSubmitting(false)
     }
-  }, [answers, questions, testSet, navigate, toast, submitting])
+  }, [answers, questions, testSet, navigate, toast, submitting, isExam])
 
   // Auto-submit when time runs out
   useEffect(() => {
     if (timeLeft === 0 && !loading && questions.length > 0 && !submitting) {
-      toast({ title: "Time's up!", description: 'Submitting your test automatically.' })
+      toast({
+        title: isExam ? '⏰ Hết giờ!' : "Time's up!",
+        description: isExam ? 'Bài thi đã được tự động nộp.' : 'Submitting your test automatically.',
+      })
       submit()
     }
-  }, [timeLeft, loading, questions.length, submit, submitting, toast])
+  }, [timeLeft, loading, questions.length, submit, submitting, toast, isExam])
 
   // Listening: auto-play audio when entering a listening question
   const playAudio = useCallback((q: Question) => {
@@ -139,7 +164,6 @@ export function TestEngine({ testSetId }: { testSetId: string }) {
     const q = questions[current]
     if (q && q.part <= 4 && q.audioScript && !playedRef.current.has(q.id)) {
       playedRef.current.add(q.id)
-      // small delay to ensure speechSynthesis is ready
       const t = setTimeout(() => playAudio(q), 300)
       return () => clearTimeout(t)
     }
@@ -168,39 +192,91 @@ export function TestEngine({ testSetId }: { testSetId: string }) {
   const answeredCount = Object.values(answers).filter((v) => v !== null).length
   const isListening = q.part <= 4
   const lowTime = timeLeft <= 60
+  const warningTime = isExam && timeLeft <= 300 && timeLeft > 60
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+      {/* EXAM MODE — Banner cảnh báo */}
+      {isExam && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 flex items-center gap-3 rounded-xl border border-rose-500/30 bg-gradient-to-r from-rose-500/10 to-orange-500/10 p-3"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-500/20 text-rose-600">
+            <Trophy className="h-5 w-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-rose-700 dark:text-rose-400">🎯 CHẾ ĐỘ THI THẬT — EXAM MODE</p>
+            <p className="text-xs text-muted-foreground truncate">
+              <EyeOff className="inline h-3 w-3" /> Không xem transcript ·{' '}
+              <VolumeX className="inline h-3 w-3" /> Không nghe lại audio ·{' '}
+              <ShieldAlert className="inline h-3 w-3" /> Tự nộp khi hết giờ
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Top bar */}
       <div className="sticky top-16 z-30 mb-4 flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/90 p-3 backdrop-blur">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">{testSet.title}</p>
-          <p className="text-xs text-muted-foreground">{answeredCount}/{questions.length} answered</p>
+          <p className="text-xs text-muted-foreground">
+            {/* Exam mode: ẩn số câu đã trả lời để tăng căng thẳng */}
+            {isExam ? (
+              <>Câu {current + 1} / {questions.length} · Hết giờ tự động nộp</>
+            ) : (
+              <>{answeredCount}/{questions.length} answered</>
+            )}
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-bold tabular-nums ${lowTime ? 'bg-rose-500/10 text-rose-600 animate-pulse' : 'bg-secondary'}`}>
+          <div className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-bold tabular-nums ${
+            lowTime
+              ? 'bg-rose-500/15 text-rose-600 animate-pulse'
+              : warningTime
+              ? 'bg-amber-500/15 text-amber-600'
+              : 'bg-secondary'
+          }`}>
             <Clock className="h-4 w-4" />
             {fmt(timeLeft)}
           </div>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button size="sm" disabled={submitting}>
-                <Flag className="mr-1 h-3.5 w-3.5" /> Submit
+              <Button size="sm" disabled={submitting} variant={isExam ? 'destructive' : 'default'}>
+                <Flag className="mr-1 h-3.5 w-3.5" /> Nộp bài
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Submit your test?</AlertDialogTitle>
+                <AlertDialogTitle>{isExam ? '🎯 Nộp bài thi?' : 'Submit your test?'}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  You have answered {answeredCount} of {questions.length} questions.
-                  {answeredCount < questions.length ? ` ${questions.length - answeredCount} unanswered questions will be marked incorrect.` : ' All questions answered.'}
-                  This cannot be undone.
+                  {isExam ? (
+                    <span>
+                      Bạn đã trả lời <strong>{answeredCount}</strong> / {questions.length} câu.
+                      {answeredCount < questions.length ? (
+                        <> Còn <strong>{questions.length - answeredCount}</strong> câu chưa trả lời sẽ bị tính sai.</>
+                      ) : null}
+                      <br /><br />
+                      ⚠️ Sau khi nộp, bạn <strong>không thể làm lại</strong>. Kết quả sẽ hiện ngay.
+                    </span>
+                  ) : (
+                    <span>
+                      You have answered {answeredCount} of {questions.length} questions.
+                      {answeredCount < questions.length ? ` ${questions.length - answeredCount} unanswered questions will be marked incorrect.` : ' All questions answered.'}
+                      This cannot be undone.
+                    </span>
+                  )}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Keep going</AlertDialogCancel>
-                <AlertDialogAction onClick={submit} disabled={submitting}>
-                  {submitting ? 'Submitting…' : 'Submit now'}
+                <AlertDialogCancel>{isExam ? 'Tiếp tục làm bài' : 'Keep going'}</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={submit}
+                  disabled={submitting}
+                  className={isExam ? 'bg-rose-600 hover:bg-rose-700' : ''}
+                >
+                  {submitting ? 'Đang nộp…' : isExam ? 'Nộp bài' : 'Submit now'}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -236,20 +312,35 @@ export function TestEngine({ testSetId }: { testSetId: string }) {
             <CardContent className="space-y-4">
               {/* Listening audio control */}
               {isListening && q.audioScript && (
-                <div className="rounded-lg border border-teal-500/30 bg-teal-500/5 p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 text-sm text-teal-700 dark:text-teal-300">
-                      <Volume2 className="h-4 w-4" />
-                      <span>Listen to the audio, then choose the best answer.</span>
+                <div className={`rounded-lg border p-3 ${
+                  isExam
+                    ? 'border-rose-500/30 bg-rose-500/5'
+                    : 'border-teal-500/30 bg-teal-500/5'
+                }`}>
+                  {isExam ? (
+                    // EXAM MODE: chỉ hiện thông báo, KHÔNG có replay, KHÔNG có transcript
+                    <div className="flex items-center gap-2 text-sm text-rose-700 dark:text-rose-400">
+                      <Volume2 className="h-4 w-4 animate-pulse" />
+                      <span>Audio đang phát <strong>1 lần duy nhất</strong>. Lắng nghe kỹ và chọn đáp án.</span>
                     </div>
-                    <Button size="sm" variant="outline" onClick={() => playAudio(q)}>
-                      <Volume2 className="mr-1 h-3.5 w-3.5" /> Replay
-                    </Button>
-                  </div>
-                  <details className="mt-2">
-                    <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">Show transcript</summary>
-                    <p className="mt-1 text-sm italic text-muted-foreground">"{q.audioScript}"</p>
-                  </details>
+                  ) : (
+                    // PRACTICE MODE: có replay + transcript như cũ
+                    <>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 text-sm text-teal-700 dark:text-teal-300">
+                          <Volume2 className="h-4 w-4" />
+                          <span>Listen to the audio, then choose the best answer.</span>
+                        </div>
+                        <Button size="sm" variant="outline" onClick={() => playAudio(q)}>
+                          <Volume2 className="mr-1 h-3.5 w-3.5" /> Replay
+                        </Button>
+                      </div>
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">Show transcript</summary>
+                        <p className="mt-1 text-sm italic text-muted-foreground">"{q.audioScript}"</p>
+                      </details>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -292,18 +383,33 @@ export function TestEngine({ testSetId }: { testSetId: string }) {
             ) : (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button disabled={submitting}><Flag className="mr-1 h-4 w-4" /> Finish &amp; Submit</Button>
+                  <Button disabled={submitting} variant={isExam ? 'destructive' : 'default'}>
+                    <Flag className="mr-1 h-4 w-4" /> {isExam ? 'Nộp bài thi' : 'Finish & Submit'}
+                  </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Submit your test?</AlertDialogTitle>
+                    <AlertDialogTitle>{isExam ? '🎯 Nộp bài thi?' : 'Submit your test?'}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      You have answered {answeredCount} of {questions.length} questions.
+                      {isExam ? (
+                        <span>
+                          Bạn đã trả lời <strong>{answeredCount}</strong> / {questions.length} câu.
+                          <br />Sau khi nộp, bạn <strong>không thể làm lại</strong>.
+                        </span>
+                      ) : (
+                        <span>You have answered {answeredCount} of {questions.length} questions.</span>
+                      )}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Keep going</AlertDialogCancel>
-                    <AlertDialogAction onClick={submit} disabled={submitting}>Submit</AlertDialogAction>
+                    <AlertDialogCancel>{isExam ? 'Tiếp tục' : 'Keep going'}</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={submit}
+                      disabled={submitting}
+                      className={isExam ? 'bg-rose-600 hover:bg-rose-700' : ''}
+                    >
+                      {submitting ? 'Đang nộp…' : isExam ? 'Nộp bài' : 'Submit'}
+                    </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -328,6 +434,9 @@ export function TestEngine({ testSetId }: { testSetId: string }) {
                       className={`flex h-8 items-center justify-center rounded-md text-xs font-medium transition-colors ${
                         i === current
                           ? 'bg-primary text-primary-foreground'
+                          : isExam
+                          // EXAM: không highlight answered (chỉ current) — tăng căng thẳng
+                          ? 'bg-secondary text-muted-foreground hover:bg-accent'
                           : ans !== null && ans !== undefined
                           ? 'bg-primary/15 text-primary'
                           : 'bg-secondary text-muted-foreground hover:bg-accent'
@@ -340,9 +449,19 @@ export function TestEngine({ testSetId }: { testSetId: string }) {
                 })}
               </div>
               <div className="mt-4 space-y-1.5 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-primary" /> Current</div>
-                <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-primary/30" /> Answered</div>
-                <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-secondary" /> Unanswered</div>
+                {isExam ? (
+                  <>
+                    <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-primary" /> Câu hiện tại</div>
+                    <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-secondary" /> Các câu khác</div>
+                    <p className="mt-2 italic text-[10px]">Ẩn trạng thái đã trả lời để mô phỏng thi thật</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-primary" /> Current</div>
+                    <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-primary/30" /> Answered</div>
+                    <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-secondary" /> Unanswered</div>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>

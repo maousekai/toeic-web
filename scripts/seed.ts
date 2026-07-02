@@ -538,6 +538,26 @@ Never spend more than 2 minutes on a single-passage question set.`,
       type: 'full',
       questionIds: JSON.stringify(['q_p2_1','q_p2_2','q_p2_3','q_p2_4','q_p2_5','q_p2_6','q_p2_7','q_p2_8','q_p5_1','q_p5_2','q_p5_3','q_p5_4','q_p5_5','q_p5_6','q_p5_7','q_p5_8','q_p5_9','q_p5_10','q_p5_11','q_p5_12','q_p5_13','q_p5_14','q_p5_15','q_p6_1','q_p6_2','q_p6_3','q_p6_4','q_p6_5','q_p6_6','q_p6_7','q_p6_8','q_p7_1','q_p7_2','q_p7_3','q_p7_4','q_p7_5','q_p7_6','q_p7_7','q_p7_8','q_p7_9']),
     },
+    {
+      id: 'ts_exam_simulation',
+      title: '🎯 TOEIC Exam Simulation — Thi Thật (61 câu · 120 phút)',
+      description: 'Mô phỏng phòng thi TOEIC thật: KHÔNG xem transcript, KHÔNG nghe lại audio, đồng hồ đếm ngược nghiêm ngặt 120 phút, tự nộp khi hết giờ. Lấy toàn bộ 61 câu hỏi hiện có. Khuyến nghị: tìm chỗ yên tĩnh, tắt điện thoại, làm nghiêm túc như thi thật.',
+      durationMin: 120,
+      type: 'exam',
+      questionIds: JSON.stringify([
+        // Part 2 — Listening (8 câu)
+        'q_p2_1','q_p2_2','q_p2_3','q_p2_4','q_p2_5','q_p2_6','q_p2_7','q_p2_8',
+        // Part 5 — Incomplete Sentences (30 câu)
+        'q_p5_1','q_p5_2','q_p5_3','q_p5_4','q_p5_5','q_p5_6','q_p5_7','q_p5_8','q_p5_9','q_p5_10',
+        'q_p5_11','q_p5_12','q_p5_13','q_p5_14','q_p5_15','q_p5_16','q_p5_17','q_p5_18','q_p5_19','q_p5_20',
+        'q_p5_21','q_p5_22','q_p5_23','q_p5_24','q_p5_25','q_p5_26','q_p5_27','q_p5_28','q_p5_29','q_p5_30',
+        // Part 6 — Text Completion (8 câu)
+        'q_p6_1','q_p6_2','q_p6_3','q_p6_4','q_p6_5','q_p6_6','q_p6_7','q_p6_8',
+        // Part 7 — Reading Comprehension (15 câu)
+        'q_p7_1','q_p7_2','q_p7_3','q_p7_4','q_p7_5','q_p7_6','q_p7_7','q_p7_8','q_p7_9','q_p7_10',
+        'q_p7_11','q_p7_12','q_p7_13','q_p7_14','q_p7_15',
+      ]),
+    },
   ]
   for (const t of testSets) {
     await db.testSet.upsert({ where: { id: t.id }, update: t, create: t })

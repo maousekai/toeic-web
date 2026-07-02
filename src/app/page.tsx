@@ -27,7 +27,7 @@ function CurrentView() {
     case 'practice':
       return <PracticeList />
     case 'test':
-      return <TestEngine testSetId={view.testSetId} />
+      return <TestEngine testSetId={view.testSetId} mode={view.mode} />
     case 'results':
       return <TestResults attemptId={view.attemptId} />
     case 'tutor':

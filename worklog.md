@@ -84,3 +84,38 @@ Stage Summary:
 - ZAI remains the default provider (no env vars set in sandbox → falls back to ZAI).
 - Project is now deploy-ready: on Vercel/local, user just sets ONE env var (e.g. `OLLAMA_BASE_URL` or `GEMINI_API_KEY`) and the app switches AI provider automatically — no code changes needed.
 - Ollama support means users can run the entire app 100% offline with a local AI model (qwen2.5:7b recommended for Vietnamese TOEIC tutoring).
+
+---
+Task ID: 5
+Agent: main (Z.ai Code)
+Task: Add "Exam Mode" — TOEIC exam simulation that mimics real test conditions.
+
+Work Log:
+- Added new test set `ts_exam_simulation` to seed.ts: 61 questions (all current), 120 minutes, type='exam'.
+- Updated `src/lib/router.tsx`: View `test` now accepts optional `mode?: 'practice' | 'exam'`.
+- Updated `src/app/page.tsx`: pass `mode` prop to `<TestEngine>`.
+- Rewrote `src/components/practice/practice-list.tsx`:
+  - Split into 2 sections: "🎯 Chế độ Thi Thật" (exam, top, highlighted) + "📚 Chế độ Luyện Tập" (practice, bottom).
+  - Exam cards have rose color theme, nội quy box (no transcript, no replay, strict timer, auto-submit).
+  - Click "Vào phòng thi" → opens AlertDialog nội quy with full rules + recommendations → confirm → navigate to exam mode.
+  - Practice cards unchanged (button "Start" → practice mode).
+- Rewrote `src/components/practice/test-engine.tsx` to support both modes:
+  - **Exam mode banner**: rose gradient banner "🎯 CHẾ ĐỘ THI THẬT — EXAM MODE" with rules summary.
+  - **Listening (exam)**: shows "Audio đang phát 1 lần duy nhất" — NO Replay button, NO transcript details.
+  - **Listening (practice)**: keeps Replay button + Show transcript (unchanged).
+  - **Palette (exam)**: hides answered state (only highlights current question) — "Ẩn trạng thái đã trả lời để mô phỏng thi thật".
+  - **Palette (practice)**: shows answered/unanswered colors (unchanged).
+  - **Top bar (exam)**: hides answered count, shows "Câu X/Y · Hết giờ tự động nộp".
+  - **Timer (exam)**: amber at ≤5min, red+pulse at ≤1min.
+  - **5-minute warning**: toast notification at 300s remaining.
+  - **Submit dialog (exam)**: Vietnamese, red destructive button, "không thể làm lại" warning.
+  - **Auto-submit**: when timeLeft === 0, auto-submits with Vietnamese toast.
+- Re-seeded database (was empty after previous schema changes) — restored 32 vocab, 10 grammar, 6 strategies, 61 questions, 7 test sets (was 6, now +1 exam).
+- Verified with Agent Browser: exam mode shows banner, no replay, no transcript, palette hides answered, 61 questions, 120 min timer. Lint passes, zero console errors.
+
+Stage Summary:
+- New "Thi Thật" feature complete and verified end-to-end.
+- 2 distinct modes: Practice (loose, learning-oriented) vs Exam (strict, simulation).
+- Exam mode mimics real TOEIC: no transcript, no audio replay, strict timer, auto-submit, 5-min warning, hidden answered state.
+- UI in Vietnamese for exam mode (nội quy, nộp bài, hết giờ) to match target audience.
+- Database restored with all content after re-seed.
