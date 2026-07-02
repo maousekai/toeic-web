@@ -151,3 +151,37 @@ Stage Summary:
 - Vietnamese UI for target audience (hướng dẫn, nút "Xem đề", "Mở Google Drive", etc.).
 - README.md in public/ets-exams/ provides clear guide for team members to add more ETS exam sets.
 - Default config has 1 exam (ETS 2024) with placeholder Google Drive URL — admin needs to replace with real folder ID and/or upload actual files.
+
+---
+Task ID: 7
+Agent: main (Z.ai Code)
+Task: Refactor ETS exam structure to support multiple tests per ETS set (ETS 2024 has 10 tests).
+
+Work Log:
+- Analyzed 2nd uploaded screenshot: folder "ETS 2024 - LISTENING" contains 11 PDFs (PART 3 - TEST 1 + TEST 1 LC through TEST 10 LC) — meaning each ETS year has 10 separate tests, each with its own Listening/Reading/Audio/Transcript files.
+- Refactored `src/data/ets-exams.ts`:
+  - Added new `EtsTest` type with `id`, `label`, `files` (listening/reading/audio/transcript).
+  - Updated `EtsResource` to have `tests: EtsTest[]` array instead of single `files` object.
+  - Added `testFiles(year, testNum)` helper function for generating standardized file paths.
+  - Configured ETS 2024 with 10 tests (Test 1 → Test 10), each pointing to `/ets-exams/2024/test-N/`.
+- Created 10 folders: `public/ets-exams/2024/test-1/` through `test-10/` for users to upload files.
+- Rewrote `src/components/practice/ets-exam-modal.tsx`:
+  - Added Test selector (Select dropdown) at top of modal — shows "Chọn Test (10 tests có sẵn)".
+  - File status check now re-runs when selected test changes.
+  - Audio player + PDF tabs + download buttons all reflect the selected test.
+  - Warning message shows correct test number (e.g., "File Test 5 chưa được upload vào web") and correct folder path (`public/ets-exams/2024/test-5/`).
+  - PDF viewer titles include test label (e.g., "Đề Listening Test 5 - ETS 2024").
+- Updated `src/components/practice/practice-list.tsx`:
+  - ETS cards now show "10 tests" badge.
+  - Added test list preview (Test 1, Test 2, ... +4) showing first 6 tests + overflow count.
+- Updated `public/ets-exams/README.md` with new folder structure documentation:
+  - `public/ets-exams/<year>/test-N/` for each test.
+  - Step-by-step guide: download from Drive (TEST 1 LC.pdf → listening.pdf, etc.) → copy to test folder → update config.
+- Verified with Agent Browser: card shows "10 tests", modal opens with Test selector dropdown (all 10 tests visible), switching to Test 5 updates warning message + PDF titles correctly. Zero console errors. Lint passes.
+
+Stage Summary:
+- ETS exam feature now supports multiple tests per ETS set (10 tests for ETS 2024).
+- Architecture: `public/ets-exams/<year>/test-N/{listening,reading,audio,transcript}` + config in `ets-exams.ts`.
+- UI: dropdown selector in modal + test preview badges on card.
+- Auto-detection: file existence checked per-test, warning shows correct test number + folder path.
+- Ready for user to upload 40 files (4 files × 10 tests) to fully populate ETS 2024.

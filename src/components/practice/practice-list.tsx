@@ -184,6 +184,9 @@ export function PracticeList() {
                       </div>
                       <div className="flex gap-1">
                         <Badge variant="secondary" className="gap-1 text-[10px]">
+                          <Layers className="h-3 w-3" /> {exam.tests.length} tests
+                        </Badge>
+                        <Badge variant="secondary" className="gap-1 text-[10px]">
                           <Clock className="h-3 w-3" /> {exam.durationMin}'
                         </Badge>
                         <Badge variant="outline" className="text-[10px]">
@@ -198,6 +201,21 @@ export function PracticeList() {
                     <CardDescription className="text-xs leading-relaxed line-clamp-3">{exam.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
+                    {/* Test list preview */}
+                    {exam.tests.length > 1 && (
+                      <div className="flex flex-wrap gap-1">
+                        {exam.tests.slice(0, 6).map((t) => (
+                          <Badge key={t.id} variant="outline" className="text-[10px] py-0.5">
+                            {t.label}
+                          </Badge>
+                        ))}
+                        {exam.tests.length > 6 && (
+                          <Badge variant="outline" className="text-[10px] py-0.5">
+                            +{exam.tests.length - 6}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
                     {/* Resource chips */}
                     <div className="flex flex-wrap gap-1.5">
                       <Badge variant="secondary" className="gap-1 text-[10px]"><Headphones className="h-3 w-3" /> Listening</Badge>

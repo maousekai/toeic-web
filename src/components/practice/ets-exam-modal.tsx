@@ -8,10 +8,13 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import {
   FileText, Headphones, Volume2, Pause, Play, Download, ExternalLink,
-  BookOpen, CheckCircle2, Clock, AlertCircle,
+  BookOpen, CheckCircle2, AlertCircle, ListChecks,
 } from 'lucide-react'
-import type { EtsResource } from '@/data/ets-exams'
+import type { EtsResource, EtsTest } from '@/data/ets-exams'
 
 async function checkFile(key: string, path: string): Promise<[string, 'ok' | 'missing']> {
   try {
@@ -31,32 +34,42 @@ export function EtsExamModal({
   open: boolean
   onOpenChange: (v: boolean) => void
 }) {
+  const [selectedTestId, setSelectedTestId] = useState<string>('')
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [audioTime, setAudioTime] = useState(0)
   const [audioDuration, setAudioDuration] = useState(0)
   const audioRef = useRef<HTMLAudioElement>(null)
+  const [fileStatus, setFileStatus] = useState<Record<string, 'loading' | 'ok' | 'missing'>>({})
 
+  // Reset khi đổi exam
   useEffect(() => {
+    if (exam && exam.tests.length > 0) {
+      setSelectedTestId(exam.tests[0].id)
+    }
     setAudioPlaying(false)
     setAudioTime(0)
+    setFileStatus({})
   }, [exam?.id])
 
-  // Check if files exist (404 = file chưa upload)
-  const [fileStatus, setFileStatus] = useState<Record<string, 'loading' | 'ok' | 'missing'>>({})
+  // Check file khi đổi test
+  const selectedTest: EtsTest | undefined = exam?.tests.find((t) => t.id === selectedTestId)
   useEffect(() => {
-    if (!exam) return
+    if (!selectedTest) return
+    setFileStatus({})
+    setAudioPlaying(false)
+    setAudioTime(0)
     const checks: Promise<[string, 'ok' | 'missing']>[] = []
-    const files = exam.files
-    if (files.listening) checks.push(checkFile('listening', files.listening))
-    if (files.reading) checks.push(checkFile('reading', files.reading))
-    if (files.audio) checks.push(checkFile('audio', files.audio))
-    if (files.transcript) checks.push(checkFile('transcript', files.transcript))
+    const f = selectedTest.files
+    if (f.listening) checks.push(checkFile('listening', f.listening))
+    if (f.reading) checks.push(checkFile('reading', f.reading))
+    if (f.audio) checks.push(checkFile('audio', f.audio))
+    if (f.transcript) checks.push(checkFile('transcript', f.transcript))
     Promise.all(checks).then((results) => {
       const status: Record<string, 'ok' | 'missing'> = {}
       results.forEach(([key, s]) => (status[key] = s))
       setFileStatus(status)
     })
-  }, [exam])
+  }, [selectedTestId])
 
   const toggleAudio = () => {
     if (!audioRef.current) return
@@ -84,8 +97,9 @@ export function EtsExamModal({
 
   if (!exam) return null
 
-  const hasFiles = fileStatus.listening === 'ok' || fileStatus.reading === 'ok' || fileStatus.audio === 'ok' || fileStatus.transcript === 'ok'
-  const allMissing = hasFiles === false && Object.keys(fileStatus).length > 0
+  const hasAnyFile = fileStatus.listening === 'ok' || fileStatus.reading === 'ok' || fileStatus.audio === 'ok' || fileStatus.transcript === 'ok'
+  const allMissing = !hasAnyFile && Object.keys(fileStatus).length > 0
+  const files = selectedTest?.files || {}
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -98,30 +112,61 @@ export function EtsExamModal({
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-foreground/20 backdrop-blur">
                 <FileText className="h-6 w-6" />
               </div>
-              <div>
+              <div className="flex-1">
                 <DialogTitle className="text-xl">{exam.title}</DialogTitle>
                 <DialogDescription className="text-primary-foreground/80">
-                  ETS {exam.year} · {exam.durationMin} phút · {exam.difficulty === 'easy' ? 'Dễ' : exam.difficulty === 'medium' ? 'Trung bình' : 'Khó'}
+                  ETS {exam.year} · {exam.tests.length} tests · {exam.durationMin} phút/test · {exam.difficulty === 'easy' ? 'Dễ' : exam.difficulty === 'medium' ? 'Trung bình' : 'Khó'}
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
         </div>
 
-        <div className="max-h-[calc(90vh-120px)] overflow-y-auto scrollbar-thin p-6">
-          {/* Nếu chưa có file → hiển thị hướng dẫn + link Drive */}
+        <div className="max-h-[calc(90vh-140px)] overflow-y-auto scrollbar-thin p-6">
+          {/* Test selector */}
+          {exam.tests.length > 1 && (
+            <div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
+              <ListChecks className="h-5 w-5 shrink-0 text-amber-600" />
+              <div className="flex-1">
+                <label className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                  Chọn Test ({exam.tests.length} tests có sẵn)
+                </label>
+                <Select value={selectedTestId} onValueChange={setSelectedTestId}>
+                  <SelectTrigger className="mt-1 h-9 bg-background">
+                    <SelectValue placeholder="Chọn test..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {exam.tests.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {/* Warning nếu chưa có file */}
           {allMissing && (
             <div className="mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-5">
               <div className="flex items-start gap-3">
                 <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-amber-700 dark:text-amber-400">File đề chưa được upload vào web</h3>
+                  <h3 className="font-semibold text-amber-700 dark:text-amber-400">
+                    File {selectedTest?.label} chưa được upload vào web
+                  </h3>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Bộ đề này hiện chỉ có trên Google Drive. Bạn có 2 cách:
                   </p>
                   <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
                     <li><strong>Mở Google Drive</strong> để tải file về máy rồi làm</li>
-                    <li><strong>Admin upload file</strong> vào folder <code className="rounded bg-secondary px-1">public/ets-exams/{exam.year}/</code> để xem trực tiếp trên web</li>
+                    <li>
+                      <strong>Admin upload file</strong> vào folder{' '}
+                      <code className="rounded bg-secondary px-1">
+                        public/ets-exams/{exam.year}/{selectedTest?.id}/
+                      </code>
+                    </li>
                   </ol>
                   {exam.driveUrl && (
                     <Button className="mt-3" size="sm" asChild>
@@ -142,7 +187,7 @@ export function EtsExamModal({
             <div className="mb-4 rounded-xl border border-teal-500/30 bg-teal-500/5 p-4">
               <div className="mb-2 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-medium text-teal-700 dark:text-teal-300">
-                  <Headphones className="h-4 w-4" /> Audio Listening
+                  <Headphones className="h-4 w-4" /> Audio Listening {selectedTest?.label}
                 </div>
                 <Badge variant="secondary" className="gap-1">
                   <Volume2 className="h-3 w-3" /> ETS {exam.year}
@@ -150,7 +195,7 @@ export function EtsExamModal({
               </div>
               <audio
                 ref={audioRef}
-                src={exam.files.audio}
+                src={files.audio}
                 onTimeUpdate={(e) => setAudioTime((e.target as HTMLAudioElement).currentTime)}
                 onLoadedMetadata={(e) => setAudioDuration((e.target as HTMLAudioElement).duration)}
                 onEnded={() => setAudioPlaying(false)}
@@ -182,7 +227,7 @@ export function EtsExamModal({
             </div>
           )}
 
-          {/* Tabs hiển thị 3 PDF */}
+          {/* Tabs PDF */}
           <Tabs defaultValue="listening">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="listening" disabled={fileStatus.listening !== 'ok'} className="gap-1.5 text-xs">
@@ -197,32 +242,34 @@ export function EtsExamModal({
             </TabsList>
 
             <TabsContent value="listening" className="mt-4">
-              <PdfViewer src={exam.files.listening!} title={`Đề Listening ETS ${exam.year}`} />
+              <PdfViewer src={files.listening!} title={`Đề Listening ${selectedTest?.label} - ETS ${exam.year}`} />
             </TabsContent>
             <TabsContent value="reading" className="mt-4">
-              <PdfViewer src={exam.files.reading!} title={`Đề Reading ETS ${exam.year}`} />
+              <PdfViewer src={files.reading!} title={`Đề Reading ${selectedTest?.label} - ETS ${exam.year}`} />
             </TabsContent>
             <TabsContent value="transcript" className="mt-4">
-              <PdfViewer src={exam.files.transcript!} title={`Đáp án + Transcript ETS ${exam.year}`} />
+              <PdfViewer src={files.transcript!} title={`Đáp án + Transcript ${selectedTest?.label} - ETS ${exam.year}`} />
             </TabsContent>
           </Tabs>
 
           {/* Download + Drive link */}
           <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border/60 pt-4">
-            <span className="text-xs text-muted-foreground">Tải về:</span>
+            <span className="text-xs text-muted-foreground">
+              Tải {selectedTest?.label}:
+            </span>
             {fileStatus.listening === 'ok' && (
               <Button size="sm" variant="outline" asChild>
-                <a href={exam.files.listening} download><Download className="mr-1 h-3.5 w-3.5" /> Listening</a>
+                <a href={files.listening} download><Download className="mr-1 h-3.5 w-3.5" /> Listening</a>
               </Button>
             )}
             {fileStatus.reading === 'ok' && (
               <Button size="sm" variant="outline" asChild>
-                <a href={exam.files.reading} download><Download className="mr-1 h-3.5 w-3.5" /> Reading</a>
+                <a href={files.reading} download><Download className="mr-1 h-3.5 w-3.5" /> Reading</a>
               </Button>
             )}
             {fileStatus.transcript === 'ok' && (
               <Button size="sm" variant="outline" asChild>
-                <a href={exam.files.transcript} download><Download className="mr-1 h-3.5 w-3.5" /> Đáp án</a>
+                <a href={files.transcript} download><Download className="mr-1 h-3.5 w-3.5" /> Đáp án</a>
               </Button>
             )}
             {exam.driveUrl && (
