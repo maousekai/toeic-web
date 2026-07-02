@@ -119,3 +119,35 @@ Stage Summary:
 - Exam mode mimics real TOEIC: no transcript, no audio replay, strict timer, auto-submit, 5-min warning, hidden answered state.
 - UI in Vietnamese for exam mode (nội quy, nộp bài, hết giờ) to match target audience.
 - Database restored with all content after re-seed.
+
+---
+Task ID: 6
+Agent: main (Z.ai Code)
+Task: Add ETS TOEIC exam section to Practice page — integrate real ETS exam files from Google Drive.
+
+Work Log:
+- Analyzed uploaded screenshot: showed Google Drive folder "ĐỀ ETS 2024" with 4 files (AUDIO, ĐÁP ÁN + TRANSCRIPT, ETS 2024 - LISTENING, ETS 2024 - READING).
+- Created `public/ets-exams/2024/` folder for users to upload ETS exam files (PDFs + audio).
+- Created `src/data/ets-exams.ts` — config file defining ETS exam resources (id, year, title, description, driveUrl, file paths, durationMin, difficulty). Includes example for 2024 + commented template for adding more years.
+- Built `src/components/practice/ets-exam-modal.tsx`:
+  - Modal with gradient header showing exam title + year + duration + difficulty.
+  - Auto-detects if files exist in public/ (HEAD request) → if missing, shows warning + 2 options: open Google Drive / admin upload.
+  - Custom audio player (play/pause, seek bar, time display) for listening audio.
+  - Tabs: Listening / Reading / Đáp án — each renders PDF in iframe viewer.
+  - Download buttons for each file.
+  - "Mở Google Drive" external link button.
+- Updated `src/components/practice/practice-list.tsx`:
+  - Added new section "📚 Đề ETS TOEIC (từ Google Drive)" between Exam Mode and Practice Mode.
+  - Amber/orange themed cards for ETS exams.
+  - Each card shows: title, year badge, duration, difficulty, resource chips (Listening/Reading/Audio/Đáp án), "Xem đề" button + Drive link button.
+  - Click "Xem đề" → opens EtsExamModal.
+- Created `public/ets-exams/README.md` — detailed Vietnamese guide for adding new ETS exam sets (folder structure, file naming, config update, restart).
+- Fixed lint: moved `checkFile` function outside component (react-hooks/immutability rule).
+- Verified with Agent Browser: ETS section appears in Practice page, "Đế ETS TOEIC 2024" card visible, clicking "Xem đề" opens modal with warning (since files not yet uploaded), Google Drive link works, tabs disabled appropriately. Zero console errors. Lint passes.
+
+Stage Summary:
+- New "Đề ETS TOEIC" feature complete — users can view real ETS exam PDFs + listen to audio + download answers directly on the web.
+- Architecture: PDFs and audio stored in `public/ets-exams/<year>/`, config in `src/data/ets-exams.ts`, UI auto-adapts (warning when files missing, full viewer when present).
+- Vietnamese UI for target audience (hướng dẫn, nút "Xem đề", "Mở Google Drive", etc.).
+- README.md in public/ets-exams/ provides clear guide for team members to add more ETS exam sets.
+- Default config has 1 exam (ETS 2024) with placeholder Google Drive URL — admin needs to replace with real folder ID and/or upload actual files.

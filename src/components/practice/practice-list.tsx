@@ -1,7 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Clock, FileText, Headphones, Layers, Play, ArrowRight, Trophy, AlertTriangle, ShieldCheck, VolumeX, EyeOff, Timer } from 'lucide-react'
+import {
+  Clock, FileText, Headphones, Layers, Play, ArrowRight, Trophy, AlertTriangle,
+  ShieldCheck, VolumeX, EyeOff, Timer, BookOpen, ExternalLink, CheckCircle2,
+} from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,6 +17,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { motion } from 'framer-motion'
+import { ETS_EXAMS, type EtsResource } from '@/data/ets-exams'
+import { EtsExamModal } from './ets-exam-modal'
 
 type TestSet = {
   id: string
@@ -41,6 +46,7 @@ export function PracticeList() {
   const [tests, setTests] = useState<TestSet[]>([])
   const [loading, setLoading] = useState(true)
   const [examDialog, setExamDialog] = useState<TestSet | null>(null)
+  const [etsExam, setEtsExam] = useState<EtsResource | null>(null)
 
   useEffect(() => {
     fetch('/api/tests')
@@ -139,6 +145,77 @@ export function PracticeList() {
                       <Button size="sm" className="bg-rose-600 hover:bg-rose-700" onClick={() => startTest(t)}>
                         <Trophy className="mr-1 h-3.5 w-3.5" /> Vào phòng thi
                       </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ETS EXAMS — Section giữa (đề thật từ Google Drive) */}
+      {ETS_EXAMS.length > 0 && (
+        <div className="mb-10 mt-10">
+          <div className="mb-4 flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600">
+              <BookOpen className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">📚 Đề ETS TOEIC (từ Google Drive)</h2>
+              <p className="text-xs text-muted-foreground">Bộ đề ETS chính thức — xem đề + nghe audio + tải đáp án ngay trên web</p>
+            </div>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {ETS_EXAMS.map((exam, i) => (
+              <motion.div
+                key={exam.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: i * 0.05 }}
+              >
+                <Card className="group relative overflow-hidden border-amber-500/30 transition-all hover:-translate-y-1 hover:shadow-lg">
+                  <div className="absolute inset-0 -z-10 bg-gradient-to-br from-amber-500/5 via-orange-500/5 to-transparent" />
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <div className="flex gap-1">
+                        <Badge variant="secondary" className="gap-1 text-[10px]">
+                          <Clock className="h-3 w-3" /> {exam.durationMin}'
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px]">
+                          {exam.difficulty === 'easy' ? 'Dễ' : exam.difficulty === 'medium' ? 'TB' : 'Khó'}
+                        </Badge>
+                      </div>
+                    </div>
+                    <CardTitle className="mt-3 flex items-center gap-2 text-base">
+                      {exam.title}
+                      <Badge variant="outline" className="text-[10px]">ETS {exam.year}</Badge>
+                    </CardTitle>
+                    <CardDescription className="text-xs leading-relaxed line-clamp-3">{exam.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {/* Resource chips */}
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge variant="secondary" className="gap-1 text-[10px]"><Headphones className="h-3 w-3" /> Listening</Badge>
+                      <Badge variant="secondary" className="gap-1 text-[10px]"><FileText className="h-3 w-3" /> Reading</Badge>
+                      <Badge variant="secondary" className="gap-1 text-[10px]"><Layers className="h-3 w-3" /> Audio</Badge>
+                      <Badge variant="secondary" className="gap-1 text-[10px]"><CheckCircle2 className="h-3 w-3" /> Đáp án</Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" className="flex-1 bg-amber-600 hover:bg-amber-700" onClick={() => setEtsExam(exam)}>
+                        <BookOpen className="mr-1 h-3.5 w-3.5" /> Xem đề
+                      </Button>
+                      {exam.driveUrl && (
+                        <Button size="sm" variant="outline" asChild>
+                          <a href={exam.driveUrl} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -265,6 +342,13 @@ export function PracticeList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ETS EXAM MODAL — Xem đề + audio + đáp án */}
+      <EtsExamModal
+        exam={etsExam}
+        open={!!etsExam}
+        onOpenChange={(v) => !v && setEtsExam(null)}
+      />
     </div>
   )
 }
