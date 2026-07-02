@@ -301,3 +301,40 @@ Stage Summary:
   - Callout boxes for tips/traps
   - Exercise section prominently highlighted with gradient + border
 - All grammar content (10 lessons) automatically benefits from new styling since they all use the same Markdown component.
+
+---
+Task ID: 11
+Agent: main (Z.ai Code)
+Task: Restructure Vocabulary into 7 CEFR levels (A0-C2) with ~100 words each.
+
+Work Log:
+- Updated Prisma schema: added `level String @default("A1")` field to Vocab model (CEFR: A0/A1/A2/B1/B2/C1/C2).
+- Ran `bun run db:push` to sync schema.
+- Created `scripts/seed-vocab-levels.ts` with ~700 vocabulary words across 7 CEFR levels:
+  - **A0 (104 từ)** — Pre-Beginner: số, màu, ngày, gia đình, đồ vật cơ bản, động từ thường (one, red, mother, eat, go...)
+  - **A1 (102 từ)** — Beginner: giao tiếp cơ bản, đời sống hàng ngày (family, teacher, lunch, buy, sell...)
+  - **A2 (105 từ)** — Elementary: du lịch, mua sắm, giao tiếp xã hội (airport, ticket, hotel, weather, season...)
+  - **B1 (107 từ)** — Intermediate (TOEIC 400-600): business English cơ bản (meeting, deadline, colleague, manager, report...)
+  - **B2 (109 từ)** — Upper-Intermediate (TOEIC 600-750): business nâng cao (negotiate, contract, revenue, strategy, feasible...)
+  - **C1 (106 từ)** — Advanced (TOEIC 750-900): business/academic nâng cao (consolidate, lucrative, pragmatic, scrutinize, implement...)
+  - **C2 (109 từ)** — Mastery (TOEIC 900+): từ vựng chuyên sâu, trang trọng (acquiesce, cogent, ephemeral, meticulous, ubiquitous...)
+  Each word has: word, phonetic, partOfSpeech, definition (Vietnamese), example (English), translation (Vietnamese), category, level, difficulty.
+- Created API `/api/content/vocab/counts` — returns count per level for UI display.
+- Updated `/api/content/vocab` — added `level` query param for filtering.
+- Rewrote `src/components/learn/vocab-flashcards.tsx` with beautiful new design:
+  - **Level selector**: 7 cards (A0-C2) in responsive grid, each showing level code + word count + Vietnamese name. Active level highlighted with gradient.
+  - **Selected level info card**: shows level code (gradient text), Vietnamese name, English name, description (e.g., "TOEIC 600-750 · Đàm phán, tài chính"), word count, mastered count.
+  - **Progress bar**: shows current position (Câu X/Y) + percentage.
+  - **Flip card**: larger (h-80), cleaner design, level badge on front, definition + translation + example on back.
+  - **Spaced repetition**: "Chưa thuộc" / "Đã thuộc" buttons, box system (0-5), stored in localStorage.
+  - **TTS pronunciation**: for both word and example sentence.
+  - **Color-coded levels**: each CEFR level has its own color (slate→emerald→teal→cyan→amber→orange→rose).
+- Verified with Agent Browser: all 7 levels visible (A0-C2 with correct counts), clicking B2 loads B2 vocab ("able" — có khả năng), flip card works, progress bar shows, no errors.
+- Lint passes. Zero console errors.
+
+Stage Summary:
+- Vocabulary feature completely restructured into 7 CEFR levels with ~100 words each (742 total).
+- Each level color-coded and described with TOEIC score range (B1=400-600, B2=600-750, C1=750-900, C2=900+).
+- Beautiful UI with level selector cards, progress tracking, spaced repetition.
+- All vocab has Vietnamese definitions + translations + English examples + phonetics.
+- Old 32 vocabs replaced with 742 new vocabs organized by proficiency level.
