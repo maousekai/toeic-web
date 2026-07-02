@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ArrowLeft, BookOpen, Volume2, Clock, Tag } from 'lucide-react'
+import { ArrowLeft, BookOpen, Volume2, Clock, Tag, PenLine } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useRouter } from '@/lib/router'
 import { Markdown } from '@/components/site/markdown'
 import { Skeleton } from '@/components/ui/skeleton'
+import { GrammarExercise } from './grammar-exercise'
 
 type Lesson = {
   id: string
@@ -99,6 +100,20 @@ export function GrammarDetail({ slug }: { slug: string }) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Exercise Section — 20 câu bài tập */}
+      <div className="mt-6">
+        <div className="mb-3 flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <PenLine className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold">Bài tập thực hành</h2>
+            <p className="text-xs text-muted-foreground">20 câu trắc nghiệm — làm để kiểm tra hiểu bài</p>
+          </div>
+        </div>
+        <GrammarExercise slug={slug} />
+      </div>
     </div>
   )
 }

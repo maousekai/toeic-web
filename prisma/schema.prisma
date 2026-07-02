@@ -59,6 +59,18 @@ model GrammarLesson {
   createdAt DateTime @default(now())
 }
 
+// Grammar exercise (multiple choice questions for each lesson)
+model GrammarExercise {
+  id          String   @id @default(cuid())
+  lessonId    String   // references GrammarLesson.id (not FK, just logical link)
+  question    String
+  options     String   // JSON array of 4 strings
+  answer      Int      // 0-3 correct index
+  explanation String   // detailed Vietnamese explanation
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
 // Strategy / tip article
 model Strategy {
   id        String   @id @default(cuid())

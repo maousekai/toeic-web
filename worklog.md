@@ -226,3 +226,37 @@ Stage Summary:
 - Signal words highlighted with Vietnamese translations (e.g., "since + mốc thời gian", "for + khoảng thời gian").
 - TOEIC-specific tips and traps included for each topic (e.g., "ago" never goes with present perfect, "must not" ≠ "don't have to").
 - Database updated, ready for use.
+
+---
+Task ID: 9
+Agent: main (Z.ai Code)
+Task: Add 20 interactive grammar exercises per lesson (200 total) with detailed Vietnamese explanations.
+
+Work Log:
+- Added `GrammarExercise` model to Prisma schema (id, lessonId, question, options JSON, answer, explanation, order).
+- Ran `bun run db:push` to sync schema.
+- Created `scripts/seed-exercises.ts` with 200 exercises (10 lessons × 20 questions each):
+  1. Present Simple vs. Present Continuous — 20 questions
+  2. Present Perfect & Past Simple — 20 questions
+  3. Conditionals — 20 questions
+  4. Passive Voice — 20 questions
+  5. Articles — 20 questions
+  6. Prepositions — 20 questions
+  7. Gerunds vs. Infinitives — 20 questions
+  8. Relative Clauses — 20 questions
+  9. Comparatives & Superlatives — 20 questions
+  10. Modal Verbs — 20 questions
+  Each exercise has: question, 4 options, correct answer, detailed Vietnamese explanation (e.g., "Dấu hiệu 'every day' → hiện tại đơn. Chủ ngữ 'The store' số ít → thêm 's': opens.").
+- Created API `/api/content/grammar/[slug]/exercises` — GET returns all exercises for a lesson, sorted by order.
+- Built `src/components/learn/grammar-exercise.tsx` — interactive exercise component with 2 phases:
+  - **Doing phase**: One question at a time, progress bar at top (clickable to jump), 4 option buttons, "Câu trước/Câu tiếp" navigation, "Nộp bài" on last question, submit confirmation dialog.
+  - **Submitted phase**: Score card (% + correct count + message), full review of all 20 questions with correct/incorrect/unanswered badges, color-coded options (green=correct, red=wrong), detailed explanation per question, "Làm lại" button.
+- Updated `src/components/learn/grammar-detail.tsx` — added "Bài tập thực hành" section at bottom of each grammar lesson page.
+- Restarted dev server to pick up regenerated Prisma client (GrammarExercise model).
+- Verified with Agent Browser: opened Present Simple lesson → exercise section visible → answered 2 questions → navigated to Q20 → submitted → results showed "2/20 câu đúng · 10%" → all 20 questions reviewed with explanations → "Làm lại" button works. Zero console errors. Lint passes.
+
+Stage Summary:
+- 200 grammar exercises added across 10 lessons (20 per lesson).
+- Interactive UI: one-question-at-a-time flow with progress bar, submit dialog, score display, full review with explanations.
+- All explanations in Vietnamese, tied to signal words and TOEIC tips from the lesson content.
+- Database: GrammarExercise table populated, API endpoint live, component integrated into grammar detail page.
