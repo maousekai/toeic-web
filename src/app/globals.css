@@ -192,14 +192,189 @@
   animation: pulse-ring 2s infinite;
 }
 
-/* Markdown prose for AI / lesson content */
-.prose-toeic h1 { font-size: 1.5rem; font-weight: 700; margin: 1rem 0 0.5rem; }
-.prose-toeic h2 { font-size: 1.25rem; font-weight: 700; margin: 1rem 0 0.5rem; }
-.prose-toeic h3 { font-size: 1.1rem; font-weight: 600; margin: 0.75rem 0 0.5rem; }
-.prose-toeic p { margin: 0.5rem 0; line-height: 1.7; }
-.prose-toeic ul { list-style: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
-.prose-toeic ol { list-style: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
-.prose-toeic li { margin: 0.25rem 0; line-height: 1.6; }
-.prose-toeic strong { font-weight: 700; }
-.prose-toeic code { background: var(--muted); padding: 0.1rem 0.35rem; border-radius: 0.25rem; font-size: 0.9em; }
-.prose-toeic blockquote { border-left: 3px solid var(--primary); padding-left: 1rem; color: var(--muted-foreground); margin: 0.75rem 0; }
+/* ============================================================
+   MARKDOWN PROSE — Dành cho content grammar, AI tutor, etc.
+   Thiết kế cho dễ đọc, có điểm nhấn màu, không rối mắt.
+   ============================================================ */
+.prose-toeic {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--foreground);
+}
+
+/* Headings — có margin lớn hơn, có line dưới cho h2 */
+.prose-toeic h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 1.5rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--border);
+  color: var(--foreground);
+}
+.prose-toeic h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 1.75rem 0 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border);
+  color: var(--foreground);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.prose-toeic h2:first-child {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+.prose-toeic h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.5rem;
+  color: var(--primary);
+}
+
+/* Paragraphs — line-height thoáng */
+.prose-toeic p {
+  margin: 0.75rem 0;
+  line-height: 1.85;
+}
+
+/* Lists — khoảng cách giữa các item thoáng hơn */
+.prose-toeic ul,
+.prose-toeic ol {
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+}
+.prose-toeic ul { list-style: none; padding-left: 0; }
+.prose-toeic ul li {
+  position: relative;
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+  line-height: 1.75;
+}
+.prose-toeic ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.7rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  opacity: 0.6;
+}
+.prose-toeic ol { list-style: decimal; }
+.prose-toeic ol li {
+  margin: 0.5rem 0;
+  line-height: 1.75;
+  padding-left: 0.25rem;
+}
+
+/* Strong — in đậm + màu nhấn nhẹ */
+.prose-toeic strong {
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+/* Em (nghĩa tiếng Việt) — màu xám, italic */
+.prose-toeic em {
+  color: var(--muted-foreground);
+  font-style: italic;
+  font-size: 0.92em;
+}
+
+/* Inline code — công thức ngữ pháp */
+.prose-toeic code {
+  background: var(--muted);
+  color: var(--foreground);
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.35rem;
+  font-size: 0.875em;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-weight: 500;
+  border: 1px solid var(--border);
+}
+
+/* Block code */
+.prose-toeic pre {
+  background: var(--muted);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+  border: 1px solid var(--border);
+}
+.prose-toeic pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+/* Blockquote — callout đẹp */
+.prose-toeic blockquote {
+  border-left: 4px solid var(--primary);
+  background: color-mix(in oklch, var(--primary) 6%, transparent);
+  padding: 0.75rem 1rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+  margin: 1rem 0;
+  color: var(--foreground);
+  font-style: normal;
+}
+.prose-toeic blockquote p {
+  margin: 0.25rem 0;
+}
+
+/* Table — đẹp, có header background, striped rows, responsive */
+.prose-toeic table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  display: block;
+  overflow-x: auto;
+}
+.prose-toeic thead {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.prose-toeic th {
+  padding: 0.625rem 0.875rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+.prose-toeic td {
+  padding: 0.625rem 0.875rem;
+  border-top: 1px solid var(--border);
+  line-height: 1.6;
+  vertical-align: top;
+}
+.prose-toeic tbody tr:nth-child(even) {
+  background: color-mix(in oklch, var(--muted) 50%, transparent);
+}
+.prose-toeic tbody tr:hover {
+  background: var(--accent);
+}
+
+/* Horizontal rule — separator đẹp */
+.prose-toeic hr {
+  border: none;
+  border-top: 1px dashed var(--border);
+  margin: 1.5rem 0;
+}
+
+/* Links */
+.prose-toeic a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-toeic a:hover {
+  opacity: 0.8;
+}
+

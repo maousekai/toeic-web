@@ -260,3 +260,44 @@ Stage Summary:
 - Interactive UI: one-question-at-a-time flow with progress bar, submit dialog, score display, full review with explanations.
 - All explanations in Vietnamese, tied to signal words and TOEIC tips from the lesson content.
 - Database: GrammarExercise table populated, API endpoint live, component integrated into grammar detail page.
+
+---
+Task ID: 10
+Agent: main (Z.ai Code)
+Task: Redesign grammar detail page CSS for better readability — less cluttered, better spacing, color accents.
+
+Work Log:
+- Analyzed user's screenshot of grammar detail page — identified problems: dense text, no spacing between sections, long formula lines, no color highlights, hard to scan.
+- Rewrote `.prose-toeic` CSS in globals.css with major improvements:
+  - **Font size**: 0.95rem → 1rem (larger, easier to read)
+  - **Line height**: 1.7 → 1.85 (more breathing room)
+  - **H2 (section titles like "Khái niệm", "Cấu trúc")**: Added dashed top border + larger margin (1.75rem) to clearly separate sections. First h2 has no border.
+  - **H3 (subsections)**: Now uses primary color for visual hierarchy
+  - **Bullet lists**: Custom bullet points (small primary-colored dots) instead of default disc, more padding between items (0.5rem margin)
+  - **Ordered lists**: Better spacing for numbered examples
+  - **Em (Italian/Vietnamese translations)**: Muted color + smaller font (0.92em) + italic — clearly distinguishes Vietnamese translations from English content
+  - **Inline code (formulas like "S + am/is/are + V-ing")**: Now has border + background + monospace font — stands out as a formula
+  - **Block code**: Styled pre blocks with border + background
+  - **Blockquote (callouts)**: Left border + tinted background (color-mix) + rounded corners — looks like a callout box
+  - **Tables**: Header with primary background + primary-foreground text, striped rows (even rows tinted), hover effect, horizontal scroll on mobile, rounded corners
+  - **HR**: Dashed line separator
+  - **Links**: Primary color + underline offset
+- Updated grammar-detail.tsx layout:
+  - Header card with subtle gradient (primary/8 → teal/5 → transparent)
+  - "Tất cả bài ngữ pháp" back button (Vietnamese)
+  - Title + summary in header card with badges (category + level)
+  - Content card with max-w-3xl centered + larger padding (p-6 sm:p-8) for readability
+  - Example section renamed "Ví dụ minh họa" (Vietnamese)
+  - Exercise section: now wrapped in highlighted container with border-2 primary/30 + gradient background + larger icon (12x12 with shadow) to make it stand out
+- Verified with VLM analysis: redesign significantly improved readability, clear section separation, good color accents (green table header, callout boxes), clear formulas/tables/bullets. Minor tweaks: increased font size 0.95→1rem, made exercise section more prominent.
+- Lint passes. Zero console errors.
+
+Stage Summary:
+- Grammar detail page now much more readable:
+  - Clear visual hierarchy with dashed section separators
+  - Vietnamese translations visually distinguished (muted italic)
+  - Formulas highlighted as code blocks with border + background
+  - Tables with colored headers + striped rows
+  - Callout boxes for tips/traps
+  - Exercise section prominently highlighted with gradient + border
+- All grammar content (10 lessons) automatically benefits from new styling since they all use the same Markdown component.

@@ -68,32 +68,40 @@ export function GrammarDetail({ slug }: { slug: string }) {
   return (
     <div className="space-y-6">
       <Button variant="ghost" size="sm" onClick={() => navigate({ name: 'grammar' })} className="gap-1.5">
-        <ArrowLeft className="h-4 w-4" /> All grammar lessons
+        <ArrowLeft className="h-4 w-4" /> Tất cả bài ngữ pháp
       </Button>
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-wrap items-center gap-2">
+      {/* Header card với gradient nhẹ */}
+      <Card className="overflow-hidden border-primary/20">
+        <div className="bg-gradient-to-br from-primary/8 via-teal-500/5 to-transparent p-6">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
             <Badge variant="secondary" className="gap-1"><Tag className="h-3 w-3" /> {lesson.category}</Badge>
             <Badge variant="outline" className="gap-1"><Clock className="h-3 w-3" /> {lesson.level}</Badge>
           </div>
-          <CardTitle className="mt-2 text-2xl">{lesson.title}</CardTitle>
-          <p className="text-sm text-muted-foreground">{lesson.summary}</p>
-        </CardHeader>
-        <CardContent>
-          <Markdown content={lesson.content} />
+          <h1 className="text-2xl font-bold tracking-tight">{lesson.title}</h1>
+          <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{lesson.summary}</p>
+        </div>
+      </Card>
+
+      {/* Content chính — max-width cho dễ đọc */}
+      <Card>
+        <CardContent className="p-6 sm:p-8">
+          <div className="max-w-3xl mx-auto">
+            <Markdown content={lesson.content} />
+          </div>
         </CardContent>
       </Card>
 
+      {/* Example callout */}
       <Card className="border-primary/30 bg-primary/5">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <BookOpen className="h-4 w-4 text-primary" /> Example
+            <BookOpen className="h-4 w-4 text-primary" /> Ví dụ minh họa
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-start gap-3">
-            <p className="flex-1 text-base italic">{lesson.example}</p>
+            <p className="flex-1 text-base italic leading-relaxed">{lesson.example}</p>
             <Button variant="ghost" size="icon" onClick={() => speak(lesson.example)} aria-label="Listen">
               <Volume2 className="h-5 w-5" />
             </Button>
@@ -102,13 +110,13 @@ export function GrammarDetail({ slug }: { slug: string }) {
       </Card>
 
       {/* Exercise Section — 20 câu bài tập */}
-      <div className="mt-6">
-        <div className="mb-3 flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <PenLine className="h-4 w-4" />
+      <div className="mt-8 rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-5">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md">
+            <PenLine className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-lg font-bold">Bài tập thực hành</h2>
+            <h2 className="text-xl font-bold">Bài tập thực hành</h2>
             <p className="text-xs text-muted-foreground">20 câu trắc nghiệm — làm để kiểm tra hiểu bài</p>
           </div>
         </div>
