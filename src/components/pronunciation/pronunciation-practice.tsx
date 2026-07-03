@@ -1,39 +1,28 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import {
-  Volume2, Mic, Square, Play, Pause, RotateCcw, Sparkles, ChevronLeft, ChevronRight,
-  Lightbulb, Target, CheckCircle2, AlertCircle, Loader2, Waves,
+  Volume2, Mic, Square, RotateCcw, Sparkles, ChevronLeft, ChevronRight,
+  Lightbulb, Loader2, Mic2, Smile,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Markdown } from '@/components/site/markdown'
 import { useToast } from '@/hooks/use-toast'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import {
-  PRONUNCIATION_EXAMPLES, PRONUNCIATION_CATEGORIES, getExamplesByLevel, type PronunciationExample,
+  SOUND_GROUPS, SOUND_CATEGORIES, getSoundsByType, type SoundGroup,
 } from '@/data/pronunciation-examples'
-
-const LEVELS = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const
-const LEVEL_LABELS: Record<string, { vn: string; color: string }> = {
-  A0: { vn: 'Tiền sơ cấp', color: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
-  A1: { vn: 'Sơ cấp', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' },
-  A2: { vn: 'Sơ trung cấp', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300' },
-  B1: { vn: 'Trung cấp', color: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300' },
-  B2: { vn: 'Trung cao cấp', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' },
-  C1: { vn: 'Cao cấp', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
-  C2: { vn: 'Thành thạo', color: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300' },
-}
 
 type Phase = 'idle' | 'recording' | 'recorded' | 'analyzing' | 'analyzed'
 
 export function PronunciationPractice() {
   const { toast } = useToast()
-  const [selectedLevel, setSelectedLevel] = useState<string>('A1')
-  const [currentIdx, setCurrentIdx] = useState(0)
+  const [activeType, setActiveType] = useState<'vowel' | 'consonant'>('vowel')
+  const [selectedSound, setSelectedSound] = useState<SoundGroup | null>(null)
+  const [wordIdx, setWordIdx] = useState(0)
   const [phase, setPhase] = useState<Phase>('idle')
   const [feedback, setFeedback] = useState('')
   const [recordingTime, setRecordingTime] = useState(0)
@@ -45,19 +34,9 @@ export function PronunciationPractice() {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
-  const examples = getExamplesByLevel(selectedLevel)
-  const current = examples[currentIdx]
+  const sounds = getSoundsByType(activeType)
 
-  // Reset khi đổi level
-  useEffect(() => {
-    setCurrentIdx(0)
-    setPhase('idle')
-    setFeedback('')
-    setAudioUrl(null)
-    setRecordingTime(0)
-  }, [selectedLevel])
-
-  // Cleanup
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
@@ -65,7 +44,7 @@ export function PronunciationPractice() {
     }
   }, [])
 
-  // Speak the example sentence (TTS)
+  // Speak word
   const speak = useCallback((text: string, rate = 0.85) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return
     window.speechSynthesis.cancel()
@@ -77,300 +56,356 @@ export function PronunciationPractice() {
     window.speechSynthesis.speak(u)
   }, [])
 
-  // Start recording
+  // Recording
   const startRecording = useCallback(async () => {
     try {
       if (!navigator.mediaDevices?.getUserMedia) {
-        toast({ title: 'Không hỗ trợ ghi âm', description: 'Trình duyệt của bạn không hỗ trợ ghi âm.', variant: 'destructive' })
+        toast({ title: 'Không hỗ trợ ghi âm', description: 'Trình duyệt không hỗ trợ.', variant: 'destructive' })
         return
       }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
-
       const mr = new MediaRecorder(stream)
       mediaRecorderRef.current = mr
       chunksRef.current = []
-
-      mr.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data)
-      }
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }
       mr.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
-        const url = URL.createObjectURL(blob)
-        setAudioUrl(url)
+        setAudioUrl(URL.createObjectURL(blob))
         setPhase('recorded')
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach((t) => t.stop())
-        }
+        if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop())
       }
-
       mr.start()
       setPhase('recording')
       setRecordingTime(0)
       setFeedback('')
       setAudioUrl(null)
-      timerRef.current = setInterval(() => {
-        setRecordingTime((t) => t + 1)
-      }, 1000)
-    } catch (e: any) {
-      toast({
-        title: 'Không truy cập được micro',
-        description: 'Vui lòng cho phép truy cập micro trong trình duyệt.',
-        variant: 'destructive',
-      })
+      timerRef.current = setInterval(() => setRecordingTime((t) => t + 1), 1000)
+    } catch {
+      toast({ title: 'Không truy cập được micro', description: 'Vui lòng cho phép truy cập micro.', variant: 'destructive' })
     }
   }, [toast])
 
-  // Stop recording
   const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop()
-    }
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-      timerRef.current = null
-    }
+    if (mediaRecorderRef.current?.state !== 'inactive') mediaRecorderRef.current?.stop()
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
   }, [])
 
-  // Analyze with AI
+  // AI analyze
   const analyze = useCallback(async () => {
-    if (!current) return
+    if (!selectedSound) return
+    const word = selectedSound.exampleWords[wordIdx]
     setPhase('analyzing')
     try {
       const res = await fetch('/api/pronunciation/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: current.text,
-          phonetic: current.phonetic,
-          tip: current.tip,
+          text: word.word,
+          phonetic: word.phonetic,
+          tip: `Âm ${selectedSound.ipa} (${selectedSound.name}). ${selectedSound.description} Khẩu hình: ${selectedSound.mouthShape}`,
           language: 'vi',
         }),
       })
       const data = await res.json()
-      if (data.feedback) {
-        setFeedback(data.feedback)
-        setPhase('analyzed')
-      } else {
-        toast({ title: 'Phân tích thất bại', description: data.error, variant: 'destructive' })
-        setPhase('recorded')
-      }
+      if (data.feedback) { setFeedback(data.feedback); setPhase('analyzed') }
+      else { toast({ title: 'Phân tích thất bại', description: data.error, variant: 'destructive' }); setPhase('recorded') }
     } catch (e: any) {
       toast({ title: 'Lỗi', description: e.message, variant: 'destructive' })
       setPhase('recorded')
     }
-  }, [current, toast])
+  }, [selectedSound, wordIdx, toast])
 
-  const reset = () => {
-    setPhase('idle')
-    setFeedback('')
-    setAudioUrl(null)
-    setRecordingTime(0)
+  const reset = () => { setPhase('idle'); setFeedback(''); setAudioUrl(null); setRecordingTime(0) }
+
+  const selectSound = (s: SoundGroup) => {
+    setSelectedSound(s)
+    setWordIdx(0)
+    reset()
   }
 
-  const next = () => {
-    if (currentIdx < examples.length - 1) {
-      setCurrentIdx((i) => i + 1)
-      reset()
-    }
+  const nextWord = () => {
+    if (!selectedSound) return
+    setWordIdx((i) => (i + 1) % selectedSound.exampleWords.length)
+    reset()
   }
-  const prev = () => {
-    if (currentIdx > 0) {
-      setCurrentIdx((i) => i - 1)
-      reset()
-    }
+  const prevWord = () => {
+    if (!selectedSound) return
+    setWordIdx((i) => (i - 1 + selectedSound.exampleWords.length) % selectedSound.exampleWords.length)
+    reset()
   }
 
-  if (examples.length === 0) {
+  // ===== SOUND DETAIL VIEW =====
+  if (selectedSound) {
+    const word = selectedSound.exampleWords[wordIdx]
     return (
-      <Card><CardContent className="p-10 text-center text-muted-foreground">
-        Chưa có ví dụ cho cấp độ này.
-      </CardContent></Card>
+      <div className="space-y-6">
+        {/* Back */}
+        <Button variant="ghost" size="sm" onClick={() => { setSelectedSound(null); reset() }} className="gap-1.5">
+          <ChevronLeft className="h-4 w-4" /> Tất cả âm {activeType === 'vowel' ? 'nguyên' : 'phụ'}
+        </Button>
+
+        {/* Sound header */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className={cn('overflow-hidden', activeType === 'vowel' ? 'border-emerald-500/30' : 'border-teal-500/30')}>
+            <div className={cn('p-6', activeType === 'vowel' ? 'bg-gradient-to-br from-emerald-500/10 to-transparent' : 'bg-gradient-to-br from-teal-500/10 to-transparent')}>
+              <div className="flex items-center gap-4">
+                <div className={cn(
+                  'flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl text-3xl font-bold font-mono',
+                  activeType === 'vowel' ? 'bg-emerald-500 text-white' : 'bg-teal-500 text-white'
+                )}>
+                  {selectedSound.ipa.replace(/\//g, '')}
+                </div>
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold">{selectedSound.name}</h1>
+                  <p className="text-sm text-muted-foreground mt-1">{selectedSound.description}</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary" className="gap-1 font-mono">
+                      <Volume2 className="h-3 w-3" /> {selectedSound.ipa}
+                    </Badge>
+                    <Badge variant="outline" className="gap-1">
+                      <Smile className="h-3 w-3" /> {selectedSound.mouthShape}
+                    </Badge>
+                  </div>
+                </div>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => speak(selectedSound.exampleWords[0].word)}
+                  disabled={isPlaying}
+                  className="hidden sm:flex shrink-0"
+                >
+                  {isPlaying ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Volume2 className="mr-2 h-5 w-5" />}
+                  Nghe mẫu
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Word list — All example words */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Lightbulb className="h-4 w-4 text-amber-500" />
+              Danh sách từ ví dụ ({selectedSound.exampleWords.length} từ)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {selectedSound.exampleWords.map((w, i) => {
+                const isActive = i === wordIdx
+                return (
+                  <button
+                    key={i}
+                    onClick={() => { setWordIdx(i); reset() }}
+                    className={cn(
+                      'flex items-center gap-2 rounded-lg border p-3 text-left transition-all',
+                      isActive
+                        ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                        : 'border-border hover:border-primary/40 hover:bg-accent/30'
+                    )}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm">{w.word}</span>
+                        <span className="font-mono text-[10px] text-muted-foreground">{w.phonetic}</span>
+                      </div>
+                      <div className="text-[11px] text-muted-foreground truncate">{w.meaning}</div>
+                    </div>
+                    <Volume2
+                      className="h-4 w-4 shrink-0 text-muted-foreground hover:text-primary"
+                      onClick={(e) => { e.stopPropagation(); speak(w.word) }}
+                    />
+                  </button>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Current word — Practice */}
+        <motion.div key={word.word} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="overflow-hidden border-primary/20">
+            <CardHeader className="bg-gradient-to-br from-primary/5 to-transparent">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1">
+                  <p className="text-3xl font-bold">{word.word}</p>
+                  <p className="mt-1 font-mono text-sm text-muted-foreground">{word.phonetic}</p>
+                  <p className="mt-1 text-sm italic text-primary">{word.meaning}</p>
+                </div>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={() => speak(word.word)}
+                  disabled={isPlaying}
+                  className="shrink-0"
+                  aria-label="Nghe"
+                >
+                  {isPlaying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              {/* Tip */}
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                <p className="flex items-start gap-2 text-xs">
+                  <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                  <span><strong className="text-amber-700 dark:text-amber-400">Cách phát âm:</strong> {selectedSound.description}</span>
+                </p>
+                <p className="mt-1.5 flex items-start gap-2 text-xs">
+                  <Smile className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                  <span><strong className="text-amber-700 dark:text-amber-400">Khẩu hình:</strong> {selectedSound.mouthShape}</span>
+                </p>
+              </div>
+
+              {/* Recording controls */}
+              <div className="rounded-xl border border-border bg-secondary/20 p-4">
+                {phase === 'idle' && (
+                  <div className="flex flex-col items-center gap-3 py-2">
+                    <Button onClick={startRecording} size="lg" className="h-14 w-14 rounded-full bg-rose-600 hover:bg-rose-700 p-0">
+                      <Mic className="h-6 w-6" />
+                    </Button>
+                    <p className="text-xs text-muted-foreground">Bấm vào micro để ghi âm phát âm của bạn</p>
+                  </div>
+                )}
+                {phase === 'recording' && (
+                  <div className="flex flex-col items-center gap-3 py-2">
+                    <div className="flex items-center gap-3">
+                      <span className="h-3 w-3 rounded-full bg-rose-500 animate-pulse" />
+                      <span className="text-sm font-medium tabular-nums">{recordingTime}s</span>
+                      <Button onClick={stopRecording} size="lg" variant="destructive" className="h-14 w-14 rounded-full p-0">
+                        <Square className="h-5 w-5" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Đang ghi âm... Đọc từ <strong>{word.word}</strong> thành tiếng</p>
+                  </div>
+                )}
+                {(phase === 'recorded' || phase === 'analyzing' || phase === 'analyzed') && audioUrl && (
+                  <div className="flex flex-col items-center gap-3 py-2">
+                    <audio src={audioUrl} controls className="w-full max-w-md" />
+                    <div className="flex gap-2">
+                      <Button onClick={reset} variant="outline" size="sm" className="gap-1.5">
+                        <RotateCcw className="h-3.5 w-3.5" /> Ghi lại
+                      </Button>
+                      {phase !== 'analyzing' && phase !== 'analyzed' && (
+                        <Button onClick={analyze} size="sm" className="gap-1.5">
+                          <Sparkles className="h-3.5 w-3.5" /> AI đánh giá
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {phase === 'analyzing' && (
+                  <div className="flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" /> AI đang phân tích phát âm của bạn...
+                  </div>
+                )}
+              </div>
+
+              {/* AI Feedback */}
+              {phase === 'analyzed' && feedback && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  className="rounded-xl border border-primary/30 bg-primary/5 p-4"
+                >
+                  <div className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-primary">
+                    <Sparkles className="h-4 w-4" /> AI Phân tích phát âm
+                  </div>
+                  <Markdown content={feedback} className="text-sm" />
+                </motion.div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Word navigation */}
+        <div className="flex items-center justify-between">
+          <Button variant="outline" onClick={prevWord}>
+            <ChevronLeft className="mr-1 h-4 w-4" /> Từ trước
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            {wordIdx + 1} / {selectedSound.exampleWords.length}
+          </span>
+          <Button variant="outline" onClick={nextWord}>
+            Từ tiếp <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     )
   }
 
+  // ===== SOUND GROUPS LIST VIEW =====
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold">Luyện phát âm</h2>
+        <h2 className="text-2xl font-bold">Luyện phát âm theo nhóm âm</h2>
         <p className="text-sm text-muted-foreground">
-          Nghe câu mẫu, ghi âm giọng nói của bạn, nhận feedback AI chi tiết về phát âm.
+          Hệ thống 44 âm tiếng Anh (20 nguyên âm + 24 phụ âm) — mỗi âm có ví dụ, phiên âm IPA, mô tả khẩu hình, ghi âm và AI feedback.
         </p>
       </div>
 
-      {/* Level selector */}
-      <div className="flex flex-wrap gap-2">
-        {LEVELS.map((level) => {
-          const count = getExamplesByLevel(level).length
-          if (count === 0) return null
-          const active = level === selectedLevel
-          const meta = LEVEL_LABELS[level]
+      {/* Type selector */}
+      <div className="flex gap-2">
+        {SOUND_CATEGORIES.map((cat) => {
+          const active = cat.id === activeType
+          const count = getSoundsByType(cat.id as 'vowel' | 'consonant').length
           return (
             <button
-              key={level}
-              onClick={() => setSelectedLevel(level)}
+              key={cat.id}
+              onClick={() => { setActiveType(cat.id as 'vowel' | 'consonant'); setSelectedSound(null) }}
               className={cn(
-                'rounded-full px-3 py-1.5 text-xs font-medium transition-all',
-                active ? 'bg-primary text-primary-foreground shadow-sm' : meta.color + ' hover:opacity-80'
+                'flex-1 rounded-xl border p-4 text-left transition-all',
+                active ? 'border-primary shadow-md scale-[1.02]' : 'border-border hover:border-primary/40'
               )}
             >
-              {level} · {count}
+              <div className="flex items-center justify-between">
+                <span className="text-2xl">{cat.icon}</span>
+                <Badge variant="secondary">{count} âm</Badge>
+              </div>
+              <div className="mt-1 font-semibold">{cat.name}</div>
+              <div className="text-xs text-muted-foreground">{cat.desc}</div>
             </button>
           )
         })}
       </div>
 
-      {/* Progress */}
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>Câu {currentIdx + 1} / {examples.length}</span>
-        <Badge variant="outline" className="gap-1">
-          <Target className="h-3 w-3" /> {LEVEL_LABELS[selectedLevel].vn}
-        </Badge>
-      </div>
-
-      {/* Sentence card */}
-      <motion.div
-        key={current.id}
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <Card className="overflow-hidden border-primary/20">
-          {/* Sentence */}
-          <CardHeader className="bg-gradient-to-br from-primary/5 to-transparent">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1">
-                <p className="text-2xl font-bold leading-relaxed">{current.text}</p>
-                <p className="mt-2 text-sm text-muted-foreground font-mono">{current.phonetic}</p>
-              </div>
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={() => speak(current.text)}
-                disabled={isPlaying}
-                className="shrink-0"
-                aria-label="Nghe mẫu"
-              >
-                {isPlaying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
-              </Button>
-            </div>
-          </CardHeader>
-
-          <CardContent className="space-y-4 pt-4">
-            {/* Tip */}
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
-              <p className="flex items-start gap-2 text-xs">
-                <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-                <span><strong className="text-amber-700 dark:text-amber-400">Mẹo phát âm:</strong> {current.tip}</span>
-              </p>
-            </div>
-
-            {/* Focus sounds */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs text-muted-foreground">Âm cần chú ý:</span>
-              {current.focusSounds.map((s, i) => (
-                <Badge key={i} variant="secondary" className="font-mono text-xs">{s}</Badge>
-              ))}
-            </div>
-
-            {/* Recording controls */}
-            <div className="rounded-xl border border-border bg-secondary/20 p-4">
-              {phase === 'idle' && (
-                <div className="flex flex-col items-center gap-3 py-2">
-                  <Button onClick={startRecording} size="lg" className="h-14 w-14 rounded-full bg-rose-600 hover:bg-rose-700 p-0">
-                    <Mic className="h-6 w-6" />
-                  </Button>
-                  <p className="text-xs text-muted-foreground">Bấm vào micro để bắt đầu ghi âm</p>
-                </div>
-              )}
-
-              {phase === 'recording' && (
-                <div className="flex flex-col items-center gap-3 py-2">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className="h-3 w-3 rounded-full bg-rose-500 animate-pulse" />
-                      <span className="text-sm font-medium tabular-nums">{recordingTime}s</span>
-                    </div>
-                    <Button onClick={stopRecording} size="lg" variant="destructive" className="h-14 w-14 rounded-full p-0">
-                      <Square className="h-5 w-5" />
-                    </Button>
-                    <Waves className="h-5 w-5 text-rose-500 animate-pulse" />
-                  </div>
-                  <p className="text-xs text-muted-foreground">Đang ghi âm... Đọc câu trên thành tiếng</p>
-                </div>
-              )}
-
-              {(phase === 'recorded' || phase === 'analyzing' || phase === 'analyzed') && audioUrl && (
-                <div className="flex flex-col items-center gap-3 py-2">
-                  <audio src={audioUrl} controls className="w-full max-w-md" />
-                  <div className="flex gap-2">
-                    <Button onClick={reset} variant="outline" size="sm" className="gap-1.5">
-                      <RotateCcw className="h-3.5 w-3.5" /> Ghi lại
-                    </Button>
-                    {phase !== 'analyzing' && phase !== 'analyzed' && (
-                      <Button onClick={analyze} size="sm" className="gap-1.5">
-                        <Sparkles className="h-3.5 w-3.5" /> AI đánh giá phát âm
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {phase === 'analyzing' && (
-                <div className="flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" /> AI đang phân tích phát âm của bạn...
-                </div>
-              )}
-            </div>
-
-            {/* AI Feedback */}
-            {phase === 'analyzed' && feedback && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl border border-primary/30 bg-primary/5 p-4"
-              >
-                <div className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-primary">
-                  <Sparkles className="h-4 w-4" /> AI Phân tích phát âm
-                </div>
-                <Markdown content={feedback} className="text-sm" />
-              </motion.div>
+      {/* Sound grid */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {sounds.map((sound, i) => (
+          <motion.button
+            key={sound.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: i * 0.03 }}
+            onClick={() => selectSound(sound)}
+            className={cn(
+              'group rounded-xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md',
+              activeType === 'vowel' ? 'border-emerald-500/30 hover:border-emerald-500/60' : 'border-teal-500/30 hover:border-teal-500/60'
             )}
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Navigation */}
-      <div className="flex items-center justify-between">
-        <Button variant="outline" disabled={currentIdx === 0} onClick={prev}>
-          <ChevronLeft className="mr-1 h-4 w-4" /> Câu trước
-        </Button>
-        <span className="text-xs text-muted-foreground">
-          {currentIdx + 1} / {examples.length}
-        </span>
-        <Button variant="outline" disabled={currentIdx === examples.length - 1} onClick={next}>
-          Câu tiếp <ChevronRight className="ml-1 h-4 w-4" />
-        </Button>
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className={cn(
+                'flex h-12 w-12 items-center justify-center rounded-lg font-mono text-xl font-bold',
+                activeType === 'vowel' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-teal-500/10 text-teal-600'
+              )}>
+                {sound.ipa.replace(/\//g, '')}
+              </span>
+              <Volume2
+                className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => { e.stopPropagation(); speak(sound.exampleWords[0].word) }}
+              />
+            </div>
+            <div className="font-semibold text-sm">{sound.name}</div>
+            <div className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">
+              {sound.description.split('.')[0]}.
+            </div>
+            <div className="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground">
+              <Mic2 className="h-3 w-3" /> {sound.exampleWords.length} từ ví dụ
+            </div>
+          </motion.button>
+        ))}
       </div>
-
-      {/* Categories info */}
-      <Card className="bg-secondary/20">
-        <CardContent className="p-4">
-          <p className="mb-2 text-xs font-semibold text-muted-foreground">📚 Các chủ đề luyện phát âm:</p>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {PRONUNCIATION_CATEGORIES.map((cat) => (
-              <div key={cat.id} className="flex items-center gap-2 rounded-lg border border-border/60 p-2">
-                <span className="text-base">{cat.icon}</span>
-                <div>
-                  <div className="text-xs font-medium">{cat.name}</div>
-                  <div className="text-[10px] text-muted-foreground line-clamp-1">{cat.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

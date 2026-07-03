@@ -381,3 +381,43 @@ Stage Summary:
 - Each example includes phonetic transcription, pronunciation tip, focus sounds, and category.
 - Covers 6 pronunciation aspects: vowels, consonants, diphthongs, word stress, intonation, connected speech.
 - Integrated into Learn hub as 5th card, accessible from main navigation.
+
+---
+Task ID: 13
+Agent: main (Z.ai Code)
+Task: Redesign Pronunciation Practice to list sounds by group (like DANG HAI ENGLISH doc).
+
+Work Log:
+- Analyzed 2 screenshots of "DANG HAI ENGLISH" pronunciation doc — user wants sounds listed by group (vowels then consonants), each sound with multiple example words + IPA + Vietnamese description.
+- Rewrote `src/data/pronunciation-examples.ts` completely:
+  - New `SoundGroup` type: id, type (vowel/consonant), ipa, name (Vietnamese), description, mouthShape, exampleWords[]
+  - **20 vowel sounds** (/ɪ/, /iː/, /ʊ/, /uː/, /e/, /æ/, /ʌ/, /ɑː/, /ɒ/, /ɔː/, /ə/, /ɜː/, /eɪ/, /aɪ/, /ɔɪ/, /aʊ/, /əʊ/, /ɪə/, /eə/, /ʊə/) — each with Vietnamese name (i ngắn, i dài, u ngắn...), description, mouth shape, 7 example words with IPA + meaning
+  - **24 consonant sounds** (/p/, /b/, /t/, /d/, /k/, /ɡ/, /f/, /v/, /θ/, /ð/, /s/, /z/, /ʃ/, /ʒ/, /tʃ/, /dʒ/, /h/, /m/, /n/, /ŋ/, /l/, /r/, /w/, /j/) — each with Vietnamese name (th vô thanh, th hữu thanh, sh, zh, ch, j, ng...), description, mouth shape, 7 example words
+  - Total: 44 sounds × ~7 words = ~308 example words
+- Rewrote `src/components/pronunciation/pronunciation-practice.tsx` with 2-level UI:
+  - **Level 1 — Sound groups list**: 2 tabs (Nguyên âm 20 / Phụ âm 24), grid of sound cards showing IPA symbol + Vietnamese name + description + word count. Click card → level 2.
+  - **Level 2 — Sound detail**: 
+    - Header card with big IPA symbol + Vietnamese name + description + mouth shape badge + "Nghe mẫu" button
+    - "Danh sách từ ví dụ" grid: all 7 example words, each card shows word + IPA + meaning + listen icon. Click to practice.
+    - Selected word card with gradient header, large word display, IPA, meaning, listen button
+    - Tip callout: description + mouth shape (amber colored)
+    - Recording controls: red mic button, stop button with timer, audio playback, "Ghi lại" + "AI đánh giá"
+    - AI feedback section (markdown rendered)
+    - Word navigation: prev/next buttons
+- Verified with Agent Browser: 
+  - Opened pronunciation page — shows "44 âm tiếng Anh (20 nguyên âm + 24 phụ âm)"
+  - 2 category tabs work (Nguyên âm / Phụ âm)
+  - Clicked /ɪ/ → detail page with "i ngắn" + description + 7 words (sit, hit, bit, big, ship, chick, his) with IPA + meaning
+  - Switched to Phụ âm → 24 consonants (p, b, t, d, k, g, f, v, th, dh, s, z, sh, zh, ch, j, h, m, n, ng, l, r, w, y)
+  - Each sound has 7 example words with IPA + Vietnamese meaning
+- Lint passes. Zero console errors.
+
+Stage Summary:
+- Pronunciation practice completely redesigned to match the "list sounds by group" format user wanted.
+- 44 IPA sounds (20 vowels + 24 consonants), each with:
+  - Vietnamese name (i ngắn, i dài, th vô thanh, th hữu thanh, sh, ch, j, ng...)
+  - Detailed Vietnamese description of how to pronounce
+  - Mouth shape description (khẩu hình)
+  - 7 example words with IPA + Vietnamese meaning
+- UI: 2 levels — sound grid → sound detail with word list + recording + AI feedback
+- Total ~308 example words across all sounds.
