@@ -1,6 +1,6 @@
 'use client'
 
-import { BookOpen, Brain, Lightbulb, Headphones, FileText, ArrowRight, GraduationCap, PenLine } from 'lucide-react'
+import { BookOpen, Brain, Lightbulb, Headphones, FileText, ArrowRight, GraduationCap, PenLine, Mic } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -24,10 +24,14 @@ export function LearnView() {
       </div>
     )
   }
+  if (view.name === 'pronunciation') {
+    return null // handled in page.tsx
+  }
 
   const hubCards = [
     { icon: BookOpen, title: 'Grammar Lessons', desc: 'Clear explanations of the grammar points tested on the TOEIC, with examples and audio.', cta: 'Browse lessons', view: 'grammar' as const },
     { icon: Brain, title: 'Vocabulary Flashcards', desc: 'Flip, listen and review high-frequency business English words with spaced repetition.', cta: 'Start flashcards', view: 'vocab' as const },
+    { icon: Mic, title: 'Luyện phát âm', desc: 'Nghe câu mẫu, ghi âm giọng nói, nhận feedback AI chi tiết về phát âm, trọng âm, ngữ điệu.', cta: 'Luyện ngay', view: 'pronunciation' as const },
     { icon: Lightbulb, title: 'Test Strategies', desc: 'Section-by-section tactics for Listening and Reading — plus test-day tips.', cta: 'See strategies', view: 'strategies' as const },
     { icon: PenLine, title: 'AI Writing Check', desc: 'Get your sentences corrected instantly by AI and learn from the feedback.', cta: 'Try AI tools', view: 'tools' as const },
   ]

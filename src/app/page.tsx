@@ -6,6 +6,7 @@ import { Navbar } from '@/components/site/navbar'
 import { Footer } from '@/components/site/footer'
 import { HomeView } from '@/components/home/home-view'
 import { LearnView } from '@/components/learn/learn-view'
+import { PronunciationPractice } from '@/components/pronunciation/pronunciation-practice'
 import { PracticeList } from '@/components/practice/practice-list'
 import { TestEngine } from '@/components/practice/test-engine'
 import { TestResults } from '@/components/practice/test-results'
@@ -24,6 +25,12 @@ function CurrentView() {
     case 'vocab':
     case 'strategies':
       return <LearnView />
+    case 'pronunciation':
+      return (
+        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+          <PronunciationPractice />
+        </div>
+      )
     case 'practice':
       return <PracticeList />
     case 'test':

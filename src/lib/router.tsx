@@ -7,6 +7,7 @@ export type View =
   | { name: 'learn' }
   | { name: 'grammar'; slug?: string }
   | { name: 'vocab' }
+  | { name: 'pronunciation' }
   | { name: 'strategies'; slug?: string }
   | { name: 'practice' }
   | { name: 'test'; testSetId: string; mode?: 'practice' | 'exam' }

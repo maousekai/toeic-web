@@ -338,3 +338,46 @@ Stage Summary:
 - Beautiful UI with level selector cards, progress tracking, spaced repetition.
 - All vocab has Vietnamese definitions + translations + English examples + phonetics.
 - Old 32 vocabs replaced with 742 new vocabs organized by proficiency level.
+
+---
+Task ID: 12
+Agent: main (Z.ai Code)
+Task: Add Pronunciation Practice feature with audio samples, recording, and AI feedback.
+
+Work Log:
+- Created `src/data/pronunciation-examples.ts` with 50 pronunciation examples across 7 CEFR levels:
+  - A0 (7 examples): basic sounds, vowels /æ/, consonants /ð/, /ʃ/
+  - A1 (8 examples): greetings, weather, /aʊ/, /iː/
+  - A2 (8 examples): travel phrases, connected speech, intonation
+  - B1 (8 examples): business English, word stress
+  - B2 (8 examples): negotiation, advanced stress patterns
+  - C1 (7 examples): complex sentences, formal vocabulary
+  - C2 (7 examples): academic, rare words
+  Each example has: text, phonetic, level, tip (Vietnamese pronunciation tip), focusSounds (difficult sounds), category (vowels/consonants/diphthongs/stress/intonation/connected-speech).
+- Created API `/api/pronunciation/analyze` — accepts text + phonetic + tip, returns AI feedback in Vietnamese covering: difficult sounds for Vietnamese speakers, word stress, intonation, connected speech, overall assessment.
+- Built `src/components/pronunciation/pronunciation-practice.tsx` — full-featured pronunciation practice:
+  - **Level selector**: 7 CEFR levels (A0-C2) with example count per level
+  - **Sentence card**: shows sentence + phonetic transcription + listen button (TTS)
+  - **Pronunciation tip**: amber callout with Vietnamese tip for each sentence
+  - **Focus sounds**: badges showing difficult sounds to watch (/æ/, /ð/, stress...)
+  - **Recording controls**: 
+    - Red mic button to start recording (uses MediaRecorder API + getUserMedia)
+    - Stop button with live timer
+    - Audio playback after recording (HTML5 audio element)
+    - "Ghi lại" (re-record) button
+  - **AI feedback**: "AI đánh giá phát âm" button calls the API, displays detailed feedback with markdown
+  - **Navigation**: prev/next buttons to move through examples
+  - **Categories info**: 6 pronunciation topics explained (vowels, consonants, diphthongs, stress, intonation, connected-speech)
+  - Beautiful animations with framer-motion
+  - Color-coded levels matching the vocab system
+- Updated `src/lib/router.tsx`: added `pronunciation` to View type
+- Updated `src/app/page.tsx`: added pronunciation case in CurrentView switch
+- Updated `src/components/learn/learn-view.tsx`: added "Luyện phát âm" hub card (5th card) with Mic icon, links to pronunciation view
+- Verified with Agent Browser: Learn hub shows "Luyện phát âm" card, clicking opens pronunciation page, 7 levels visible with counts (A0:7, A1:8, B2:8...), B2 loads "We should negotiate the terms of the contract.", listen button works (TTS plays), recording UI ready. Lint passes, zero console errors.
+
+Stage Summary:
+- New "Luyện phát âm" (Pronunciation Practice) feature complete with 50 examples across 7 CEFR levels.
+- Features: TTS audio samples, microphone recording with MediaRecorder API, audio playback, AI-powered pronunciation feedback in Vietnamese.
+- Each example includes phonetic transcription, pronunciation tip, focus sounds, and category.
+- Covers 6 pronunciation aspects: vowels, consonants, diphthongs, word stress, intonation, connected speech.
+- Integrated into Learn hub as 5th card, accessible from main navigation.
