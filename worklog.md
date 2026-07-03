@@ -450,3 +450,28 @@ Stage Summary:
 - Created complete 100-question test set in database with Vietnamese explanations.
 - Test appears in Practice page as "🎯 Đề TOEIC Reading Test 1 (100 câu · 75 phút)".
 - This demonstrates the full pipeline: PDF upload → AI Vision OCR → question extraction → database seed → web integration.
+
+---
+Task ID: 15
+Agent: general-purpose sub agent
+Task: Create a seed script file at /home/z/my-project/scripts/seed-rc-test2.ts that inserts 100 TOEIC Reading questions (TEST 2 RC) into the database, following the exact same format as scripts/seed-rc-test1.ts.
+
+Work Log:
+- Read worklog.md to understand prior work (Task ID 14 created seed-rc-test1.ts with TEST 1 RC — 100 questions, test set ts_rc1_full).
+- Read scripts/seed-rc-test1.ts (569 lines) end-to-end to learn the exact code structure: import db, Q helper function (id, part, groupId, passage, question, options, answer, explanation, category, difficulty), per-part arrays, p5.forEach / p6_X.forEach / p7_X.forEach push pattern, final upsert loop, and test set creation.
+- Created scripts/seed-rc-test2.ts mirroring seed-rc-test1.ts structure with all 100 questions supplied by user:
+  - Part 5 (Q101-130): 30 incomplete-sentence questions (ids q_rc2_101 … q_rc2_130, groupId null, passage null) covering vocabulary / word-form / preposition / pronoun / conjunction / comparison / infinitive / tense / phrase categories.
+  - Part 6 (Q131-146): 16 text-completion questions in 4 passages (groups g_rc2_p6_1 … g_rc2_p6_4): Dellwyn Home Store furniture email, Keep Cool Service Contractors ad, Light Idea price-increase email, Kenneth Okim jewelry order email.
+  - Part 7 (Q147-200): 54 reading-comprehension questions across 15 passages (groups g_rc2_p7_1 … g_rc2_p7_15): Savan Business Center webinar, Dine Out Darville, Rainsy LLC HQ move, printer-paper text chain, SFMA library letter (sentence-insertion), Claro Vision ad, Rosserry lease letter, Qualiview contract email (+vocabulary), shipping container shortage article (+sentence-insertion), construction team text chain, Karabel Industries ice-cream email+survey (5 q), Create Great job posting + Annie Smith letter (5 q), Fowler Office Supplies email exchange + receipt (5 q), Crawford and Duval article + web page + receipt (5 q), Osawa Corporate Team Building web page + form + review (5 q).
+  - Each question has Vietnamese explanation referencing grammar rule, vocabulary meaning, or inference logic.
+  - Test set ts_rc2_full: title "🎯 Đề TOEIC Reading Test 2 (100 câu · 75 phút)", type "full", durationMin 75.
+- Ran `bun run scripts/seed-rc-test2.ts` → success:
+  - Questions added: 100
+  - Test set: ts_rc2_full
+  - Total questions in DB: 268 (was 168 → +100 new)
+  - Total test sets in DB: 10 (was 9 → +1 new)
+
+Stage Summary:
+- Second 100-question TOEIC Reading full test (TEST 2 RC) is now in the database and appears on the Practice page as "🎯 Đề TOEIC Reading Test 2 (100 câu · 75 phút)".
+- Together with TEST 1 RC, the platform now offers 200 full TOEIC Reading practice questions across 2 complete mock tests, all with Vietnamese explanations.
+- Format identical to seed-rc-test1.ts (same Q helper, upsert pattern, test set shape) → consistent and maintainable.
