@@ -421,3 +421,32 @@ Stage Summary:
   - 7 example words with IPA + Vietnamese meaning
 - UI: 2 levels — sound grid → sound detail with word list + recording + AI feedback
 - Total ~308 example words across all sounds.
+
+---
+Task ID: 14
+Agent: main (Z.ai Code)
+Task: Read TOEIC Reading test from PDF (TEST 1 RC.pdf) uploaded by user and create a full test set.
+
+Work Log:
+- User uploaded "TEST 1 RC (1).pdf" (20MB, 29 pages, PDF from Imax Toeic created with Canva).
+- PDF was image-based (no text layer) → used `pdftoppm` to convert to 29 PNG images at 150 DPI.
+- Used z-ai vision API (glm-4.6v) to read each page, extracting:
+  - Part 5 (Q101-130): 30 incomplete sentence questions
+  - Part 6 (Q131-146): 16 text completion questions across 4 passages (opening gala letter, library card email, photography letter, Greenwood Workshop ad)
+  - Part 7 (Q147-200): 54 reading comprehension questions across 15 passages (product instructions, meeting schedule, Bryant Foyer brochure, text messages, farm donation notice, concert hall notice, Sweeter Specialties email, dishwasher review, Skyler Airlines, headphones chat, Kitchen Swifts press release, Conor Boyle email+ticket, Train to Achieve, Orange Bay Kitchen article+review+email, Orbys Distributors invoice+notice+email)
+- Created `scripts/seed-rc-test1.ts` with all 100 questions:
+  - Each question: id, part, groupId, passage, question text, 4 options, correct answer, Vietnamese explanation, category, difficulty
+  - All passages included for Part 6 and Part 7
+  - Explanations in Vietnamese covering: grammar rule, vocabulary meaning, inference logic
+- Created test set `ts_rc1_full`:
+  - Title: "🎯 Đề TOEIC Reading Test 1 (100 câu · 75 phút)"
+  - 100 questions, 75 minutes, type=full
+- Ran seed: 100 questions inserted + 1 test set created.
+- Total DB: 168 questions, 9 test sets.
+- Verified via API: test set loads correctly, 100 questions, correct Part distribution (30/16/54).
+
+Stage Summary:
+- Successfully read entire TOEIC Reading test from user's PDF using AI Vision.
+- Created complete 100-question test set in database with Vietnamese explanations.
+- Test appears in Practice page as "🎯 Đề TOEIC Reading Test 1 (100 câu · 75 phút)".
+- This demonstrates the full pipeline: PDF upload → AI Vision OCR → question extraction → database seed → web integration.

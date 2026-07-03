@@ -1,0 +1,568 @@
+import { db } from '../src/lib/db'
+
+// Đề TOEIC Reading Test 1 (RC) - 100 câu (Part 5: 101-130, Part 6: 131-146, Part 7: 147-200)
+// Nguồn: TEST 1 RC.pdf (Imax Toeic) - user upload
+// Mỗi câu có: question, options, answer, explanation (tiếng Việt)
+
+async function main() {
+  console.log('Seeding TOEIC Reading Test 1 (100 questions)...')
+
+  const questions: any[] = []
+
+  // Helper
+  const Q = (id: string, part: number, groupId: string | null, passage: string | null, question: string, options: string[], answer: number, explanation: string, category: string, difficulty = 2) => ({
+    id, part, groupId, passage, question,
+    options: JSON.stringify(options),
+    answer, explanation, category, difficulty,
+    audioScript: null, imagePrompt: null,
+  })
+
+  // ============ PART 5 (101-130) - 30 câu ============
+  const p5 = [
+    ['q_rc1_101', 5, null, null, 'Former Sendai Company CEO Ken Nakata spoke about ------ career experiences.', ['he', 'his', 'him', 'himself'], 1, 'Cần tính từ sở hữu (possessive adjective) bổ nghĩa cho "career experiences". "His" = của anh ấy. "He" (chủ ngữ), "him" (tân ngữ), "himself" (phản thân) đều sai vị trí.', 'pronoun', 2],
+    ['q_rc1_102', 5, null, null, 'Passengers who will be taking a ------ domestic flight should go to Terminal A.', ['connectivity', 'connects', 'connect', 'connecting'], 3, '"Connecting flight" = chuyến bay nối (trung chuyển). Cần V-ing làm tính từ bổ nghĩa cho "flight".', 'word-form', 3],
+    ['q_rc1_103', 5, null, null, "Fresh and ------ apple-cider donuts are available at Oakcrest Orchard's retail shop for £6 per dozen.", ['eaten', 'open', 'tasty', 'free'], 2, 'Cần tính từ song song với "Fresh" (Fresh and ___). "Tasty" = ngon miệng, phù hợp đồ ăn.', 'vocabulary', 2],
+    ['q_rc1_104', 5, null, null, 'Zahn Flooring has the widest selection of ------ in the United Kingdom.', ['paints', 'tiles', 'furniture', 'curtains'], 1, 'Ngữ cảnh "Zahn Flooring" (sàn nhà) → "tiles" (gạch lát nền) phù hợp nhất.', 'vocabulary', 2],
+    ['q_rc1_105', 5, null, null, 'One responsibility of the IT department is to ensure that the company is using ------ software.', ['update', 'updating', 'updates', 'updated'], 3, '"Updated software" = phần mềm đã cập nhật. Cần V3 (past participle) làm tính từ mang nghĩa bị động.', 'word-form', 3],
+    ['q_rc1_106', 5, null, null, "It is wise to check a company's dress code ------ visiting its head office.", ['so', 'how', 'like', 'before'], 3, '"Before + V-ing" = trước khi làm gì. Cần liên từ chỉ thời gian.', 'conjunction', 2],
+    ['q_rc1_107', 5, null, null, "Wexler Store's management team expects that employees will ------ support any new hires.", ['enthusiastically', 'enthusiasm', 'enthusiastic', 'enthused'], 0, 'Cần trạng từ (adverb) bổ nghĩa cho động từ "support". Vị trí giữa modal "will" và V.', 'word-form', 3],
+    ['q_rc1_108', 5, null, null, 'Wheel alignments and brake system ------ are part of our vehicle service plan.', ['inspects', 'inspector', 'inspected', 'inspections'], 3, 'Cần danh từ số nhiều song song với "alignments". "Inspections" = các cuộc kiểm tra.', 'word-form', 3],
+    ['q_rc1_109', 5, null, null, 'Registration for the Marketing Coalition Conference is now open ------ September 30.', ['until', 'into', 'yet', 'while'], 0, '"Until" = cho đến (deadline). "Open until September 30" = mở đến hết 30/9.', 'preposition', 2],
+    ['q_rc1_110', 5, null, null, 'Growth in the home entertainment industry has been ------ this quarter.', ['separate', 'limited', 'willing', 'assorted'], 1, '"Limited" = hạn chế. Ngữ cảnh "growth has been limited" = tăng trưởng bị hạn chế.', 'vocabulary', 3],
+    ['q_rc1_111', 5, null, null, 'Hawson Furniture will be making ------ on the east side of town on Thursday.', ['deliveries', 'delivered', 'deliver', 'deliverable'], 0, 'Cần danh từ số nhiều. "Make deliveries" = giao hàng.', 'word-form', 2],
+    ['q_rc1_112', 5, null, null, 'The Marlton City Council does not have the authority to ------ parking on city streets.', ['drive', 'prohibit', 'bother', 'travel'], 1, '"Prohibit" = cấm. "Prohibit parking" = cấm đỗ xe.', 'vocabulary', 2],
+    ['q_rc1_113', 5, null, null, 'Project Earth Group is ------ for ways to reduce transport-related greenhouse gas emissions.', ['looking', 'seeing', 'driving', 'leaning'], 0, '"Look for" = tìm kiếm. "Looking for ways" = tìm cách.', 'collocation', 2],
+    ['q_rc1_114', 5, null, null, 'Our skilled tailors are happy to design a custom-made suit that fits your style and budget ------.', ['perfect', 'perfects', 'perfectly', 'perfection'], 2, 'Cần trạng từ bổ nghĩa cho động từ "fits". "Perfectly" = một cách hoàn hảo.', 'word-form', 2],
+    ['q_rc1_115', 5, null, null, 'Project manager Hannah Chung has proved to be very ------ with completing company projects.', ['helpfulness', 'help', 'helpfully', 'helpful'], 3, 'Cần tính từ sau "be very". "Helpful" = có ích.', 'word-form', 2],
+    ['q_rc1_116', 5, null, null, 'Lehua Vacation Club members will receive double points ------ the month of August at participating hotels.', ['onto', 'above', 'during', 'between'], 2, '"During" = trong suốt. "During the month of August" = trong tháng 8.', 'preposition', 2],
+    ['q_rc1_117', 5, null, null, 'The costumes were not received ------ enough to be used in the first dress rehearsal.', ['far', 'very', 'almost', 'soon'], 3, '"Soon enough" = đủ sớm. Cụm cố định.', 'collocation', 3],
+    ['q_rc1_118', 5, null, null, 'As a former publicist for several renowned orchestras, Mr. Wu would excel in the role of event ------.', ['organized', 'organizer', 'organizes', 'organizational'], 1, 'Cần danh từ chỉ người. "Event organizer" = người tổ chức sự kiện.', 'word-form', 2],
+    ['q_rc1_119', 5, null, null, 'The northbound lane on Davis Street will be ------ closed because of the city\'s bridge reinforcement project.', ['temporarily', 'competitively', 'recently', 'collectively'], 0, '"Temporarily" = tạm thời. Ngữ cảnh закры cầu → đóng tạm thời.', 'vocabulary', 3],
+    ['q_rc1_120', 5, null, null, 'Airline representatives must handle a wide range of passenger issues, ------ missed connections to lost luggage.', ['from', 'under', 'on', 'against'], 0, '"From X to Y" = từ X đến Y. Cụm cố định.', 'preposition', 2],
+    ['q_rc1_121', 5, null, null, 'The meeting notes were ------ deleted, but Mr. Hahm was able to recreate them from memory.', ['accident', 'accidental', 'accidents', 'accidentally'], 3, 'Cần trạng từ bổ nghĩa cho "deleted". "Accidentally" = vô tình.', 'word-form', 2],
+    ['q_rc1_122', 5, null, null, 'The current issue of Farming Scene magazine predicts that the price of corn will rise 5 percent over the ------ year.', ['next', 'with', 'which', 'now'], 0, '"Next" = tiếp theo. "Over the next year" = trong năm tới.', 'vocabulary', 2],
+    ['q_rc1_123', 5, null, null, 'Anyone who still ------ to take the fire safety training should do so before the end of the month.', ['needing', 'needs', 'has needed', 'were needing'], 1, 'Cần động từ hiện tại đơn. Chủ ngữ "Anyone" → số ít → "needs".', 'subject-verb', 2],
+    ['q_rc1_124', 5, null, null, 'Emerging technologies have ------ begun to transform the shipping industry in ways that were once unimaginable.', ['already', 'exactly', 'hardly', 'closely'], 0, '"Already" = rồi (đã bắt đầu). Hiện tại hoàn thành + already.', 'vocabulary', 3],
+    ['q_rc1_125', 5, null, null, 'The company handbook outlines the high ------ that employees are expected to meet every day.', ['experts', 'accounts', 'recommendations', 'standards'], 3, '"Standards" = tiêu chuẩn. "Meet standards" = đạt tiêu chuẩn.', 'collocation', 2],
+    ['q_rc1_126', 5, null, null, 'Because ------ of the board members have scheduling conflicts, the board meeting will be moved to a date when all can attend.', ['any', 'everybody', 'those', 'some'], 3, '"Some" = một số. "Some of the board members" = một số thành viên HĐQT.', 'quantifier', 3],
+    ['q_rc1_127', 5, null, null, 'The project ------ the collaboration of several teams across the company.', ['passed', 'decided', 'required', 'performed'], 2, '"Required" = đòi hỏi. "The project required collaboration" = dự án đòi hỏi sự hợp tác.', 'vocabulary', 2],
+    ['q_rc1_128', 5, null, null, 'We cannot send the store\'s coupon booklet to the printers until it ------ by Ms. Jeon.', ['is approving', 'approves', 'has been approved', 'will be approved'], 2, 'Bị động hiện tại hoàn thành. "Has been approved" = đã được phê duyệt.', 'passive', 4],
+    ['q_rc1_129', 5, null, null, '------ the closure of Verdigold Transport Services, we are looking for a new shipping company.', ['In spite of', 'Just as', 'In light of', 'According to'], 2, '"In light of" = xem xét, bởi vì. "In light of the closure" = do việc đóng cửa.', 'phrase', 3],
+    ['q_rc1_130', 5, null, null, "The ------ information provided by Uniss Bank's brochure helps applicants understand the terms of their loans.", ['arbitrary', 'supplemental', 'superfluous', 'potential'], 1, '"Supplemental" = bổ sung. "Supplemental information" = thông tin bổ sung.', 'vocabulary', 4],
+  ]
+  p5.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // ============ PART 6 (131-146) - 16 câu, 4 passages ============
+  // Passage 1: Letter about opening gala (135-138)
+  const p6_passage1 = `31 July
+
+Akwasi Dombo
+Fourth Avenue
+GA 105
+Accra, Ghana
+
+Dear Mr. Dombo,
+
+Thank you for your 135 support in helping me to plan the opening gala for Tokyo's fashion week. The event was a huge success, and I was honored to work with you. I know that our attendees follow your work closely, and they loved the designs you contributed for this event. Your designs received a lot of 136 on social media. Shows like this will keep Tokyo on the map as a premier fashion centre. 137. I realize that the multiple delays made the planning no easy task. The auction 138 our Young Designers Award program is coming up soon and I look forward to working with you on that as well.
+
+Sincerely,
+
+Asahi Ishioka
+Director, Japanese Guild of Fashion Designers`
+
+  const p6_1 = [
+    ['q_rc1_135', 6, 'g_rc1_p6_1', p6_passage1, '135.', ['amazed', 'amazement', 'amazing', 'amazingly'], 2, 'Cần tính từ bổ nghĩa cho "support". "Amazing support" = sự hỗ trợ tuyệt vời.', 'word-form', 3],
+    ['q_rc1_136', 6, 'g_rc1_p6_1', p6_passage1, '136.', ['attention', 'proposals', 'innovation', 'criticism'], 0, '"Receive a lot of attention" = thu hút nhiều sự chú ý. Collocation phổ biến.', 'collocation', 2],
+    ['q_rc1_137', 6, 'g_rc1_p6_1', p6_passage1, '137.', ['Several other events have gone surprisingly well.', 'Thank you also for your flexibility in planning the event.', 'Please stop by our office the next time you are in the city.', 'Tokyo is a top tourism destination for many reasons.'], 1, 'Câu tiếp theo nói về "delays" (sự chậm trễ) → câu phù hợp là cảm ơn sự linh hoạt trong việc lập kế hoạch.', 'sentence-insertion', 4],
+    ['q_rc1_138', 6, 'g_rc1_p6_1', p6_passage1, '138.', ['will benefit', 'to benefit', 'has benefited', 'benefits'], 1, '"The auction to benefit our program" = buổi đấu giá nhằm hưởng lợi cho chương trình. "To benefit" là不定式 bổ nghĩa.', 'word-form', 4],
+  ]
+  p6_1.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Passage 2: Email about library card (139-142)
+  const p6_passage2 = `From: Patron Services <patronservices@menachinlibrary.org>
+To: Edgar Hughes <hughese98@villachesta.com>
+Subject: Card expiration date approaching
+Date: December 3
+
+Dear Mr. Hughes,
+
+Please be advised that your Mena Chin Library card will expire one month from today.
+
+139. must be renewed if you intend to keep your membership for the coming year.
+
+140. This can be done at the information desk at any branch location.
+
+141. you decide to close your account, no action is necessary. Failure to complete your renewal by the 142. date will result in the expiration of your library privileges.
+
+If you have any questions about this notice, or about general library services, you may reply directly to this e-mail.
+
+Sincerely,
+Patron Services`
+
+  const p6_2 = [
+    ['q_rc1_139', 6, 'g_rc1_p6_2', p6_passage2, '139.', ['It', 'You', 'Our', 'Each'], 0, '"It" thay cho "your library card" (vật). "It must be renewed" = nó phải được gia hạn.', 'pronoun', 3],
+    ['q_rc1_140', 6, 'g_rc1_p6_2', p6_passage2, '140.', ['To sign up for a card, visit your local library branch.', 'For questions about library membership, please visit our Web site.', 'Renewal must be completed at least one week before your card expires.', 'You may opt out of this program at any time.'], 2, 'Câu trước nói về "renewed" → câu phù hợp nhất là về việc gia hạn phải hoàn thành trước khi thẻ hết hạn.', 'sentence-insertion', 4],
+    ['q_rc1_141', 6, 'g_rc1_p6_2', p6_passage2, '141.', ['Also', 'Should', 'Because', 'Although'], 1, '"Should you decide to close..." = Nếu bạn quyết định đóng... (đảo ngữ câu điều kiện).', 'conjunction', 4],
+    ['q_rc1_142', 6, 'g_rc1_p6_2', p6_passage2, '142.', ['specifically', 'specifics', 'specified', 'specificity'], 2, '"Specified date" = ngày đã chỉ định. Cần V3 làm tính từ.', 'word-form', 3],
+  ]
+  p6_2.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Passage 3: Letter about photography (143-146)
+  const p6_passage3 = `April 7
+
+Naomi Burwell
+43 Waymire Road
+South Portland, ME 04109
+
+Dear Ms. Burwell,
+
+I am Omar Ridha, the manager of Droplight Studio. 143. We offer a full range of photography services for real estate professionals like you. We take pride in composing interior and exterior shots that make a property look its best. Droplight Studio spares no effort in 144. superior digital images. 145., our professional-grade equipment, lighting, and staging techniques allow us to highlight the best features of a property. And once the photo shoot is over, every image 146. expert editing. All these services come standard in every package.
+
+Please visit our Web site to view our work as well as our pricing and scheduling information. We are happy to work with you to customize orders.
+
+Sincerely,
+
+Omar Ridha, Droplight Studio`
+
+  const p6_3 = [
+    ['q_rc1_143', 6, 'g_rc1_p6_3', p6_passage3, '143.', ['I would like to introduce you to our business.', 'Great photographs can make your property stand out.', 'We are looking forward to your visit.', 'It was the first studio of its kind to open in this area.'], 0, 'Câu đầu thư giới thiệu → "I would like to introduce you to our business" phù hợp nhất.', 'sentence-insertion', 4],
+    ['q_rc1_144', 6, 'g_rc1_p6_3', p6_passage3, '144.', ['researching', 'creating', 'purchasing', 'displaying'], 1, '"Spare no effort in creating" = không tiếc công sức tạo ra. Ngữ cảnh studio攝影 → tạo ảnh.', 'vocabulary', 3],
+    ['q_rc1_145', 6, 'g_rc1_p6_3', p6_passage3, '145.', ['If not', 'By comparison', 'Otherwise', 'Indeed'], 3, '"Indeed" = quả thực, thêm thông tin nhấn mạnh. Phù hợp vì câu sau bổ sung chi tiết về thiết bị.', 'transition', 4],
+    ['q_rc1_146', 6, 'g_rc1_p6_3', p6_passage3, '146.', ['receives', 'is receiving', 'had received', 'had to receive'], 0, 'Cần động từ hiện tại đơn (chủ ngữ "every image" số ít → "receives"). "Receives expert editing" = nhận chỉnh sửa chuyên nghiệp.', 'tense', 3],
+  ]
+  p6_3.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Passage 4 (131-134) - thiếu passage trên ảnh, mình dùng câu hỏi + đáp án
+  const p6_passage4 = `Questions 131-134 refer to the following advertisement.
+
+At Greenwood Workshop, we believe everyone can build something beautiful. 131. Children of all ages will enjoy the new exhibits. 132. By using easy-to-acquire materials, you can create your own patio furniture. 133. Best of all, our workshops are free for all participants. 134. We invite you to join us this weekend.`
+
+  const p6_4 = [
+    ['q_rc1_131', 6, 'g_rc1_p6_4', p6_passage4, '131.', ['Children of all ages will enjoy the new exhibits.', 'Learn about rainfall patterns across the region.', 'Build a set of simple patio furniture with easy-to-acquire materials.', 'Next Saturday at 4 P.M., we are hosting a free workshop for the public.'], 2, 'Câu phù hợp với ngữ cảnh xưởng mộc Greenwood Workshop → xây dựng bàn ghế sân vườn.', 'sentence-insertion', 4],
+    ['q_rc1_132', 6, 'g_rc1_p6_4', p6_passage4, '132.', ['to use', 'used to', 'by using', 'that uses'], 2, '"By using" = bằng cách sử dụng. Diễn tả phương tiện.', 'preposition', 3],
+    ['q_rc1_133', 6, 'g_rc1_p6_4', p6_passage4, '133.', ['Best of all', 'For example', 'In any event', 'As a matter of fact'], 0, '"Best of all" = tốt nhất là. Dùng để nhấn mạnh điểm hấp dẫn nhất (workshop miễn phí).', 'transition', 4],
+    ['q_rc1_134', 6, 'g_rc1_p6_4', p6_passage4, '134.', ['we', 'they', 'both', 'yours'], 0, '"We" thay cho Greenwood Workshop. "We invite you" = chúng tôi mời bạn.', 'pronoun', 3],
+  ]
+  p6_4.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // ============ PART 7 (147-200) - 54 câu ============
+  // Q147-148: Stop! Please read first.
+  const p7_passage1 = `STOP! PLEASE READ FIRST.
+
+Thank you for purchasing this item.
+
+As you do the unpacking, please verify that all components are included and place them in a safe area to avoid loss or damage. Assemble the item on a soft surface or on the flattened empty box.
+
+Follow the pictures and begin the assembly by placing the main part on its side. Never overtighten any screws or bolts, or you may damage the wood or cushioning.
+
+Please visit our Web site to obtain maintenance tips and register your product for warranty coverage: www.indoordelight.com.`
+
+  const p7_1 = [
+    ['q_rc1_147', 7, 'g_rc1_p7_1', p7_passage1, 'Where is the information most likely found?', ['On a door', 'On a receipt', 'In a box', 'On a Web site'], 2, '"As you do the unpacking" + "assemble the item" → thông tin trong hộp sản phẩm.', 'inference', 3],
+    ['q_rc1_148', 7, 'g_rc1_p7_1', p7_passage1, 'What kind of item is most likely discussed?', ['A desktop computer', 'A piece of furniture', 'A household appliance', 'A power tool'], 1, '"Screws or bolts" + "damage the wood or cushioning" → đồ nội thất cần lắp ráp.', 'inference', 3],
+  ]
+  p7_1.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Q149-150: Meeting schedule
+  const p7_passage2 = `We are asking all Winnipeg staff to keep a copy of this schedule at their desks as a quick reference tool for scheduling interoffice meetings. Whenever possible, please schedule these meetings during one of the underlined hours, that is, after 7:00 A.M. but before 11:00 A.M.
+
+Winnipeg | Toulouse
+7:00 A.M. | 2:00 P.M.
+8:00 A.M. | 3:00 P.M.
+9:00 A.M. | 4:00 P.M.
+10:00 A.M. | 5:00 P.M.
+11:00 A.M. | 6:00 P.M.
+12:00 noon | 7:00 P.M.`
+
+  const p7_2 = [
+    ['q_rc1_149', 7, 'g_rc1_p7_2', p7_passage2, 'What is suggested by the schedule?', ['A conference has been scheduled.', 'A firm has offices in two time zones.', 'Administrative assistants make travel plans.', 'Some meeting times have been changed.'], 1, 'Lịch trình có 2 cột Winnipeg và Toulouse với chênh lệch 7 giờ → công ty có văn phòng ở 2 múi giờ.', 'inference', 3],
+    ['q_rc1_150', 7, 'g_rc1_p7_2', p7_passage2, 'What is indicated about 11:00 A.M. Winnipeg time?', ['It is when the Winnipeg office closes for lunch.', 'It is when staff in Toulouse begin their workday.', 'It is not a preferred time to schedule a meeting.', 'It has just been added to the schedule.'], 2, 'Câu đầu nói "after 7 A.M. but before 11 A.M." → 11 A.M. không phải giờ ưu tiên.', 'detail', 3],
+  ]
+  p7_2.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Q151-152: Bryant Foyer
+  const p7_passage3 = `The Bryant Foyer is one of the premier event spaces in our area. Set on a hill, it has expansive windows that provide sweeping views of the adjacent botanical gardens and the river. Built in 1897, it was the home of the Francona Charitable Trust until its renovation just over a year ago. Today, the space can accommodate up to 200 guests and is ideal for wedding receptions, office parties, and panel presentations. With its marble floors, cathedral ceiling, and stunning artwork, the Bryant Foyer is the ideal location for your next gathering.
+
+The on-site restaurant, Andito's, caters our events and also operates as its own business. This farm-to-table restaurant, headed by chef Michaela Rymond, meets all dietary needs and has revolutionized the local food scene. Area residents know to plan far in advance to get a seat.
+
+To reserve the event space or to make a dinner reservation, give us a call at 216-555-0157.`
+
+  const p7_3 = [
+    ['q_rc1_151', 7, 'g_rc1_p7_3', p7_passage3, 'What is indicated about the Bryant Foyer?', ['It is located on the shores of a lake.', 'It has recently been renovated.', 'It will build a botanical garden for guests.', 'It is reserved solely for corporate events.'], 1, '"Until its renovation just over a year ago" → đã được cải tạo gần đây.', 'detail', 2],
+    ['q_rc1_152', 7, 'g_rc1_p7_3', p7_passage3, "What is suggested about Andito's?", ['It was started by an international chef.', 'It offers limited menu options.', 'It is now funded by a charitable organization.', 'It is very popular with local residents.'], 3, '"Area residents know to plan far in advance to get a seat" → rất phổ biến với người dân địa phương.', 'inference', 3],
+  ]
+  p7_3.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Q153-154: Text message chain
+  const p7_passage4 = `Joan Chi (12:39 P.M.)
+Hello Mina. Are you almost finished with the field measurements? I'm getting hungry.
+
+Mina Evers (12:40 P.M.)
+Sorry, Joan. I'm afraid you and Ms. Lim will have to go to lunch without me today. There's a problem with the site coordinates. This is going to take some time.
+
+Joan Chi (12:51 P.M.)
+Oh no. Should we bring something back for you?
+
+Mina Evers (12:59 P.M.)
+Get me a chicken sandwich.
+
+Joan Chi (1:00 P.M.)
+Sure thing, Mina. See you in a while.`
+
+  const p7_4 = [
+    ['q_rc1_153', 7, 'g_rc1_p7_4', p7_passage4, 'At 1:00 P.M., what does Ms. Chi most likely mean when she writes, "Sure thing, Mina"?', ['She will bring lunch for Ms. Evers.', 'She can provide a tool that Ms. Evers needs.', 'Some site coordinates are correct.', 'Some measurements must be double-checked.'], 0, 'Ms. Evers yêu cầu chicken sandwich → "Sure thing" = đồng ý mang về cho cô ấy.', 'inference', 3],
+    ['q_rc1_154', 7, 'g_rc1_p7_4', p7_passage4, 'What will happen next?', ['Ms. Chi will get new site coordinates.', 'Ms. Chi and Ms. Lim will be out for a while.', 'Ms. Evers will share a recipe.', 'Ms. Lim will begin taking measurements.'], 1, '"See you in a while" → Ms. Chi và Ms. Lim sẽ đi ăn trưa một lúc.', 'inference', 3],
+  ]
+  p7_4.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Q155-157: Vosey Farm notice
+  const p7_passage5 = `This season's excellent weather has yielded a substantial harvest of fruits and vegetables, in many cases more than growers may find buyers for. Those of you wishing to donate surplus produce to community organizations can do so by visiting Vosey Farm and Garden's Web site (www.vfgrdn.org), where you will find our list of drop-off locations.
+
+If you need us to come to you instead, please contact us. We will reach out to one of the many independent truck drivers who have kindly volunteered to transport and quickly distribute your food donations to vetted groups that need it. Check our Web site for more information about this service as well as for insights into topics related to farming and gardening in the Northern Great Plains region.`
+
+  const p7_5 = [
+    ['q_rc1_155', 7, 'g_rc1_p7_5', p7_passage5, 'For whom is the notice most likely intended?', ['Farmers', 'Professional chefs', 'Truck drivers', 'Supermarket managers'], 0, '"Growers" + "surplus produce" + "donate" → thông báo dành cho nông dân có sản phẩm dư thừa.', 'main-idea', 3],
+    ['q_rc1_156', 7, 'g_rc1_p7_5', p7_passage5, 'What does the notice indicate about the weather?', ['It caused transportation delays.', 'It included heavier rain than usual.', 'It was frequently a topic in the local news.', 'It was beneficial for crops.'], 3, '"Excellent weather has yielded a substantial harvest" → thời tiết tốt cho mùa màng.', 'detail', 2],
+    ['q_rc1_157', 7, 'g_rc1_p7_5', p7_passage5, 'What service does the notice mention?', ['Staffing for local businesses', 'Food collection and distribution', 'Farm machinery repair', 'Gardening workshops'], 1, '"Transport and quickly distribute your food donations" → thu thập và phân phối thực phẩm.', 'detail', 2],
+  ]
+  p7_5.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Q158-160: Concert hall notice
+  const p7_passage6 = `We are delighted that you are joining us for today's event. — [1] —. We ask that you adhere to the following guidelines to ensure that all attendees have an enjoyable experience.
+
+Upon entering the venue, please put any and all electronic devices in silent mode. Ringtones and lit screens are very distracting to both the performers and your fellow audience members. — [2] —. Moreover, audience members are not allowed to make an audio or visual recording of the performance.
+
+Bags and other items in the aisles pose a safety concern. — [3] —. If your bag is too big to fit properly under a seat, consider storing it in a locker for just $2. — [4] —. One of our attendants will gladly assist you with that.
+
+Thank you for your cooperation.`
+
+  const p7_6 = [
+    ['q_rc1_158', 7, 'g_rc1_p7_6', p7_passage6, 'Where most likely is the notice posted?', ['In an airplane', 'In a concert hall', 'At a restaurant', 'At a post office'], 1, '"Performers" + "audience members" + "performance" → phòng hòa nhạc.', 'inference', 2],
+    ['q_rc1_159', 7, 'g_rc1_p7_6', p7_passage6, 'What is stated about large bags?', ['They can be put in a locked box for a fee.', 'They must be left outside the building.', 'They will be inspected by an attendant.', 'They must be stored under a seat.'], 0, '"Storing it in a locker for just $2" → có thể cất trong tủ khóa với phí $2.', 'detail', 2],
+    ['q_rc1_160', 7, 'g_rc1_p7_6', p7_passage6, 'In which of the positions marked [1], [2], [3], and [4] does the following sentence best belong? "Please refrain from making phone calls or texting at all times."', ['[1]', '[2]', '[3]', '[4]'], 1, 'Câu về "phone calls or texting" phù hợp sau câu về "electronic devices" → vị trí [2].', 'sentence-insertion', 4],
+  ]
+  p7_6.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Q161-164: Sweeter Specialties email
+  const p7_passage7 = `To: Camille Ayala <ayala@esplinelectronics.com>
+From: Masae Adachi <madachi@sweeterspecialties.com>
+Date: February 12
+Subject: Event order
+Attachment: Sweeter Specialties Request Form
+
+Dear Ms. Ayala,
+
+Thank you for selecting our business to provide baked goods for the Esplin Electronics conference event in March. We are honored that you chose us for a fourth year in a row! On March 29, we will provide a large vanilla cake for each of the ten venues you indicated, and we will deliver a custom-baked multilayer cake on the following day. You will be billed on March 28. Please review the attached order form and return it to me within seven days.
+
+Regarding the cake you ordered for March 30, our head pastry chef will produce it according to your specifications. In fact, he created a sample of the complete recipe earlier today—almond crème cake with fresh raspberry filling. We have judged it to be a delectable treat, and we are sure that you will be pleased.
+
+If you have any concerns, just send me an e-mail. As always, we value your business.
+
+Masae Adachi, Owner
+Sweeter Specialties`
+
+  const p7_7 = [
+    ['q_rc1_161', 7, 'g_rc1_p7_7', p7_passage7, 'What is the main purpose of the e-mail?', ['To request confirmation of an order', 'To adjust some delivery dates', 'To announce the expansion of a business', 'To promote new dessert products'], 0, '"Please review the attached order form and return it to me" → yêu cầu xác nhận đơn hàng.', 'main-idea', 3],
+    ['q_rc1_162', 7, 'g_rc1_p7_7', p7_passage7, 'What is suggested about Ms. Ayala?', ['She is receiving a professional award.', 'She has worked as a pastry chef.', 'She has been a Sweeter Specialties client in the past.', 'She received a positive recommendation about a chef.'], 2, '"A fourth year in a row" → cô ấy là khách hàng cũ của Sweeter Specialties.', 'inference', 3],
+    ['q_rc1_163', 7, 'g_rc1_p7_7', p7_passage7, 'What is indicated about the multilayer cake?', ['It has been a best-selling product with clients.', 'It is the most expensive cake at Sweeter Specialties.', 'It is baked for Esplin Electronics annually.', 'It is a new flavor combination for Sweeter Specialties.'], 3, '"Almond crème cake with fresh raspberry filling" + "he created a sample earlier today" → hương vị mới.', 'inference', 4],
+    ['q_rc1_164', 7, 'g_rc1_p7_7', p7_passage7, 'The word "judged" in paragraph 2, line 3, is closest in meaning to', ['criticized', 'settled', 'determined', 'described'], 2, '"Judged" trong ngữ cảnh "judged it to be a delectable treat" = đánh giá/quyết định → "determined".', 'vocabulary', 4],
+  ]
+  p7_7.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Q165-167: Dishwasher review
+  const p7_passage8 = `Great Dishwasher!
+
+I never had a dishwasher before. After remodeling my kitchen, I finally had room for a compact dishwasher. I did a lot of research, and the Dish Magic 300 seemed to be the best choice. It was pricier than other models, but all of the reviews were excellent. So, I decided to spend the extra money. I have had the dishwasher for one month now, and I could not be happier with my decision. Most importantly, the dishes come out sparkling clean, no matter how dirty they were going in. Also, the machine is so quiet, you do not even know it is running. Lastly, it is designed to use water efficiently, which is very important to me. Overall, I am very pleased with this dishwasher.
+
+— Anna Yakovleva`
+
+  const p7_8 = [
+    ['q_rc1_165', 7, 'g_rc1_p7_8', p7_passage8, 'Why did Ms. Yakovleva choose the Dish Magic 300 dishwasher?', ['It was less expensive than most models.', 'It was the largest model available.', 'It was rated very highly.', 'It was the same brand as her other appliances.'], 2, '"All of the reviews were excellent" → cô chọn vì đánh giá cao.', 'detail', 2],
+    ['q_rc1_166', 7, 'g_rc1_p7_8', p7_passage8, 'The word "running" in paragraph 1, line 7, is closest in meaning to', ['adjusting', 'controlling', 'moving', 'operating'], 3, '"Running" trong "machine is so quiet, you do not even know it is running" = đang hoạt động → "operating".', 'vocabulary', 3],
+    ['q_rc1_167', 7, 'g_rc1_p7_8', p7_passage8, 'What is indicated about Ms. Yakovleva?', ['She cares about saving water.', 'She recently moved to a new home.', 'She bought the dishwasher a year ago.', 'She remodels kitchens professionally.'], 0, '"Designed to use water efficiently, which is very important to me" → cô quan tâm tiết kiệm nước.', 'inference', 3],
+  ]
+  p7_8.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Q168-171: Skyler Airlines
+  const p7_passage9 = `Skyler Airlines employs more than 20,000 people from all over the world. We're growing fast and have many positions available. —[1]—. So regardless of your background, there's probably a place for you on our team. Skyler employees enjoy many perks. —[2]—. For example, our discount program enables them to fly to any of our destinations for a fraction of the average ticket price. —[3]—. We offer upward and global mobility, tuition reimbursement, a mentorship program, and a generous compensation package. —[4]—. Annual paid vacations enable a comfortable work-life balance. It's no wonder that Skyler Airlines was named "Best Airline to Work For" by Travel Vista Journal three years in a row.`
+
+  const p7_9 = [
+    ['q_rc1_168', 7, 'g_rc1_p7_9', p7_passage9, 'For whom is the information intended?', ['Skyler Airlines employees', 'Skyler Airlines customers', 'Potential journal subscribers', 'Current job seekers'], 3, '"Many positions available" + "growing fast" → thông tin tuyển dụng cho người tìm việc.', 'main-idea', 2],
+    ['q_rc1_169', 7, 'g_rc1_p7_9', p7_passage9, 'In the information, what is NOT mentioned as being offered to employees?', ['Payment for educational expenses', 'Free airline tickets', 'Opportunities for mentoring', 'Paid days off'], 1, 'Có "tuition reimbursement" (A), "mentorship" (C), "paid vacations" (D). Không có "free tickets" — chỉ có "discount program" (giảm giá, không miễn phí).', 'detail', 4],
+    ['q_rc1_170', 7, 'g_rc1_p7_9', p7_passage9, 'What is mentioned about Skyler Airlines?', ['It flies to the most destinations around the world.', 'It is planning to merge with another airline.', 'It has been praised by a trade publication.', 'It has replaced its seats with more comfortable ones.'], 2, '"Named Best Airline to Work For by Travel Vista Journal" → được tạp chí khen ngợi.', 'detail', 3],
+    ['q_rc1_171', 7, 'g_rc1_p7_9', p7_passage9, 'In which of the positions marked [1], [2], [3], and [4] does the following sentence best belong? "Our openings cover a broad range of skill sets."', ['[1]', '[2]', '[3]', '[4]'], 0, 'Câu về "broad range of skill sets" phù hợp sau câu "many positions available" → vị trí [1].', 'sentence-insertion', 4],
+  ]
+  p7_9.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Q172-175: Online chat discussion (headphones presentation)
+  const p7_passage10 = `Susan Gowan 9:16 A.M.
+Good morning. The presentation slides about the new line of headphones are almost ready for distribution to our many partner stores. We are on track to send them out next Monday.
+
+Maggie Lorenz 9:17 A.M.
+How do they look?
+
+Susan Gowan 9:20 A.M.
+There are still some missing elements.
+
+Alan Woodson 9:21 A.M.
+We mainly need the information from the user studies that reviewed the headphones for sport use. We should have that report from the research and development office by Wednesday.
+
+Maggie Lorenz 9:22 A.M.
+Yes, let's not overlook that. And if you're concerned about the report not arriving by Wednesday, please contact Matt Harven and remind him to expedite a summary to us.
+
+Susan Gowan 9:23 A.M.
+Assuming we receive that summary soon enough to incorporate its findings into the slides, should the three of us schedule a trial run through the presentation on Thursday or Friday?
+
+Maggie Lorenz 9:24 A.M.
+Let's try for Thursday afternoon. Then we will still have Friday to make any necessary changes.
+
+Alan Woodson 9:25 A.M.
+Fine by me. I'm free after 2 P.M.`
+
+  const p7_10 = [
+    ['q_rc1_172', 7, 'g_rc1_p7_10', p7_passage10, 'What is indicated about a presentation?', ['It will be expensive to produce.', 'It will highlight some best-selling products.', 'It will be Ms. Gowan\'s first project.', 'It will be sent to multiple locations.'], 3, '"Distribution to our many partner stores" → gửi đến nhiều địa điểm.', 'detail', 3],
+    ['q_rc1_173', 7, 'g_rc1_p7_10', p7_passage10, 'At 9:22 A.M., what does Ms. Lorenz imply when she writes, "let\'s not overlook that"?', ['More staff should attend a meeting.', 'Information from the user studies is important.', 'The presentation must run smoothly.', 'Partner stores must be notified about an upcoming report.'], 1, 'Bối cảnh: Alan nói cần thông tin user studies → Maggie nói "let\'s not overlook that" = đừng bỏ qua (vì quan trọng).', 'inference', 4],
+    ['q_rc1_174', 7, 'g_rc1_p7_10', p7_passage10, 'Who most likely is Mr. Harven?', ['A store manager', 'An amateur athlete', 'A product researcher', 'An advertising executive'], 2, '"Contact Matt Harven and remind him to expedite a summary" về R&D report → anh ấy là nhà nghiên cứu sản phẩm.', 'inference', 4],
+    ['q_rc1_175', 7, 'g_rc1_p7_10', p7_passage10, 'When do the writers plan to meet to review a slide presentation?', ['On Monday', 'On Wednesday', 'On Thursday', 'On Friday'], 2, '"Let\'s try for Thursday afternoon" → họp vào chiều thứ Năm.', 'detail', 2],
+  ]
+  p7_10.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Q176-180: Kitchen Swifts press release + review (double passage)
+  const p7_passage11 = `FOR IMMEDIATE RELEASE
+
+SYDNEY (4 June)—Kitchen Swifts and Chef Darius Cordero are joining together to give home cooks a new culinary experience. The award-winning chef is the owner of restaurants in both the Philippines and Australia, including the recently opened Enriqua's. He says his cooking reflects his Filipino heritage, which is a blend of many cultures.
+
+"I've designed these simplified recipes for Kitchen Swifts so that cooks at home can enjoy new and exciting flavours with ease," he said. "While preparing and eating these meals, you can feel like you are travelling the world with me."
+
+Zahra Chambers, vice president of Kitchen Swifts, says she is pleased to work with Chef Cordero and to offer delicious new recipes to their customers. Kitchen Swifts supplies menus, recipes, and ingredients for two people, four people, or six people, including a range of vegetarian selections. Customers choose the most appropriate meal options, and then a box is delivered weekly. Current customers will see no price increase with the partnership. To find out more, visit the Kitchen Swifts Web site at www.kitchenswifts.com.au.
+
+---
+
+https://www.sydneyrestaurants.com.au
+
+A colleague arranged for us to eat at Enriqua's while I was at a conference in Sydney. It is usually fully booked for dinner; you may need to call months in advance for a table. We had a wonderful lunch there instead. Everything was delicious, and the bread and desserts are baked on-site! It was a worthwhile treat before I flew back to Hong Kong.
+
+—Meili Guan`
+
+  const p7_11 = [
+    ['q_rc1_176', 7, 'g_rc1_p7_11', p7_passage11, 'What is the purpose of the press release?', ['To promote the opening of a restaurant', 'To announce a business partnership', 'To introduce a travel program', 'To congratulate an award recipient'], 1, '"Kitchen Swifts and Chef Darius Cordero are joining together" → thông báo hợp tác kinh doanh.', 'main-idea', 2],
+    ['q_rc1_177', 7, 'g_rc1_p7_11', p7_passage11, 'In the press release, the word "reflects" in paragraph 1, line 4, is closest in meaning to', ['results in', 'changes', 'shows', 'thinks about'], 2, '"Reflects" trong "cooking reflects his Filipino heritage" = phản ánh/thể hiện → "shows".', 'vocabulary', 3],
+    ['q_rc1_178', 7, 'g_rc1_p7_11', p7_passage11, 'What is indicated about Kitchen Swifts?', ['It raised its prices for all customers.', 'It revised its delivery schedule.', 'It offers several meal options.', 'It has a new vice president.'], 2, '"Menus, recipes, and ingredients for two people, four people, or six people, including vegetarian selections" → nhiều lựa chọn.', 'detail', 3],
+    ['q_rc1_179', 7, 'g_rc1_p7_11', p7_passage11, 'What is most likely true about Ms. Guan?', ['She went to Mr. Cordero\'s restaurant.', 'She recently went to Sydney for a vacation.', 'She is a colleague of Ms. Chambers.', 'She regularly orders from Kitchen Swifts.'], 0, '"A colleague arranged for us to eat at Enriqua\'s" → cô ấy đến nhà hàng của Chef Cordero.', 'inference', 3],
+    ['q_rc1_180', 7, 'g_rc1_p7_11', p7_passage11, 'What did Ms. Guan suggest about Enriqua\'s in the review?', ['It has a limited lunch menu.', 'It takes dinner reservations.', 'It serves bread from a local bakery.', 'It has a location in Hong Kong.'], 1, '"You may need to call months in advance for a table" → nhận đặt bàn trước cho bữa tối.', 'detail', 3],
+  ]
+  p7_11.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Q181-185: Email + ticket (double passage) - Conor Boyle
+  const p7_passage12 = `From: cboyle@ceoleire.co.uk
+To: laura.savard@orbitmail.scot
+Date: 25 May
+Subject: RE: Some suggestions
+
+Dear Ms. Savard,
+
+Thank you for your kind offer to either pick up your online order from my shop or to pay extra for air or train transport. Neither arrangement is necessary, as I am happy to deliver your items to you in Stranraer myself. It so happens that my sister and her children live nearby in Kirkcolm. Before seeing them, I will drive my rental car to your house and hand deliver the items to you.
+
+As you know, my merchandise is 100 percent handcrafted. If any damage occurs in transit, the repair turns into an expensive, time-consuming ordeal. Over the years, I've seen too much damage done by inattentive baggage handlers. My policy is to deliver items personally whenever feasible or hire a ground- or sea-based courier service I trust.
+
+I look forward to meeting you on 5 June. I expect to arrive at your house no later than 5 p.m.
+
+Sincerely,
+Conor Boyle
+Ceoleire Classics
+
+---
+
+Northern Ireland Ferry Service
+Date of Issuance: 26 May
+Passenger Name: Conor Boyle
+Departing Belfast: Friday, 5 June, 1:05 PM
+Docking at Cairnryan: Friday, 5 June, 3:20 PM
+Baggage: 1 suitcase (small), 2 instrument cases (1 mandolin, 1 guitar)
+Vehicle transport: No
+Adult Standard Class: £55.00
+Please arrive 30 minutes prior to departure.`
+
+  const p7_12 = [
+    ['q_rc1_181', 7, 'g_rc1_p7_12', p7_passage12, 'What is the purpose of the e-mail?', ['To finalize a plan', 'To accept an invitation', 'To promote a new service', 'To request feedback on a policy'], 0, 'Email chốt kế hoạch giao hàng + gặp mặt → "finalize a plan".', 'main-idea', 3],
+    ['q_rc1_182', 7, 'g_rc1_p7_12', p7_passage12, 'Why will Mr. Boyle travel from Stranraer to Kirkcolm?', ['To make a delivery', 'To attend a meeting', 'To drop off a rental car', 'To visit with family members'], 3, '"My sister and her children live nearby in Kirkcolm. Before seeing them..." → thăm gia đình.', 'detail', 3],
+    ['q_rc1_183', 7, 'g_rc1_p7_12', p7_passage12, 'What is indicated in the e-mail?', ['Mr. Boyle\'s sister is a cofounder of Ceoleire Classics.', 'Mr. Boyle has been disappointed by air- and train-freight companies.', 'Ms. Savard has purchased items from Mr. Boyle in the past.', 'Ms. Savard prefers a specific brand of luggage.'], 1, '"Over the years, I\'ve seen too much damage done by inattentive baggage handlers" → thất vọng với vận chuyển air/train.', 'inference', 4],
+    ['q_rc1_184', 7, 'g_rc1_p7_12', p7_passage12, 'What is most likely true about Ms. Savard?', ['She often travels for her job.', 'She paid extra to have items hand delivered.', 'She recently purchased musical instruments.', 'She will meet Mr. Boyle at the rental car office.'], 2, 'Baggage: "2 instrument cases (1 mandolin, 1 guitar)" → cô mua nhạc cụ (đàn mandolin và guitar).', 'inference', 4],
+    ['q_rc1_185', 7, 'g_rc1_p7_12', p7_passage12, 'How is Mr. Boyle traveling to Cairnryan on June 5?', ['By car', 'By train', 'By boat', 'By plane'], 2, 'Ticket là "Northern Ireland Ferry Service" → đi bằng phà (thuyền).', 'detail', 2],
+  ]
+  p7_12.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Q186-190: Train to Achieve (triple passage - ad + forum + website)
+  const p7_passage13 = `Train to Achieve (TTA)—Our classes prepare you to succeed!
+
+Profiled in the latest Business Directions Nigeria newsletter, Train to Achieve (TTA) is one of the most innovative training providers in West Africa. By offering our classes entirely in online format, we bring the classroom to your home. All classes include individualized instruction and are taught by recognized professionals in their respective fields. Upon successful completion of a class, you will receive an official Certificate of Training, a valuable addition to any résumé. For a complete list of class fees and schedules, visit our Web site at www.traintoachieve.org.ng. The following are some of our most popular classes.
+
+Introduction to Social Media Marketing (TTA1504): Taught by marketing consultant Marcus Akpan, the class equips you with the know-how to promote your business online.
+
+Become a Successful Freelance Writer (TTA3283): Business writer Brenda Akande gives you expert guidance on how to hone your writing skills and sell your writing services.
+
+Starting an Internet Radio Station (TTA7629): Online radio host Natalie Kabiru shows you how to appeal to your target market and gives practical tips for setting up your broadcast service.
+
+Basics of Graphic Design (TTA7633): Veteran graphic designer Doug Umaru helps you acquire the basic skills needed to start a graphic design business.
+
+---
+
+Discussion forum for students enrolled in Train to Achieve Class TTA1504
+
+Posted on: 21 May, 9:41 A.M.
+Posted by: Joseph Egbe
+Subject: Presentations
+
+Viewing the list of students enrolled in this class, I remembered chatting with some of you on the forum for January's poster design class. I look forward to sharing our learning experiences again for this class. Yesterday I was the second student to meet with Mr. Akpan for an individual videoconference about my business. I own a food truck from which I sell baked goods, and when I shared with Mr. Akpan the outline for my Web site, he suggested that I add a section with vivid images of all my baked goods. It was helpful advice.
+
+---
+
+Egbe's Bakery—Unique baked-in flavours in every bite!
+- Section 1: Explore our menu and price list
+- Section 2: Browse photos of our delicious treats
+- Section 3: Learn about our catering services
+- Section 4: View lists of ingredients`
+
+  const p7_13 = [
+    ['q_rc1_186', 7, 'g_rc1_p7_13', p7_passage13, 'What is indicated about TTA?', ['It was founded by a graphic designer.', 'It publishes its own online newsletter.', 'It offers classes led by industry professionals.', 'It has classroom facilities in cities across West Africa.'], 2, '"Taught by recognized professionals in their respective fields" → lớp học do chuyên gia dạy.', 'detail', 3],
+    ['q_rc1_187', 7, 'g_rc1_p7_13', p7_passage13, 'According to the advertisement, what does TTA provide to students who finish a class?', ['A résumé-writing workshop', 'A discount on a follow-up class', 'A list of current job postings', 'A certification document'], 3, '"Official Certificate of Training" → chứng chỉ hoàn thành khóa học.', 'detail', 2],
+    ['q_rc1_188', 7, 'g_rc1_p7_13', p7_passage13, 'What is most likely true about Mr. Egbe?', ['He helped design a discussion forum.', 'He has previously taken a TTA class.', 'He develops videoconferencing software.', 'He recently sold a bakery food truck.'], 1, '"I remembered chatting with some of you on the forum for January\'s poster design class" → đã học TTA trước đó.', 'inference', 4],
+    ['q_rc1_189', 7, 'g_rc1_p7_13', p7_passage13, 'What TTA class is Mr. Egbe enrolled in?', ['Introduction to Social Media Marketing', 'Become a Successful Freelance Writer', 'Starting an Internet Radio Station', 'Basics of Graphic Design'], 0, 'Forum là "for students enrolled in Train to Achieve Class TTA1504" → Introduction to Social Media Marketing.', 'detail', 3],
+    ['q_rc1_190', 7, 'g_rc1_p7_13', p7_passage13, 'What section did Mr. Egbe most likely add to the outline after speaking with Mr. Akpan?', ['Section 1', 'Section 2', 'Section 3', 'Section 4'], 1, 'Mr. Akpan khuyên "add a section with vivid images of all my baked goods" → Section 2 (Browse photos).', 'inference', 4],
+  ]
+  p7_13.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Q191-195: Orange Bay Kitchen (article + review + email)
+  const p7_passage14 = `Caribbean Flavours Abound
+By Rebecca Roats
+
+NOTTINGHAM (1 August)—Orange Bay Kitchen has been serving up an infusion of Jamaican flavours in a laid-back Caribbean atmosphere for six months now. Managed by Keron Deslandes, the 150-seat restaurant is an aromatic jewel amid the bustling shops and eateries in Wester Square. The servers are always happy to help diners select from the variety of delights on the extensive menu, which includes curried goat, oxtail soup, and red snapper. The restaurant is most famous for its jerk chicken. Marinated for 24 hours prior to grilling and served with sides of stewed cabbage and coconut rice, the dish is a good deal at £12.
+
+If you stop in on any Friday night between 7 and 11 P.M., you will enjoy live reggae music.
+
+---
+
+https://www.dinerreviews.co.uk/orangebaykitchen
+Posted on 22 August by Tamika Peterkin, tpeterkin@sunmail.co.uk
+
+Orange Bay Kitchen: 2/5 Stars
+
+After reading a glowing article about Orange Bay Kitchen by Rebecca Roats, I was eager to give this place a try. My husband and I arrived there at 7 P.M. yesterday, keen to enjoy live music with our dinner. Unfortunately, the band's performance that night had been cancelled. Undeterred, we stayed and both ordered the jerk chicken. While the chicken's smoky flavour was outstanding, the stewed cabbage was lacking in flavour. Also, the portion size was smaller than we had anticipated, so we ordered another appetiser to avoid going home hungry. The head chef came out to apologise and was extremely nice, but we will probably not go back anytime soon.
+
+---
+
+To: tpeterkin@sunmail.co.uk
+From: vsmith@orangebaykitchen.co.uk
+Date: 24 August
+Subject: Your review
+Attachment: 0258
+
+Dear Ms. Peterkin,
+
+Thank you for visiting Orange Bay Kitchen and leaving a review. Our manager, Keron Deslandes, told me more about your visit and our failure to live up to your expectations that evening. Please accept the attached £20 gift certificate; I do hope that you will give us another try.
+
+During your visit, our band had an equipment malfunction, which is what led to the last-minute cancellation. However, the band will be back performing weekly beginning in September. Also, I want you to know that Head Chef Adio Brown has changed the spices he uses in the stewed cabbage. I am sure you will find them delightful.
+
+Sincerely,
+Vea Smith, Owner
+Orange Bay Kitchen`
+
+  const p7_14 = [
+    ['q_rc1_191', 7, 'g_rc1_p7_14', p7_passage14, 'What does the article mention about Orange Bay Kitchen?', ['It is currently hiring servers.', 'It is located on a quiet street.', 'It has another location in Jamaica.', 'It opened six months ago.'], 3, '"Has been serving up...for six months now" → mở 6 tháng trước.', 'detail', 2],
+    ['q_rc1_192', 7, 'g_rc1_p7_14', p7_passage14, 'According to the article, what is the most popular menu item at Orange Bay Kitchen?', ['Red snapper', 'Oxtail soup', 'Jerk chicken', 'Curried goat'], 2, '"The restaurant is most famous for its jerk chicken" → jerk chicken nổi tiếng nhất.', 'detail', 2],
+    ['q_rc1_193', 7, 'g_rc1_p7_14', p7_passage14, 'What is suggested about Ms. Peterkin\'s visit to Orange Bay Kitchen?', ['She was there on a Friday.', 'She dined alone.', 'She requested extra rice.', 'She ordered dessert.'], 0, 'Bài nói "live music on Friday night" + cô đến 7 P.M. để nghe nhạc → đến thứ Sáu.', 'inference', 3],
+    ['q_rc1_194', 7, 'g_rc1_p7_14', p7_passage14, 'What is a purpose of the e-mail?', ['To answer a question', 'To offer an apology', 'To ask for feedback', 'To confirm a reservation'], 1, '"Please accept the attached £20 gift certificate" + giải thích sự cố → xin lỗi.', 'main-idea', 2],
+    ['q_rc1_195', 7, 'g_rc1_p7_14', p7_passage14, 'Whom did Ms. Peterkin meet at Orange Bay Kitchen?', ['Ms. Roats', 'Mr. Deslandes', 'Mr. Brown', 'Ms. Smith'], 2, '"The head chef came out to apologise" → gặp Head Chef Adio Brown.', 'detail', 3],
+  ]
+  p7_14.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Q196-200: Orbys Distributors (invoice + notice + email)
+  const p7_passage15 = `Orbys Distributors
+Client: Green Canyon  Date: June 10
+Account: 4352-0
+
+Item | Price
+Garden soil, 33 cubic meters | $1,170.00
+Crushed gravel, 30 metric tons | 1,710.00
+Decorative stone, 20 metric tons | 1,140.00
+70 paving stones, .6 x .6 meters | 630.00
+Subtotal | 4,650.00
+Discount (10%) | 465.00
+Delivery charge | 350.00
+Grand Total | 4,535.00
+
+Please see the enclosed notice outlining important changes to your billing.
+
+---
+
+Orbys Distributors
+
+To our valued customers:
+Our current invoicing system has been in use since Orbys Distributors was founded over twenty years ago. As a much-needed upgrade, we are switching to electronic invoicing. Starting August 1, invoices will be generated automatically each month and will be sent to the e-mail address associated with your company's account.
+
+Rest assured that our long-standing incentives remain in place:
+- A 10% discount for orders of more than $4,000
+- A 20% discount for charitable organizations
+- Free deliveries to locations within 5 miles of one of our supply centers
+- Free samples for members of our Frequent Buyer Club
+
+More information about our transition to electronic invoicing is available on our Web site. Thank you for your support. Orbys Distributors appreciates your business.
+
+---
+
+To: Mary Peterson, Billing Department
+From: Tanvir Singh, Account Manager
+Date: September 12
+Subject: Account 1012-4
+
+Hello Mary,
+
+I received a query today from William Tesoriero at Tesoriero Remodeling. His monthly invoice for August never arrived.
+
+As you know, Mr. Tesoriero was one of our very first customers. Since we first opened for business, he has made purchases from us on a regular basis. He is also a member of the Frequent Buyer Club. This is a customer we absolutely do not want to lose. I explained to him that the rollout of our electronic invoicing system did not go as smoothly as we had hoped and promised that this would not happen again.
+
+I would appreciate it if you could please investigate the problem without delay and send the invoice for August to Mr. Tesoriero.
+
+Tanvir`
+
+  const p7_15 = [
+    ['q_rc1_196', 7, 'g_rc1_p7_15', p7_passage15, 'What does the invoice suggest about Green Canyon?', ['It does landscaping projects.', 'It designs highways.', 'It repairs old houses.', 'It operates a farm.'], 0, 'Mặt hàng: garden soil, gravel, decorative stone, paving stones → làm cảnh quan (landscaping).', 'inference', 3],
+    ['q_rc1_197', 7, 'g_rc1_p7_15', p7_passage15, 'Why most likely did Green Canyon receive a discount on its order dated June 10?', ['It is a charitable organization.', 'It belongs to the Frequent Buyer Club.', 'It spent more than $4,000 on merchandise.', 'It is located near an Orbys Distributors supply center.'], 2, 'Subtotal $4,650 > $4,000 → được giảm 10% (theo notice).', 'inference', 3],
+    ['q_rc1_198', 7, 'g_rc1_p7_15', p7_passage15, 'According to the notice, what is changing at Orbys Distributors?', ['Its e-mail address', 'Its list of incentives', 'Its invoicing system', 'Its delivery schedule'], 2, '"We are switching to electronic invoicing" → thay đổi hệ thống hóa đơn.', 'detail', 2],
+    ['q_rc1_199', 7, 'g_rc1_p7_15', p7_passage15, 'What is suggested about Mr. Tesoriero?', ['He asked to meet with Mr. Singh.', 'He is interested in employment at Orbys Distributors.', 'He recently placed an order for some construction machinery.', 'He has been a customer of Orbys Distributors for about twenty years.'], 3, '"One of our very first customers" + công ty mở "over twenty years ago" → khách hàng ~20 năm.', 'inference', 4],
+    ['q_rc1_200', 7, 'g_rc1_p7_15', p7_passage15, 'What does Mr. Singh ask Ms. Peterson to do?', ['Make a bill payment', 'Solve a problem', 'Confirm an order', 'Update an account number'], 1, '"Investigate the problem without delay and send the invoice" → giải quyết vấn đề.', 'detail', 2],
+  ]
+  p7_15.forEach(q => questions.push(Q(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[8], q[9])))
+
+  // Insert all questions
+  for (const q of questions) {
+    await db.question.upsert({ where: { id: q.id }, update: q, create: q })
+  }
+
+  // Create test set
+  const allIds = questions.map(q => q.id)
+  const testSet = {
+    id: 'ts_rc1_full',
+    title: '🎯 Đề TOEIC Reading Test 1 (100 câu · 75 phút)',
+    description: 'Đề TOEIC Reading đầy đủ từ Part 5 (30 câu), Part 6 (16 câu), Part 7 (54 câu) — tổng 100 câu. Lấy từ bộ đề ETS thật bạn cung cấp (TEST 1 RC.pdf). Có giải thích chi tiết bằng tiếng Việt sau khi nộp bài.',
+    durationMin: 75,
+    type: 'full',
+    questionIds: JSON.stringify(allIds),
+  }
+  await db.testSet.upsert({ where: { id: testSet.id }, update: testSet, create: testSet })
+
+  console.log('Seed complete!')
+  console.log(`  Questions added: ${questions.length}`)
+  console.log(`  Test set: ${testSet.id}`)
+  console.log(`  Total questions in DB: ${await db.question.count()}`)
+  console.log(`  Total test sets in DB: ${await db.testSet.count()}`)
+}
+
+main()
+  .catch((e) => {
+    console.error(e)
+    process.exit(1)
+  })
+  .finally(async () => {
+    await db.$disconnect()
+  })
