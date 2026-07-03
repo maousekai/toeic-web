@@ -75,7 +75,9 @@ export function PracticeList() {
   }
 
   const examTests = tests.filter((t) => t.type === 'exam')
-  const practiceTests = tests.filter((t) => t.type !== 'exam')
+  // Đề Reading đầy đủ (Test 1, Test 2...) — ưu tiên hiển thị lên đầu
+  const fullReadingTests = tests.filter((t) => t.id === 'ts_rc1_full' || t.id === 'ts_rc2_full')
+  const practiceTests = tests.filter((t) => t.type !== 'exam' && t.id !== 'ts_rc1_full' && t.id !== 'ts_rc2_full')
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -86,6 +88,65 @@ export function PracticeList() {
           và <strong>thi thật</strong> (mô phỏng phòng thi, nghiêm ngặt).
         </p>
       </div>
+
+      {/* ĐỀ READING ĐẦY ĐỦ — Section ưu tiên hiển thị đầu trang */}
+      {fullReadingTests.length > 0 && (
+        <div className="mb-10">
+          <div className="mb-4 flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
+              <FileText className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">📖 Đề TOEIC Reading Đầy Đủ (100 câu)</h2>
+              <p className="text-xs text-muted-foreground">Đề thi thật TOEIC Reading — Part 5, 6, 7 với 100 câu hỏi + giải thích chi tiết tiếng Việt</p>
+            </div>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            {fullReadingTests.map((t, i) => (
+              <motion.div
+                key={t.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: i * 0.05 }}
+              >
+                <Card className="group relative overflow-hidden border-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl">
+                  <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/8 via-teal-500/5 to-transparent" />
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <FileText className="h-6 w-6" />
+                      </div>
+                      <Badge variant="secondary" className="gap-1 bg-primary/10 text-primary">
+                        <Clock className="h-3 w-3" /> {t.durationMin}'
+                      </Badge>
+                    </div>
+                    <CardTitle className="mt-3 text-lg">{t.title}</CardTitle>
+                    <CardDescription className="text-sm leading-relaxed line-clamp-3">{t.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge variant="secondary" className="gap-1 text-[10px]"><FileText className="h-3 w-3" /> Part 5 (30 câu)</Badge>
+                      <Badge variant="secondary" className="gap-1 text-[10px]"><FileText className="h-3 w-3" /> Part 6 (16 câu)</Badge>
+                      <Badge variant="secondary" className="gap-1 text-[10px]"><FileText className="h-3 w-3" /> Part 7 (54 câu)</Badge>
+                      <Badge variant="secondary" className="gap-1 text-[10px]"><CheckCircle2 className="h-3 w-3" /> Giải thích VN</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1"><Layers className="h-3.5 w-3.5" /> {t.questionCount} câu</span>
+                        <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {t.durationMin} phút</span>
+                      </div>
+                      <Button size="sm" onClick={() => startTest(t)}>
+                        <Play className="mr-1 h-3.5 w-3.5" /> Bắt đầu
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* EXAM MODE — Section nổi bật ở trên */}
       {examTests.length > 0 && (
