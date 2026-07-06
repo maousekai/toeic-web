@@ -219,16 +219,30 @@ export function TestEngine({ testSetId, mode = 'practice' }: { testSetId: string
 
       {/* Top bar */}
       <div className="sticky top-16 z-30 mb-4 flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/90 p-3 backdrop-blur">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{testSet.title}</p>
-          <p className="text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 min-w-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              if (confirm('Bạn đang làm bài. Quay lại sẽ mất tiến trình. Bạn chắc không?')) {
+                navigate({ name: 'practice' })
+              }
+            }}
+            className="gap-1.5 shrink-0 text-muted-foreground hover:text-foreground"
+          >
+            <ChevronLeft className="h-4 w-4" /> Quay lại
+          </Button>
+          <div className="min-w-0 border-l border-border/60 pl-3">
+            <p className="truncate text-sm font-semibold" suppressHydrationWarning>{testSet.title}</p>
+            <p className="text-xs text-muted-foreground">
             {/* Exam mode: ẩn số câu đã trả lời để tăng căng thẳng */}
             {isExam ? (
               <>Câu {current + 1} / {questions.length} · Hết giờ tự động nộp</>
             ) : (
               <>{answeredCount}/{questions.length} answered</>
             )}
-          </p>
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <div className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-bold tabular-nums ${

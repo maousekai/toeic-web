@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { BackButton } from '@/components/site/back-button'
 
 type Vocab = {
   id: string
@@ -119,6 +120,7 @@ export function VocabFlashcards() {
 
   return (
     <div className="space-y-6">
+      <BackButton targetView={{ name: 'learn' }} label="Trung tâm học tập" />
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold">Từ vựng TOEIC theo cấp độ</h2>

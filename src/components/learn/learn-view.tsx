@@ -4,7 +4,10 @@ import { BookOpen, Brain, Lightbulb, Headphones, FileText, ArrowRight, Graduatio
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
-import { useRouter } from '@/lib/router'
+import { useRouter, type View } from '@/lib/router'
+import { useAuth } from '@/lib/auth/use-auth'
+import { useAuthUI } from '@/lib/auth/auth-ui-context'
+import { BackButton } from '@/components/site/back-button'
 import { GrammarList } from './grammar-list'
 import { GrammarDetail } from './grammar-detail'
 import { VocabFlashcards } from './vocab-flashcards'
@@ -12,6 +15,17 @@ import { StrategiesView } from './strategies-view'
 
 export function LearnView() {
   const { view, navigate } = useRouter()
+  const { user } = useAuth()
+  const { openAuth } = useAuthUI()
+
+  // Helper: yêu cầu login trước khi navigate
+  const requireAuth = (targetView: View, featureName: string) => {
+    if (!user) {
+      openAuth('login', () => navigate(targetView))
+      return
+    }
+    navigate(targetView)
+  }
 
   // Single grammar lesson
   if (view.name === 'grammar' && view.slug) {
@@ -29,15 +43,16 @@ export function LearnView() {
   }
 
   const hubCards = [
-    { icon: BookOpen, title: 'Grammar Lessons', desc: 'Clear explanations of the grammar points tested on the TOEIC, with examples and audio.', cta: 'Browse lessons', view: 'grammar' as const },
-    { icon: Brain, title: 'Vocabulary Flashcards', desc: 'Flip, listen and review high-frequency business English words with spaced repetition.', cta: 'Start flashcards', view: 'vocab' as const },
-    { icon: Mic, title: 'Luyện phát âm', desc: 'Nghe câu mẫu, ghi âm giọng nói, nhận feedback AI chi tiết về phát âm, trọng âm, ngữ điệu.', cta: 'Luyện ngay', view: 'pronunciation' as const },
-    { icon: Lightbulb, title: 'Test Strategies', desc: 'Section-by-section tactics for Listening and Reading — plus test-day tips.', cta: 'See strategies', view: 'strategies' as const },
-    { icon: PenLine, title: 'AI Writing Check', desc: 'Get your sentences corrected instantly by AI and learn from the feedback.', cta: 'Try AI tools', view: 'tools' as const },
+    { icon: BookOpen, title: 'Grammar Lessons', desc: 'Clear explanations of the grammar points tested on the TOEIC, with examples and audio.', cta: 'Browse lessons', view: 'grammar' as const, needAuth: true },
+    { icon: Brain, title: 'Vocabulary Flashcards', desc: 'Flip, listen and review high-frequency business English words with spaced repetition.', cta: 'Start flashcards', view: 'vocab' as const, needAuth: true },
+    { icon: Mic, title: 'Luyện phát âm', desc: 'Nghe câu mẫu, ghi âm giọng nói, nhận feedback AI chi tiết về phát âm, trọng âm, ngữ điệu.', cta: 'Luyện ngay', view: 'pronunciation' as const, needAuth: true },
+    { icon: Lightbulb, title: 'Test Strategies', desc: 'Section-by-section tactics for Listening and Reading — plus test-day tips.', cta: 'See strategies', view: 'strategies' as const, needAuth: false },
+    { icon: PenLine, title: 'AI Writing Check', desc: 'Get your sentences corrected instantly by AI and learn from the feedback.', cta: 'Try AI tools', view: 'tools' as const, needAuth: true },
   ]
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      <BackButton targetView={{ name: 'home' }} label="Trang chủ" />
       {/* Hub header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Learning Center</h1>
@@ -49,7 +64,13 @@ export function LearnView() {
       {/* Hub cards */}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-10">
         {hubCards.map((c) => (
-          <Card key={c.title} className="group cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md" onClick={() => navigate({ name: c.view })}>
+          <Card key={c.title} className="group cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md" onClick={() => {
+            if (c.needAuth) {
+              requireAuth({ name: c.view } as View, c.title)
+            } else {
+              navigate({ name: c.view } as View)
+            }
+          }}>
             <CardHeader>
               <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <c.icon className="h-5 w-5" />
@@ -58,7 +79,7 @@ export function LearnView() {
               <CardDescription className="text-sm">{c.desc}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center text-xs font-medium text-primary">
+              <div className="flex items-center text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
                 {c.cta} <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-0.5" />
               </div>
             </CardContent>

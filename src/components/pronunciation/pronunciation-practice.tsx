@@ -12,6 +12,7 @@ import { Markdown } from '@/components/site/markdown'
 import { useToast } from '@/hooks/use-toast'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { BackButton } from '@/components/site/back-button'
 import {
   SOUND_GROUPS, SOUND_CATEGORIES, getSoundsByType, type SoundGroup,
 } from '@/data/pronunciation-examples'
@@ -337,6 +338,7 @@ export function PronunciationPractice() {
   // ===== SOUND GROUPS LIST VIEW =====
   return (
     <div className="space-y-6">
+      <BackButton targetView={{ name: 'learn' }} label="Trung tâm học tập" />
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold">Luyện phát âm theo nhóm âm</h2>
