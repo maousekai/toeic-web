@@ -24,7 +24,7 @@ export function Footer() {
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
                 <GraduationCap className="h-5 w-5" />
               </div>
-              <span className="text-base font-bold">TOEIC Ace AI</span>
+              <span className="text-base font-bold" suppressHydrationWarning>TOEIC Ace AI</span>
             </div>
             <p className="mt-3 max-w-sm text-sm text-muted-foreground">
               A complete TOEIC Listening &amp; Reading preparation platform with AI-powered tutoring,
@@ -64,7 +64,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 flex flex-col items-center justify-between gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row">
-          <p>© {new Date().getFullYear()} TOEIC Ace AI. For practice &amp; educational use only.</p>
+          <p suppressHydrationWarning>© {new Date().getFullYear()} TOEIC Ace AI. For practice &amp; educational use only.</p>
           <p className="flex items-center gap-1.5">
             Built with <Heart className="h-3.5 w-3.5 fill-primary text-primary" /> for English learners
           </p>

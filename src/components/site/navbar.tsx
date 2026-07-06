@@ -37,8 +37,8 @@ export function Navbar() {
             <GraduationCap className="h-5 w-5" />
           </div>
           <div className="flex flex-col leading-none">
-            <span className="text-base font-bold tracking-tight">TOEIC Ace AI</span>
-            <span className="text-[10px] text-muted-foreground">Smart English Test Prep</span>
+            <span className="text-base font-bold tracking-tight" suppressHydrationWarning>TOEIC Ace AI</span>
+            <span className="text-[10px] text-muted-foreground" suppressHydrationWarning>Smart English Test Prep</span>
           </div>
         </button>
 
@@ -53,8 +53,9 @@ export function Navbar() {
                   ? 'bg-primary/10 text-primary'
                   : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               )}
+              suppressHydrationWarning
             >
-              {item.label}
+              <span suppressHydrationWarning>{item.label}</span>
             </button>
           ))}
         </nav>
@@ -90,8 +91,9 @@ export function Navbar() {
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-accent'
                 )}
+                suppressHydrationWarning
               >
-                {item.label}
+                <span suppressHydrationWarning>{item.label}</span>
               </button>
             ))}
             <div className="mt-2 border-t border-border/60 pt-3">
