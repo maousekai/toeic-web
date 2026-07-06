@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Dialog, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Users, Brain, BookOpen, FileText, TrendingUp, Database, Plus, Pencil, Trash2, LayoutDashboard } from 'lucide-react'
 import { AdminShell } from './admin-shell'
 import { useToast } from '@/hooks/use-toast'
@@ -126,21 +126,23 @@ function VocabForm({ vocab, onClose, onSaved }: any) {
     } catch { toast({ title: 'Lỗi', variant: 'destructive' }) } finally { setSaving(false) }
   }
   return (
-    <Dialog open onOpenChange={onClose}><div className="max-w-lg p-6 bg-card rounded-lg border max-h-[90vh] overflow-y-auto mx-auto mt-12">
-      <DialogHeader><DialogTitle>{vocab ? 'Sửa từ vựng' : 'Thêm từ vựng'}</DialogTitle></DialogHeader>
-      <div className="space-y-3 mt-4">
-        <div className="grid grid-cols-2 gap-3"><div><Label className="text-xs">Từ *</Label><Input value={form.word} onChange={e => setForm({ ...form, word: e.target.value })} /></div><div><Label className="text-xs">Loại *</Label><Input value={form.partOfSpeech} onChange={e => setForm({ ...form, partOfSpeech: e.target.value })} /></div></div>
-        <div><Label className="text-xs">Phiên âm</Label><Input value={form.phonetic} onChange={e => setForm({ ...form, phonetic: e.target.value })} /></div>
-        <div><Label className="text-xs">Nghĩa *</Label><Input value={form.definition} onChange={e => setForm({ ...form, definition: e.target.value })} /></div>
-        <div><Label className="text-xs">Ví dụ</Label><Textarea value={form.example} onChange={e => setForm({ ...form, example: e.target.value })} rows={2} /></div>
-        <div><Label className="text-xs">Dịch nghĩa</Label><Input value={form.translation} onChange={e => setForm({ ...form, translation: e.target.value })} /></div>
-        <div className="grid grid-cols-2 gap-3">
-          <div><Label className="text-xs">Level</Label><Select value={form.level} onValueChange={v => setForm({ ...form, level: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['A0','A1','A2','B1','B2','C1','C2'].map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent></Select></div>
-          <div><Label className="text-xs">Category</Label><Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['general','business','office','finance','marketing','hr','travel','tech'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>{vocab ? 'Sửa từ vựng' : 'Thêm từ vựng'}</DialogTitle></DialogHeader>
+        <div className="space-y-3 mt-4">
+          <div className="grid grid-cols-2 gap-3"><div><Label className="text-xs">Từ *</Label><Input value={form.word} onChange={e => setForm({ ...form, word: e.target.value })} /></div><div><Label className="text-xs">Loại *</Label><Input value={form.partOfSpeech} onChange={e => setForm({ ...form, partOfSpeech: e.target.value })} /></div></div>
+          <div><Label className="text-xs">Phiên âm</Label><Input value={form.phonetic} onChange={e => setForm({ ...form, phonetic: e.target.value })} /></div>
+          <div><Label className="text-xs">Nghĩa *</Label><Input value={form.definition} onChange={e => setForm({ ...form, definition: e.target.value })} /></div>
+          <div><Label className="text-xs">Ví dụ</Label><Textarea value={form.example} onChange={e => setForm({ ...form, example: e.target.value })} rows={2} /></div>
+          <div><Label className="text-xs">Dịch nghĩa</Label><Input value={form.translation} onChange={e => setForm({ ...form, translation: e.target.value })} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label className="text-xs">Level</Label><Select value={form.level} onValueChange={v => setForm({ ...form, level: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['A0','A1','A2','B1','B2','C1','C2'].map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label className="text-xs">Category</Label><Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['general','business','office','finance','marketing','hr','travel','tech'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
+          </div>
         </div>
-      </div>
-      <DialogFooter className="mt-4"><Button variant="outline" onClick={onClose}>Hủy</Button><Button onClick={save} disabled={saving || !form.word || !form.definition}>{saving ? 'Đang lưu...' : 'Lưu'}</Button></DialogFooter>
-    </div></Dialog>
+        <DialogFooter className="mt-4"><Button variant="outline" onClick={onClose}>Hủy</Button><Button onClick={save} disabled={saving || !form.word || !form.definition}>{saving ? 'Đang lưu...' : 'Lưu'}</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -185,21 +187,23 @@ function GrammarForm({ lesson, onClose, onSaved }: any) {
     } catch { toast({ title: 'Lỗi', variant: 'destructive' }) } finally { setSaving(false) }
   }
   return (
-    <Dialog open onOpenChange={onClose}><div className="max-w-2xl p-6 bg-card rounded-lg border max-h-[90vh] overflow-y-auto mx-auto mt-12">
-      <DialogHeader><DialogTitle>{lesson ? 'Sửa bài ngữ pháp' : 'Thêm bài ngữ pháp'}</DialogTitle></DialogHeader>
-      <div className="space-y-3 mt-4">
-        <div><Label className="text-xs">Tiêu đề *</Label><Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} /></div>
-        <div><Label className="text-xs">Slug *</Label><Input value={form.slug} onChange={e => setForm({ ...form, slug: e.target.value })} /></div>
-        <div className="grid grid-cols-2 gap-3">
-          <div><Label className="text-xs">Level</Label><Select value={form.level} onValueChange={v => setForm({ ...form, level: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['beginner','intermediate','advanced'].map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent></Select></div>
-          <div><Label className="text-xs">Category</Label><Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['tenses','conditionals','voice','articles','prepositions','verb-forms','clauses','adjectives','modals','general'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>{lesson ? 'Sửa bài ngữ pháp' : 'Thêm bài ngữ pháp'}</DialogTitle></DialogHeader>
+        <div className="space-y-3 mt-4">
+          <div><Label className="text-xs">Tiêu đề *</Label><Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} /></div>
+          <div><Label className="text-xs">Slug *</Label><Input value={form.slug} onChange={e => setForm({ ...form, slug: e.target.value })} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label className="text-xs">Level</Label><Select value={form.level} onValueChange={v => setForm({ ...form, level: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['beginner','intermediate','advanced'].map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label className="text-xs">Category</Label><Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['tenses','conditionals','voice','articles','prepositions','verb-forms','clauses','adjectives','modals','general'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
+          </div>
+          <div><Label className="text-xs">Tóm tắt</Label><Input value={form.summary} onChange={e => setForm({ ...form, summary: e.target.value })} /></div>
+          <div><Label className="text-xs">Nội dung (Markdown) *</Label><Textarea value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} rows={10} className="font-mono text-sm" /></div>
+          <div><Label className="text-xs">Ví dụ</Label><Input value={form.example} onChange={e => setForm({ ...form, example: e.target.value })} /></div>
         </div>
-        <div><Label className="text-xs">Tóm tắt</Label><Input value={form.summary} onChange={e => setForm({ ...form, summary: e.target.value })} /></div>
-        <div><Label className="text-xs">Nội dung (Markdown) *</Label><Textarea value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} rows={10} className="font-mono text-sm" /></div>
-        <div><Label className="text-xs">Ví dụ</Label><Input value={form.example} onChange={e => setForm({ ...form, example: e.target.value })} /></div>
-      </div>
-      <DialogFooter className="mt-4"><Button variant="outline" onClick={onClose}>Hủy</Button><Button onClick={save} disabled={saving || !form.title || !form.slug || !form.content}>{saving ? 'Đang lưu...' : 'Lưu'}</Button></DialogFooter>
-    </div></Dialog>
+        <DialogFooter className="mt-4"><Button variant="outline" onClick={onClose}>Hủy</Button><Button onClick={save} disabled={saving || !form.title || !form.slug || !form.content}>{saving ? 'Đang lưu...' : 'Lưu'}</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
