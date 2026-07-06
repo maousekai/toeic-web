@@ -37,6 +37,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           image: user.image ?? null,
+          role: user.role,
         }
       },
     }),
@@ -47,6 +48,12 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id
         token.email = user.email!
         token.name = user.name!
+        token.role = (user as any).role || 'STUDENT'
+      }
+      // Always fetch latest role from DB on subsequent token uses
+      if (token.email && !token.role) {
+        const dbUser = await db.user.findUnique({ where: { email: token.email }, select: { role: true } })
+        token.role = dbUser?.role || 'STUDENT'
       }
       return token
     },
@@ -55,6 +62,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string
         session.user.email = token.email as string
         session.user.name = token.name as string
+        (session.user as any).role = token.role as string
       }
       return session
     },
