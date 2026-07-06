@@ -76,8 +76,8 @@ export function PracticeList() {
 
   const examTests = tests.filter((t) => t.type === 'exam')
   // Đề Reading đầy đủ (Test 1, Test 2...) — ưu tiên hiển thị lên đầu
-  const fullReadingTests = tests.filter((t) => t.id === 'ts_rc1_full' || t.id === 'ts_rc2_full')
-  const practiceTests = tests.filter((t) => t.type !== 'exam' && t.id !== 'ts_rc1_full' && t.id !== 'ts_rc2_full')
+  const fullReadingTests = tests.filter((t) => t.id === 'ts_rc1_full' || t.id === 'ts_rc2_full' || t.id === 'ts_rc3_full')
+  const practiceTests = tests.filter((t) => t.type !== 'exam' && t.id !== 'ts_rc1_full' && t.id !== 'ts_rc2_full' && t.id !== 'ts_rc3_full')
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
