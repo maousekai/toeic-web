@@ -15,6 +15,7 @@ export type View =
   | { name: 'tutor' }
   | { name: 'tools' }
   | { name: 'dashboard' }
+  | { name: 'admin' }
 
 type RouterCtx = {
   view: View

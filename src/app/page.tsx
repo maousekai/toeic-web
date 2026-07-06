@@ -13,6 +13,7 @@ import { TestResults } from '@/components/practice/test-results'
 import { TutorView } from '@/components/ai/tutor-view'
 import { ToolsView } from '@/components/ai/tools-view'
 import { DashboardView } from '@/components/dashboard/dashboard-view'
+import { AdminPanel } from '@/components/admin/admin-panel'
 
 function CurrentView() {
   const { view } = useRouter()
@@ -43,6 +44,8 @@ function CurrentView() {
       return <ToolsView />
     case 'dashboard':
       return <DashboardView />
+    case 'admin':
+      return <AdminPanel />
     default:
       return <HomeView />
   }
@@ -50,12 +53,13 @@ function CurrentView() {
 
 function Shell() {
   const { view } = useRouter()
-  // Hide the global footer on the test-taking screen for focus
-  const hideFooter = view.name === 'test' || view.name === 'tutor'
+  const isAdmin = view.name === 'admin'
+  const hideFooter = view.name === 'test' || view.name === 'tutor' || isAdmin
+  const hideNavbar = isAdmin
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar />
+      {!hideNavbar && <Navbar />}
       <main className="flex-1">
         <CurrentView />
       </main>

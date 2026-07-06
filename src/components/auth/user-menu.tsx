@@ -11,7 +11,7 @@ import { useAuth } from '@/lib/auth/use-auth'
 import { useAuthUI } from '@/lib/auth/auth-ui-context'
 import { useRouter, View } from '@/lib/router'
 import { useToast } from '@/hooks/use-toast'
-import { LogOut, User as UserIcon, LayoutDashboard, LogIn, UserPlus, ChevronDown } from 'lucide-react'
+import { LogOut, User as UserIcon, LayoutDashboard, LogIn, UserPlus, ChevronDown, Shield } from 'lucide-react'
 
 function initials(name: string) {
   return name
@@ -71,6 +71,11 @@ export function UserMenu() {
         <DropdownMenuItem onClick={() => { navigate({ name: 'tutor' }); setOpen(false) }}>
           <UserIcon className="mr-2 h-4 w-4" /> AI Tutor
         </DropdownMenuItem>
+        {user.role === 'ADMIN' && (
+          <DropdownMenuItem onClick={() => { navigate({ name: 'admin' }); setOpen(false) }}>
+            <Shield className="mr-2 h-4 w-4" /> Admin Panel
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="text-rose-600 focus:text-rose-600"

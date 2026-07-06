@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Menu, X, GraduationCap, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter, View } from '@/lib/router'
+import { useAuth } from '@/lib/auth/use-auth'
 import { ThemeToggle } from './theme-toggle'
 import { LanguageToggle } from './language-toggle'
 import { UserMenu } from '@/components/auth/user-menu'
@@ -20,13 +21,22 @@ const NAV: { label: string; view: View }[] = [
 
 export function Navbar() {
   const { view, navigate } = useRouter()
+  const { user } = useAuth()
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
 
   const isActive = (v: View) => v.name === view.name
 
   const go = (v: View) => {
     navigate(v)
     setOpen(false)
+  }
+
+  // Build nav list — add Admin if user is admin (chỉ sau khi mounted)
+  const navItems = [...NAV]
+  if (mounted && user?.role === 'ADMIN') {
+    navItems.push({ label: 'Admin', view: { name: 'admin' } as View })
   }
 
   return (
@@ -43,7 +53,7 @@ export function Navbar() {
         </button>
 
         <nav className="hidden items-center gap-1 md:flex">
-          {NAV.map((item) => (
+          {navItems.map((item) => (
             <button
               key={item.label}
               onClick={() => go(item.view)}
@@ -81,7 +91,7 @@ export function Navbar() {
       {open && (
         <nav className="border-t border-border/60 bg-background md:hidden">
           <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-3">
-            {NAV.map((item) => (
+            {navItems.map((item) => (
               <button
                 key={item.label}
                 onClick={() => go(item.view)}
