@@ -5,6 +5,8 @@ import { BookOpen, ArrowRight, Tag, Clock } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useRouter } from '@/lib/router'
+import { useAuth } from '@/lib/auth/use-auth'
+import { useAuthUI } from '@/lib/auth/auth-ui-context'
 import { Skeleton } from '@/components/ui/skeleton'
 
 type LessonSummary = {
@@ -21,6 +23,8 @@ const CATEGORIES = ['tenses', 'conditionals', 'voice', 'articles', 'prepositions
 
 export function GrammarList() {
   const { navigate } = useRouter()
+  const { user } = useAuth()
+  const { openAuth } = useAuthUI()
   const [lessons, setLessons] = useState<LessonSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('all')
@@ -69,7 +73,13 @@ export function GrammarList() {
             <Card
               key={l.id}
               className="group cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md"
-              onClick={() => navigate({ name: 'grammar', slug: l.slug })}
+              onClick={() => {
+                if (!user) {
+                  openAuth('login', () => navigate({ name: 'grammar', slug: l.slug }))
+                  return
+                }
+                navigate({ name: 'grammar', slug: l.slug })
+              }}
             >
               <CardHeader>
                 <div className="flex items-center justify-between">
