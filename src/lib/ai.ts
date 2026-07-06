@@ -26,7 +26,7 @@ function detectProvider(): Provider {
 }
 
 const DEFAULT_MODELS: Record<Provider, string> = {
-  ollama: process.env.OLLAMA_MODEL || 'qwen2.5:7b',
+  ollama: process.env.OLLAMA_MODEL || 'qwen2.5:3b',
   openai: process.env.OPENAI_MODEL || 'gpt-4o-mini',
   openrouter: process.env.OPENROUTER_MODEL || 'qwen/qwen-2.5-7b-instruct:free',
   groq: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
