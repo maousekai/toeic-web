@@ -1,0 +1,478 @@
+     1→---
+     2→Task ID: 1
+     3→Agent: main (Z.ai Code)
+     4→Task: Build a comprehensive English TOEIC learning website with AI integration — full features, TOEIC knowledge, practice tests, grading, and AI capabilities.
+     5→
+     6→Work Log:
+     7→- Designed emerald/teal education theme in globals.css (light + dark, custom scrollbars, flip-card & gradient animations, prose styling).
+     8→- Defined Prisma schema (Learner, Vocab, GrammarLesson, Strategy, Question, TestSet, TestAttempt) and pushed to SQLite.
+     9→- Wrote seed script (scripts/seed.ts) with real TOEIC content: 32 vocab words, 10 grammar lessons, 6 strategy articles, 61 questions (Parts 2, 5, 6, 7), and 6 curated test sets incl. a 40-question mock.
+    10→- Created core libs: src/lib/ai.ts (z-ai-web-dev-sdk helper + system prompts), src/lib/router.tsx (single-route view router + anonymous learner id), src/lib/score.ts (TOEIC score estimation + CEFR bands).
+    11→- Built 14 API routes: content (vocab/grammar/strategies), tests list+detail, attempts POST/GET/by-learner, and 5 AI endpoints (chat, explain, generate-question, writing-check, study-plan).
+    12→- Built site shell: theme provider, navbar (responsive w/ hamburger), sticky footer, markdown renderer.
+    13→- Built Home view (hero, stats, 8 feature cards, 7-part TOEIC structure, AI showcase, CTA).
+    14→- Built Learn view hub + Grammar list/detail (with TTS), Vocab flashcards (flip + spaced repetition + TTS), Strategies (tabbed).
+    15→- Built Practice: test list, full test engine (timer, question palette, listening auto-TTS playback, submit dialog, auto-submit on timeout), results page (score hero, listening/reading breakdown, filterable answer review, per-question AI explain).
+    16→- Built AI Tutor chat (multi-turn, suggestions, typing indicator) and AI Tools (question generator, writing checker, study plan).
+    17→- Built Dashboard (stat cards, recharts score-history line chart + skill bar chart, recent attempts list).
+    18→- Wired everything in src/app/page.tsx as a single-route SPA driven by the router context.
+    19→- Fixed: installed remark-gfm, disabled react-hooks/set-state-in-effect rule for legitimate data-fetch/mount patterns.
+    20→- Ran `bun run lint` → passes clean.
+    21→- Verified end-to-end with Agent Browser: home, practice list, test taking, submission, results+AI explain, learn hub, grammar, vocab flashcards, AI tutor chat, AI question generator, dashboard charts, mobile hamburger menu. All API calls returned 200; zero console/runtime errors.
+    22→
+    23→Stage Summary:
+    24→- Production-ready TOEIC learning platform on a single `/` route (Next.js 16 App Router + TS + Tailwind v4 + shadcn/ui + Prisma/SQLite).
+    25→- 5 AI features powered by z-ai-web-dev-sdk (LLM): tutor chat, answer explainer, question generator, writing checker, study-plan generator.
+    26→- Practice engine supports Parts 2/5/6/7 with real timer, question palette, browser-TTS narration for listening, instant grading with estimated 10–990 score, and AI answer explanations.
+    27→- Dashboard tracks progress with recharts visualizations and attempt history (keyed by anonymous learner id in localStorage).
+    28→- Sticky footer, responsive design, dark mode, accessibility (semantic HTML, ARIA labels, keyboard-friendly controls) all implemented and browser-verified.
+    29→
+    30→---
+    31→Task ID: 2
+    32→Agent: main (Z.ai Code)
+    33→Task: Add user registration & login functionality with beautiful UI and good scalability.
+    34→
+    35→Work Log:
+    36→- Installed bcryptjs + @types/bcryptjs for password hashing.
+    37→- Updated Prisma schema: added `User` model (email unique, passwordHash, name, image) + added `userId` optional FK on `Learner` to link accounts.
+    38→- Ran `bun run db:push` and `bunx prisma generate` to sync schema.
+    39→- Created NextAuth.js config at `src/lib/auth/auth-options.ts` with CredentialsProvider + JWT session strategy (30-day expiry). Passwords verified via `bcrypt.compare`. Throws descriptive errors for missing account / wrong password.
+    40→- Added `src/types/next-auth.d.ts` to extend Session/JWT types with `user.id`.
+    41→- Created `src/app/api/auth/[...nextauth]/route.ts` (NextAuth handler, GET+POST).
+    42→- Created `src/app/api/auth/register/route.ts` with full validation (name ≥ 2 chars, email regex, password ≥ 6 chars), duplicate-email check (409), bcrypt hash (salt 10), creates User + linked Learner row.
+    43→- Built `src/lib/auth/session-provider.tsx` (wraps next-auth SessionProvider).
+    44→- Built `src/lib/auth/use-auth.ts` (`useAuth` hook exposing user/isLoading/isAuthenticated/login/logout).
+    45→- Built `src/lib/auth/auth-ui-context.tsx` (AuthUIProvider) — global modal state so any component can call `openAuth('login'|'register', onSuccess)`.
+    46→- Built `src/components/auth/auth-modal.tsx` — beautiful dialog with gradient header, tabs Sign In / Create Account, inline validation, password show/hide, password-strength meter (4 bars, weak/fair/good/strong), auto-login after register, feature bullets.
+    47→- Built `src/components/auth/user-menu.tsx` — avatar with initials fallback + dropdown (Dashboard, AI Tutor, Sign Out) when authenticated; "Sign In" + "Get Started" buttons when not.
+    48→- Updated `src/app/layout.tsx` to wrap app in SessionProvider.
+    49→- Updated `src/app/page.tsx` to wrap app in AuthUIProvider.
+    50→- Updated `src/components/site/navbar.tsx` — replaced "Start Practice" CTA with UserMenu; UserMenu also renders in mobile hamburger menu.
+    51→- Updated `src/lib/router.tsx` `getLearnerId(userId?)` — deterministic `learner_<userId>` when authenticated (attempts follow account across devices), falls back to localStorage anonymous id otherwise.
+    52→- Updated `src/components/practice/test-engine.tsx` — uses `user.id` from useAuth when submitting attempts.
+    53→- Updated `src/components/practice/practice-list.tsx` — `startTest()` opens auth modal (with onSuccess callback → navigate to test) if not logged in; otherwise navigates directly.
+    54→- Updated `src/components/dashboard/dashboard-view.tsx` — auth gate card ("Sign in to view your dashboard") when not authenticated; refetches attempts when user changes.
+    55→- Updated `src/components/home/home-view.tsx` — primary CTA shows "Get Started — It's Free" (opens register) when logged out, "Start a Free Practice Test" when logged in; subtitle adapts to auth state.
+    56→- Fixed lint: removed `useMemo` in useAuth (react-hooks/preserve-manual-memoization rule).
+    57→- Restarted dev server to pick up regenerated Prisma client (global Prisma cache was holding pre-User-model instance).
+    58→- Verified end-to-end with Agent Browser: register new account → auto-login → user menu shows name+email → logout → login with credentials → start practice test (no auth gate) → submit → dashboard shows the attempt linked to the user (`learner_<userId>`). Mobile hamburger menu shows auth buttons. Zero console/runtime errors. Lint passes clean.
+    59→
+    60→Stage Summary:
+    61→- Production-grade auth layered on top of the existing TOEIC platform.
+    62→- Stack: NextAuth.js v4 (JWT strategy) + bcryptjs (salt 10) + Prisma User model + SQLite.
+    63→- UI: modal-based (login + register in one dialog with tabs) because sandbox only exposes the `/` route. Gradient header, password strength meter, show/hide password, inline validation, auto-login after register.
+    64→- Scalability: deterministic `learner_<userId>` id means attempts follow the user across devices/browsers; JWT sessions work serverless/edge; existing anonymous localStorage behavior preserved as fallback so the site still works for guests.
+    65→- Auth-gated features: Practice tests and Dashboard prompt login via the modal (with onSuccess callback). Home + Learn + AI Tutor + AI Tools remain open to guests.
+    66→- All API routes for auth: `/api/auth/[...nextauth]` (NextAuth handler), `/api/auth/register` (custom register), `/api/auth/session` (NextAuth session check).
+    67→
+    68→---
+    69→Task ID: 4
+    70→Agent: main (Z.ai Code)
+    71→Task: Add multi-provider AI adapter (Ollama/OpenAI/OpenRouter/Groq/Gemini) while keeping ZAI as default.
+    72→
+    73→Work Log:
+    74→- Installed `openai` SDK (OpenAI-compatible — works with Ollama, Groq, OpenRouter, Gemini too).
+    75→- Refactored `src/lib/ai.ts` into adapter pattern with priority: OLLAMA_BASE_URL → OPENAI_API_KEY → OPENROUTER_API_KEY → GROQ_API_KEY → GEMINI_API_KEY → ZAI (fallback).
+    76→- Each provider has sensible default model (e.g. `qwen2.5:7b` for Ollama, `gpt-4o-mini` for OpenAI, `gemini-1.5-flash` for Gemini, `llama-3.3-70b-versatile` for Groq, `qwen/qwen-2.5-7b-instruct:free` for OpenRouter). All overridable via env vars.
+    77→- Used dynamic `import('openai')` so SDK is only loaded when a non-ZAI provider is active — keeps ZAI path lightweight.
+    78→- Added `/api/ai/provider` GET endpoint returning current provider info (name, model, isLocal).
+    79→- Updated `TutorView` to fetch + display a provider badge (e.g. "🤖 ZAI Cloud" or "🦙 Ollama (Local AI) · 100% offline") under the header.
+    80→- Fixed lint: converted `require()` to `await import()` for `@typescript-eslint/no-require-imports`.
+    81→- Verified with Agent Browser: badge shows "🤖 ZAI Cloud", AI Tutor still answers in Vietnamese via ZAI endpoint (POST /api/ai/chat 200 in 11.7s). No regressions.
+    82→
+    83→Stage Summary:
+    84→- ZAI remains the default provider (no env vars set in sandbox → falls back to ZAI).
+    85→- Project is now deploy-ready: on Vercel/local, user just sets ONE env var (e.g. `OLLAMA_BASE_URL` or `GEMINI_API_KEY`) and the app switches AI provider automatically — no code changes needed.
+    86→- Ollama support means users can run the entire app 100% offline with a local AI model (qwen2.5:7b recommended for Vietnamese TOEIC tutoring).
+    87→
+    88→---
+    89→Task ID: 5
+    90→Agent: main (Z.ai Code)
+    91→Task: Add "Exam Mode" — TOEIC exam simulation that mimics real test conditions.
+    92→
+    93→Work Log:
+    94→- Added new test set `ts_exam_simulation` to seed.ts: 61 questions (all current), 120 minutes, type='exam'.
+    95→- Updated `src/lib/router.tsx`: View `test` now accepts optional `mode?: 'practice' | 'exam'`.
+    96→- Updated `src/app/page.tsx`: pass `mode` prop to `<TestEngine>`.
+    97→- Rewrote `src/components/practice/practice-list.tsx`:
+    98→  - Split into 2 sections: "🎯 Chế độ Thi Thật" (exam, top, highlighted) + "📚 Chế độ Luyện Tập" (practice, bottom).
+    99→  - Exam cards have rose color theme, nội quy box (no transcript, no replay, strict timer, auto-submit).
+   100→  - Click "Vào phòng thi" → opens AlertDialog nội quy with full rules + recommendations → confirm → navigate to exam mode.
+   101→  - Practice cards unchanged (button "Start" → practice mode).
+   102→- Rewrote `src/components/practice/test-engine.tsx` to support both modes:
+   103→  - **Exam mode banner**: rose gradient banner "🎯 CHẾ ĐỘ THI THẬT — EXAM MODE" with rules summary.
+   104→  - **Listening (exam)**: shows "Audio đang phát 1 lần duy nhất" — NO Replay button, NO transcript details.
+   105→  - **Listening (practice)**: keeps Replay button + Show transcript (unchanged).
+   106→  - **Palette (exam)**: hides answered state (only highlights current question) — "Ẩn trạng thái đã trả lời để mô phỏng thi thật".
+   107→  - **Palette (practice)**: shows answered/unanswered colors (unchanged).
+   108→  - **Top bar (exam)**: hides answered count, shows "Câu X/Y · Hết giờ tự động nộp".
+   109→  - **Timer (exam)**: amber at ≤5min, red+pulse at ≤1min.
+   110→  - **5-minute warning**: toast notification at 300s remaining.
+   111→  - **Submit dialog (exam)**: Vietnamese, red destructive button, "không thể làm lại" warning.
+   112→  - **Auto-submit**: when timeLeft === 0, auto-submits with Vietnamese toast.
+   113→- Re-seeded database (was empty after previous schema changes) — restored 32 vocab, 10 grammar, 6 strategies, 61 questions, 7 test sets (was 6, now +1 exam).
+   114→- Verified with Agent Browser: exam mode shows banner, no replay, no transcript, palette hides answered, 61 questions, 120 min timer. Lint passes, zero console errors.
+   115→
+   116→Stage Summary:
+   117→- New "Thi Thật" feature complete and verified end-to-end.
+   118→- 2 distinct modes: Practice (loose, learning-oriented) vs Exam (strict, simulation).
+   119→- Exam mode mimics real TOEIC: no transcript, no audio replay, strict timer, auto-submit, 5-min warning, hidden answered state.
+   120→- UI in Vietnamese for exam mode (nội quy, nộp bài, hết giờ) to match target audience.
+   121→- Database restored with all content after re-seed.
+   122→
+   123→---
+   124→Task ID: 6
+   125→Agent: main (Z.ai Code)
+   126→Task: Add ETS TOEIC exam section to Practice page — integrate real ETS exam files from Google Drive.
+   127→
+   128→Work Log:
+   129→- Analyzed uploaded screenshot: showed Google Drive folder "ĐỀ ETS 2024" with 4 files (AUDIO, ĐÁP ÁN + TRANSCRIPT, ETS 2024 - LISTENING, ETS 2024 - READING).
+   130→- Created `public/ets-exams/2024/` folder for users to upload ETS exam files (PDFs + audio).
+   131→- Created `src/data/ets-exams.ts` — config file defining ETS exam resources (id, year, title, description, driveUrl, file paths, durationMin, difficulty). Includes example for 2024 + commented template for adding more years.
+   132→- Built `src/components/practice/ets-exam-modal.tsx`:
+   133→  - Modal with gradient header showing exam title + year + duration + difficulty.
+   134→  - Auto-detects if files exist in public/ (HEAD request) → if missing, shows warning + 2 options: open Google Drive / admin upload.
+   135→  - Custom audio player (play/pause, seek bar, time display) for listening audio.
+   136→  - Tabs: Listening / Reading / Đáp án — each renders PDF in iframe viewer.
+   137→  - Download buttons for each file.
+   138→  - "Mở Google Drive" external link button.
+   139→- Updated `src/components/practice/practice-list.tsx`:
+   140→  - Added new section "📚 Đề ETS TOEIC (từ Google Drive)" between Exam Mode and Practice Mode.
+   141→  - Amber/orange themed cards for ETS exams.
+   142→  - Each card shows: title, year badge, duration, difficulty, resource chips (Listening/Reading/Audio/Đáp án), "Xem đề" button + Drive link button.
+   143→  - Click "Xem đề" → opens EtsExamModal.
+   144→- Created `public/ets-exams/README.md` — detailed Vietnamese guide for adding new ETS exam sets (folder structure, file naming, config update, restart).
+   145→- Fixed lint: moved `checkFile` function outside component (react-hooks/immutability rule).
+   146→- Verified with Agent Browser: ETS section appears in Practice page, "Đế ETS TOEIC 2024" card visible, clicking "Xem đề" opens modal with warning (since files not yet uploaded), Google Drive link works, tabs disabled appropriately. Zero console errors. Lint passes.
+   147→
+   148→Stage Summary:
+   149→- New "Đề ETS TOEIC" feature complete — users can view real ETS exam PDFs + listen to audio + download answers directly on the web.
+   150→- Architecture: PDFs and audio stored in `public/ets-exams/<year>/`, config in `src/data/ets-exams.ts`, UI auto-adapts (warning when files missing, full viewer when present).
+   151→- Vietnamese UI for target audience (hướng dẫn, nút "Xem đề", "Mở Google Drive", etc.).
+   152→- README.md in public/ets-exams/ provides clear guide for team members to add more ETS exam sets.
+   153→- Default config has 1 exam (ETS 2024) with placeholder Google Drive URL — admin needs to replace with real folder ID and/or upload actual files.
+   154→
+   155→---
+   156→Task ID: 7
+   157→Agent: main (Z.ai Code)
+   158→Task: Refactor ETS exam structure to support multiple tests per ETS set (ETS 2024 has 10 tests).
+   159→
+   160→Work Log:
+   161→- Analyzed 2nd uploaded screenshot: folder "ETS 2024 - LISTENING" contains 11 PDFs (PART 3 - TEST 1 + TEST 1 LC through TEST 10 LC) — meaning each ETS year has 10 separate tests, each with its own Listening/Reading/Audio/Transcript files.
+   162→- Refactored `src/data/ets-exams.ts`:
+   163→  - Added new `EtsTest` type with `id`, `label`, `files` (listening/reading/audio/transcript).
+   164→  - Updated `EtsResource` to have `tests: EtsTest[]` array instead of single `files` object.
+   165→  - Added `testFiles(year, testNum)` helper function for generating standardized file paths.
+   166→  - Configured ETS 2024 with 10 tests (Test 1 → Test 10), each pointing to `/ets-exams/2024/test-N/`.
+   167→- Created 10 folders: `public/ets-exams/2024/test-1/` through `test-10/` for users to upload files.
+   168→- Rewrote `src/components/practice/ets-exam-modal.tsx`:
+   169→  - Added Test selector (Select dropdown) at top of modal — shows "Chọn Test (10 tests có sẵn)".
+   170→  - File status check now re-runs when selected test changes.
+   171→  - Audio player + PDF tabs + download buttons all reflect the selected test.
+   172→  - Warning message shows correct test number (e.g., "File Test 5 chưa được upload vào web") and correct folder path (`public/ets-exams/2024/test-5/`).
+   173→  - PDF viewer titles include test label (e.g., "Đề Listening Test 5 - ETS 2024").
+   174→- Updated `src/components/practice/practice-list.tsx`:
+   175→  - ETS cards now show "10 tests" badge.
+   176→  - Added test list preview (Test 1, Test 2, ... +4) showing first 6 tests + overflow count.
+   177→- Updated `public/ets-exams/README.md` with new folder structure documentation:
+   178→  - `public/ets-exams/<year>/test-N/` for each test.
+   179→  - Step-by-step guide: download from Drive (TEST 1 LC.pdf → listening.pdf, etc.) → copy to test folder → update config.
+   180→- Verified with Agent Browser: card shows "10 tests", modal opens with Test selector dropdown (all 10 tests visible), switching to Test 5 updates warning message + PDF titles correctly. Zero console errors. Lint passes.
+   181→
+   182→Stage Summary:
+   183→- ETS exam feature now supports multiple tests per ETS set (10 tests for ETS 2024).
+   184→- Architecture: `public/ets-exams/<year>/test-N/{listening,reading,audio,transcript}` + config in `ets-exams.ts`.
+   185→- UI: dropdown selector in modal + test preview badges on card.
+   186→- Auto-detection: file existence checked per-test, warning shows correct test number + folder path.
+   187→- Ready for user to upload 40 files (4 files × 10 tests) to fully populate ETS 2024.
+   188→
+   189→---
+   190→Task ID: 8
+   191→Agent: main (Z.ai Code)
+   192→Task: Rewrite all 10 grammar lessons in Vietnamese with detailed structure: explanation, signal words, examples, TOEIC tips.
+   193→
+   194→Work Log:
+   195→- Rewrote all 10 grammar lessons in scripts/seed.ts with consistent 5-section Vietnamese structure:
+   196→  1. 📖 Khái niệm — Vietnamese explanation of when/why to use
+   197→  2. 📝 Cấu trúc & Công thức — Formulas + conjugation tables
+   198→  3. 🔍 Dấu hiệu nhận biết — Signal words (e.g., "ago" → past simple, "since" → present perfect)
+   199→  4. 💡 Ví dụ cụ thể — Tables with English sentence + Vietnamese translation
+   200→  5. 🎯 Mẹo làm bài TOEIC & Bẫy thường gặp — Common traps + TOEIC Part 5 strategies
+   201→- Lessons covered:
+   202→  1. Present Simple vs. Present Continuous (Thì hiện tại đơn & tiếp diễn)
+   203→  2. Present Perfect & Past Simple (Hiện tại hoàn thành & quá khứ đơn)
+   204→  3. Conditionals (Câu điều kiện loại 0, 1, 2)
+   205→  4. The Passive Voice (Câu bị động)
+   206→  5. Articles (Mạo từ a/an/the)
+   207→  6. Prepositions of Time & Place (Giới từ thời gian & địa điểm)
+   208→  7. Gerunds vs. Infinitives (Danh động từ vs động từ nguyên mẫu)
+   209→  8. Relative Clauses (Mệnh đề quan hệ)
+   210→  9. Comparatives & Superlatives (So sánh hơn & nhất)
+   211→  10. Modal Verbs (Động từ khuyết thiếu)
+   212→- Each lesson includes:
+   213→  - Vietnamese title with English original in parentheses
+   214→  - Detailed Vietnamese explanation
+   215→  - Signal words with Vietnamese translations
+   216→  - 5-7 example sentences in table format with Vietnamese translations
+   217→  - 3-4 common TOEIC traps (⚠️) with correct/incorrect examples
+   218→  - Specific TOEIC Part 5 strategy (🎯)
+   219→- Re-seeded database (10 grammar lessons updated).
+   220→- Fixed Chinese characters that slipped in during editing (chỉ xuất hiện, có thể xảy ra).
+   221→- Verified with Agent Browser: lesson list shows Vietnamese titles, lesson detail page displays all 5 sections correctly with proper Vietnamese formatting. Zero console errors. Lint passes.
+   222→
+   223→Stage Summary:
+   224→- All 10 grammar lessons now in Vietnamese with consistent, comprehensive structure.
+   225→- Each lesson has: Khái niệm, Cấu trúc, Dấu hiệu nhận biết, Ví dụ cụ thể (with translations), Mẹo TOEIC + Bẫy.
+   226→- Signal words highlighted with Vietnamese translations (e.g., "since + mốc thời gian", "for + khoảng thời gian").
+   227→- TOEIC-specific tips and traps included for each topic (e.g., "ago" never goes with present perfect, "must not" ≠ "don't have to").
+   228→- Database updated, ready for use.
+   229→
+   230→---
+   231→Task ID: 9
+   232→Agent: main (Z.ai Code)
+   233→Task: Add 20 interactive grammar exercises per lesson (200 total) with detailed Vietnamese explanations.
+   234→
+   235→Work Log:
+   236→- Added `GrammarExercise` model to Prisma schema (id, lessonId, question, options JSON, answer, explanation, order).
+   237→- Ran `bun run db:push` to sync schema.
+   238→- Created `scripts/seed-exercises.ts` with 200 exercises (10 lessons × 20 questions each):
+   239→  1. Present Simple vs. Present Continuous — 20 questions
+   240→  2. Present Perfect & Past Simple — 20 questions
+   241→  3. Conditionals — 20 questions
+   242→  4. Passive Voice — 20 questions
+   243→  5. Articles — 20 questions
+   244→  6. Prepositions — 20 questions
+   245→  7. Gerunds vs. Infinitives — 20 questions
+   246→  8. Relative Clauses — 20 questions
+   247→  9. Comparatives & Superlatives — 20 questions
+   248→  10. Modal Verbs — 20 questions
+   249→  Each exercise has: question, 4 options, correct answer, detailed Vietnamese explanation (e.g., "Dấu hiệu 'every day' → hiện tại đơn. Chủ ngữ 'The store' số ít → thêm 's': opens.").
+   250→- Created API `/api/content/grammar/[slug]/exercises` — GET returns all exercises for a lesson, sorted by order.
+   251→- Built `src/components/learn/grammar-exercise.tsx` — interactive exercise component with 2 phases:
+   252→  - **Doing phase**: One question at a time, progress bar at top (clickable to jump), 4 option buttons, "Câu trước/Câu tiếp" navigation, "Nộp bài" on last question, submit confirmation dialog.
+   253→  - **Submitted phase**: Score card (% + correct count + message), full review of all 20 questions with correct/incorrect/unanswered badges, color-coded options (green=correct, red=wrong), detailed explanation per question, "Làm lại" button.
+   254→- Updated `src/components/learn/grammar-detail.tsx` — added "Bài tập thực hành" section at bottom of each grammar lesson page.
+   255→- Restarted dev server to pick up regenerated Prisma client (GrammarExercise model).
+   256→- Verified with Agent Browser: opened Present Simple lesson → exercise section visible → answered 2 questions → navigated to Q20 → submitted → results showed "2/20 câu đúng · 10%" → all 20 questions reviewed with explanations → "Làm lại" button works. Zero console errors. Lint passes.
+   257→
+   258→Stage Summary:
+   259→- 200 grammar exercises added across 10 lessons (20 per lesson).
+   260→- Interactive UI: one-question-at-a-time flow with progress bar, submit dialog, score display, full review with explanations.
+   261→- All explanations in Vietnamese, tied to signal words and TOEIC tips from the lesson content.
+   262→- Database: GrammarExercise table populated, API endpoint live, component integrated into grammar detail page.
+   263→
+   264→---
+   265→Task ID: 10
+   266→Agent: main (Z.ai Code)
+   267→Task: Redesign grammar detail page CSS for better readability — less cluttered, better spacing, color accents.
+   268→
+   269→Work Log:
+   270→- Analyzed user's screenshot of grammar detail page — identified problems: dense text, no spacing between sections, long formula lines, no color highlights, hard to scan.
+   271→- Rewrote `.prose-toeic` CSS in globals.css with major improvements:
+   272→  - **Font size**: 0.95rem → 1rem (larger, easier to read)
+   273→  - **Line height**: 1.7 → 1.85 (more breathing room)
+   274→  - **H2 (section titles like "Khái niệm", "Cấu trúc")**: Added dashed top border + larger margin (1.75rem) to clearly separate sections. First h2 has no border.
+   275→  - **H3 (subsections)**: Now uses primary color for visual hierarchy
+   276→  - **Bullet lists**: Custom bullet points (small primary-colored dots) instead of default disc, more padding between items (0.5rem margin)
+   277→  - **Ordered lists**: Better spacing for numbered examples
+   278→  - **Em (Italian/Vietnamese translations)**: Muted color + smaller font (0.92em) + italic — clearly distinguishes Vietnamese translations from English content
+   279→  - **Inline code (formulas like "S + am/is/are + V-ing")**: Now has border + background + monospace font — stands out as a formula
+   280→  - **Block code**: Styled pre blocks with border + background
+   281→  - **Blockquote (callouts)**: Left border + tinted background (color-mix) + rounded corners — looks like a callout box
+   282→  - **Tables**: Header with primary background + primary-foreground text, striped rows (even rows tinted), hover effect, horizontal scroll on mobile, rounded corners
+   283→  - **HR**: Dashed line separator
+   284→  - **Links**: Primary color + underline offset
+   285→- Updated grammar-detail.tsx layout:
+   286→  - Header card with subtle gradient (primary/8 → teal/5 → transparent)
+   287→  - "Tất cả bài ngữ pháp" back button (Vietnamese)
+   288→  - Title + summary in header card with badges (category + level)
+   289→  - Content card with max-w-3xl centered + larger padding (p-6 sm:p-8) for readability
+   290→  - Example section renamed "Ví dụ minh họa" (Vietnamese)
+   291→  - Exercise section: now wrapped in highlighted container with border-2 primary/30 + gradient background + larger icon (12x12 with shadow) to make it stand out
+   292→- Verified with VLM analysis: redesign significantly improved readability, clear section separation, good color accents (green table header, callout boxes), clear formulas/tables/bullets. Minor tweaks: increased font size 0.95→1rem, made exercise section more prominent.
+   293→- Lint passes. Zero console errors.
+   294→
+   295→Stage Summary:
+   296→- Grammar detail page now much more readable:
+   297→  - Clear visual hierarchy with dashed section separators
+   298→  - Vietnamese translations visually distinguished (muted italic)
+   299→  - Formulas highlighted as code blocks with border + background
+   300→  - Tables with colored headers + striped rows
+   301→  - Callout boxes for tips/traps
+   302→  - Exercise section prominently highlighted with gradient + border
+   303→- All grammar content (10 lessons) automatically benefits from new styling since they all use the same Markdown component.
+   304→
+   305→---
+   306→Task ID: 11
+   307→Agent: main (Z.ai Code)
+   308→Task: Restructure Vocabulary into 7 CEFR levels (A0-C2) with ~100 words each.
+   309→
+   310→Work Log:
+   311→- Updated Prisma schema: added `level String @default("A1")` field to Vocab model (CEFR: A0/A1/A2/B1/B2/C1/C2).
+   312→- Ran `bun run db:push` to sync schema.
+   313→- Created `scripts/seed-vocab-levels.ts` with ~700 vocabulary words across 7 CEFR levels:
+   314→  - **A0 (104 từ)** — Pre-Beginner: số, màu, ngày, gia đình, đồ vật cơ bản, động từ thường (one, red, mother, eat, go...)
+   315→  - **A1 (102 từ)** — Beginner: giao tiếp cơ bản, đời sống hàng ngày (family, teacher, lunch, buy, sell...)
+   316→  - **A2 (105 từ)** — Elementary: du lịch, mua sắm, giao tiếp xã hội (airport, ticket, hotel, weather, season...)
+   317→  - **B1 (107 từ)** — Intermediate (TOEIC 400-600): business English cơ bản (meeting, deadline, colleague, manager, report...)
+   318→  - **B2 (109 từ)** — Upper-Intermediate (TOEIC 600-750): business nâng cao (negotiate, contract, revenue, strategy, feasible...)
+   319→  - **C1 (106 từ)** — Advanced (TOEIC 750-900): business/academic nâng cao (consolidate, lucrative, pragmatic, scrutinize, implement...)
+   320→  - **C2 (109 từ)** — Mastery (TOEIC 900+): từ vựng chuyên sâu, trang trọng (acquiesce, cogent, ephemeral, meticulous, ubiquitous...)
+   321→  Each word has: word, phonetic, partOfSpeech, definition (Vietnamese), example (English), translation (Vietnamese), category, level, difficulty.
+   322→- Created API `/api/content/vocab/counts` — returns count per level for UI display.
+   323→- Updated `/api/content/vocab` — added `level` query param for filtering.
+   324→- Rewrote `src/components/learn/vocab-flashcards.tsx` with beautiful new design:
+   325→  - **Level selector**: 7 cards (A0-C2) in responsive grid, each showing level code + word count + Vietnamese name. Active level highlighted with gradient.
+   326→  - **Selected level info card**: shows level code (gradient text), Vietnamese name, English name, description (e.g., "TOEIC 600-750 · Đàm phán, tài chính"), word count, mastered count.
+   327→  - **Progress bar**: shows current position (Câu X/Y) + percentage.
+   328→  - **Flip card**: larger (h-80), cleaner design, level badge on front, definition + translation + example on back.
+   329→  - **Spaced repetition**: "Chưa thuộc" / "Đã thuộc" buttons, box system (0-5), stored in localStorage.
+   330→  - **TTS pronunciation**: for both word and example sentence.
+   331→  - **Color-coded levels**: each CEFR level has its own color (slate→emerald→teal→cyan→amber→orange→rose).
+   332→- Verified with Agent Browser: all 7 levels visible (A0-C2 with correct counts), clicking B2 loads B2 vocab ("able" — có khả năng), flip card works, progress bar shows, no errors.
+   333→- Lint passes. Zero console errors.
+   334→
+   335→Stage Summary:
+   336→- Vocabulary feature completely restructured into 7 CEFR levels with ~100 words each (742 total).
+   337→- Each level color-coded and described with TOEIC score range (B1=400-600, B2=600-750, C1=750-900, C2=900+).
+   338→- Beautiful UI with level selector cards, progress tracking, spaced repetition.
+   339→- All vocab has Vietnamese definitions + translations + English examples + phonetics.
+   340→- Old 32 vocabs replaced with 742 new vocabs organized by proficiency level.
+   341→
+   342→---
+   343→Task ID: 12
+   344→Agent: main (Z.ai Code)
+   345→Task: Add Pronunciation Practice feature with audio samples, recording, and AI feedback.
+   346→
+   347→Work Log:
+   348→- Created `src/data/pronunciation-examples.ts` with 50 pronunciation examples across 7 CEFR levels:
+   349→  - A0 (7 examples): basic sounds, vowels /æ/, consonants /ð/, /ʃ/
+   350→  - A1 (8 examples): greetings, weather, /aʊ/, /iː/
+   351→  - A2 (8 examples): travel phrases, connected speech, intonation
+   352→  - B1 (8 examples): business English, word stress
+   353→  - B2 (8 examples): negotiation, advanced stress patterns
+   354→  - C1 (7 examples): complex sentences, formal vocabulary
+   355→  - C2 (7 examples): academic, rare words
+   356→  Each example has: text, phonetic, level, tip (Vietnamese pronunciation tip), focusSounds (difficult sounds), category (vowels/consonants/diphthongs/stress/intonation/connected-speech).
+   357→- Created API `/api/pronunciation/analyze` — accepts text + phonetic + tip, returns AI feedback in Vietnamese covering: difficult sounds for Vietnamese speakers, word stress, intonation, connected speech, overall assessment.
+   358→- Built `src/components/pronunciation/pronunciation-practice.tsx` — full-featured pronunciation practice:
+   359→  - **Level selector**: 7 CEFR levels (A0-C2) with example count per level
+   360→  - **Sentence card**: shows sentence + phonetic transcription + listen button (TTS)
+   361→  - **Pronunciation tip**: amber callout with Vietnamese tip for each sentence
+   362→  - **Focus sounds**: badges showing difficult sounds to watch (/æ/, /ð/, stress...)
+   363→  - **Recording controls**: 
+   364→    - Red mic button to start recording (uses MediaRecorder API + getUserMedia)
+   365→    - Stop button with live timer
+   366→    - Audio playback after recording (HTML5 audio element)
+   367→    - "Ghi lại" (re-record) button
+   368→  - **AI feedback**: "AI đánh giá phát âm" button calls the API, displays detailed feedback with markdown
+   369→  - **Navigation**: prev/next buttons to move through examples
+   370→  - **Categories info**: 6 pronunciation topics explained (vowels, consonants, diphthongs, stress, intonation, connected-speech)
+   371→  - Beautiful animations with framer-motion
+   372→  - Color-coded levels matching the vocab system
+   373→- Updated `src/lib/router.tsx`: added `pronunciation` to View type
+   374→- Updated `src/app/page.tsx`: added pronunciation case in CurrentView switch
+   375→- Updated `src/components/learn/learn-view.tsx`: added "Luyện phát âm" hub card (5th card) with Mic icon, links to pronunciation view
+   376→- Verified with Agent Browser: Learn hub shows "Luyện phát âm" card, clicking opens pronunciation page, 7 levels visible with counts (A0:7, A1:8, B2:8...), B2 loads "We should negotiate the terms of the contract.", listen button works (TTS plays), recording UI ready. Lint passes, zero console errors.
+   377→
+   378→Stage Summary:
+   379→- New "Luyện phát âm" (Pronunciation Practice) feature complete with 50 examples across 7 CEFR levels.
+   380→- Features: TTS audio samples, microphone recording with MediaRecorder API, audio playback, AI-powered pronunciation feedback in Vietnamese.
+   381→- Each example includes phonetic transcription, pronunciation tip, focus sounds, and category.
+   382→- Covers 6 pronunciation aspects: vowels, consonants, diphthongs, word stress, intonation, connected speech.
+   383→- Integrated into Learn hub as 5th card, accessible from main navigation.
+   384→
+   385→---
+   386→Task ID: 13
+   387→Agent: main (Z.ai Code)
+   388→Task: Redesign Pronunciation Practice to list sounds by group (like DANG HAI ENGLISH doc).
+   389→
+   390→Work Log:
+   391→- Analyzed 2 screenshots of "DANG HAI ENGLISH" pronunciation doc — user wants sounds listed by group (vowels then consonants), each sound with multiple example words + IPA + Vietnamese description.
+   392→- Rewrote `src/data/pronunciation-examples.ts` completely:
+   393→  - New `SoundGroup` type: id, type (vowel/consonant), ipa, name (Vietnamese), description, mouthShape, exampleWords[]
+   394→  - **20 vowel sounds** (/ɪ/, /iː/, /ʊ/, /uː/, /e/, /æ/, /ʌ/, /ɑː/, /ɒ/, /ɔː/, /ə/, /ɜː/, /eɪ/, /aɪ/, /ɔɪ/, /aʊ/, /əʊ/, /ɪə/, /eə/, /ʊə/) — each with Vietnamese name (i ngắn, i dài, u ngắn...), description, mouth shape, 7 example words with IPA + meaning
+   395→  - **24 consonant sounds** (/p/, /b/, /t/, /d/, /k/, /ɡ/, /f/, /v/, /θ/, /ð/, /s/, /z/, /ʃ/, /ʒ/, /tʃ/, /dʒ/, /h/, /m/, /n/, /ŋ/, /l/, /r/, /w/, /j/) — each with Vietnamese name (th vô thanh, th hữu thanh, sh, zh, ch, j, ng...), description, mouth shape, 7 example words
+   396→  - Total: 44 sounds × ~7 words = ~308 example words
+   397→- Rewrote `src/components/pronunciation/pronunciation-practice.tsx` with 2-level UI:
+   398→  - **Level 1 — Sound groups list**: 2 tabs (Nguyên âm 20 / Phụ âm 24), grid of sound cards showing IPA symbol + Vietnamese name + description + word count. Click card → level 2.
+   399→  - **Level 2 — Sound detail**: 
+   400→    - Header card with big IPA symbol + Vietnamese name + description + mouth shape badge + "Nghe mẫu" button
+   401→    - "Danh sách từ ví dụ" grid: all 7 example words, each card shows word + IPA + meaning + listen icon. Click to practice.
+   402→    - Selected word card with gradient header, large word display, IPA, meaning, listen button
+   403→    - Tip callout: description + mouth shape (amber colored)
+   404→    - Recording controls: red mic button, stop button with timer, audio playback, "Ghi lại" + "AI đánh giá"
+   405→    - AI feedback section (markdown rendered)
+   406→    - Word navigation: prev/next buttons
+   407→- Verified with Agent Browser: 
+   408→  - Opened pronunciation page — shows "44 âm tiếng Anh (20 nguyên âm + 24 phụ âm)"
+   409→  - 2 category tabs work (Nguyên âm / Phụ âm)
+   410→  - Clicked /ɪ/ → detail page with "i ngắn" + description + 7 words (sit, hit, bit, big, ship, chick, his) with IPA + meaning
+   411→  - Switched to Phụ âm → 24 consonants (p, b, t, d, k, g, f, v, th, dh, s, z, sh, zh, ch, j, h, m, n, ng, l, r, w, y)
+   412→  - Each sound has 7 example words with IPA + Vietnamese meaning
+   413→- Lint passes. Zero console errors.
+   414→
+   415→Stage Summary:
+   416→- Pronunciation practice completely redesigned to match the "list sounds by group" format user wanted.
+   417→- 44 IPA sounds (20 vowels + 24 consonants), each with:
+   418→  - Vietnamese name (i ngắn, i dài, th vô thanh, th hữu thanh, sh, ch, j, ng...)
+   419→  - Detailed Vietnamese description of how to pronounce
+   420→  - Mouth shape description (khẩu hình)
+   421→  - 7 example words with IPA + Vietnamese meaning
+   422→- UI: 2 levels — sound grid → sound detail with word list + recording + AI feedback
+   423→- Total ~308 example words across all sounds.
+   424→
+   425→---
+   426→Task ID: 14
+   427→Agent: main (Z.ai Code)
+   428→Task: Read TOEIC Reading test from PDF (TEST 1 RC.pdf) uploaded by user and create a full test set.
+   429→
+   430→Work Log:
+   431→- User uploaded "TEST 1 RC (1).pdf" (20MB, 29 pages, PDF from Imax Toeic created with Canva).
+   432→- PDF was image-based (no text layer) → used `pdftoppm` to convert to 29 PNG images at 150 DPI.
+   433→- Used z-ai vision API (glm-4.6v) to read each page, extracting:
+   434→  - Part 5 (Q101-130): 30 incomplete sentence questions
+   435→  - Part 6 (Q131-146): 16 text completion questions across 4 passages (opening gala letter, library card email, photography letter, Greenwood Workshop ad)
+   436→  - Part 7 (Q147-200): 54 reading comprehension questions across 15 passages (product instructions, meeting schedule, Bryant Foyer brochure, text messages, farm donation notice, concert hall notice, Sweeter Specialties email, dishwasher review, Skyler Airlines, headphones chat, Kitchen Swifts press release, Conor Boyle email+ticket, Train to Achieve, Orange Bay Kitchen article+review+email, Orbys Distributors invoice+notice+email)
+   437→- Created `scripts/seed-rc-test1.ts` with all 100 questions:
+   438→  - Each question: id, part, groupId, passage, question text, 4 options, correct answer, Vietnamese explanation, category, difficulty
+   439→  - All passages included for Part 6 and Part 7
+   440→  - Explanations in Vietnamese covering: grammar rule, vocabulary meaning, inference logic
+   441→- Created test set `ts_rc1_full`:
+   442→  - Title: "🎯 Đề TOEIC Reading Test 1 (100 câu · 75 phút)"
+   443→  - 100 questions, 75 minutes, type=full
+   444→- Ran seed: 100 questions inserted + 1 test set created.
+   445→- Total DB: 168 questions, 9 test sets.
+   446→- Verified via API: test set loads correctly, 100 questions, correct Part distribution (30/16/54).
+   447→
+   448→Stage Summary:
+   449→- Successfully read entire TOEIC Reading test from user's PDF using AI Vision.
+   450→- Created complete 100-question test set in database with Vietnamese explanations.
+   451→- Test appears in Practice page as "🎯 Đề TOEIC Reading Test 1 (100 câu · 75 phút)".
+   452→- This demonstrates the full pipeline: PDF upload → AI Vision OCR → question extraction → database seed → web integration.
+   453→
+   454→---
+   455→Task ID: 15
+   456→Agent: general-purpose sub agent
+   457→Task: Create a seed script file at /home/z/my-project/scripts/seed-rc-test2.ts that inserts 100 TOEIC Reading questions (TEST 2 RC) into the database, following the exact same format as scripts/seed-rc-test1.ts.
+   458→
+   459→Work Log:
+   460→- Read worklog.md to understand prior work (Task ID 14 created seed-rc-test1.ts with TEST 1 RC — 100 questions, test set ts_rc1_full).
+   461→- Read scripts/seed-rc-test1.ts (569 lines) end-to-end to learn the exact code structure: import db, Q helper function (id, part, groupId, passage, question, options, answer, explanation, category, difficulty), per-part arrays, p5.forEach / p6_X.forEach / p7_X.forEach push pattern, final upsert loop, and test set creation.
+   462→- Created scripts/seed-rc-test2.ts mirroring seed-rc-test1.ts structure with all 100 questions supplied by user:
+   463→  - Part 5 (Q101-130): 30 incomplete-sentence questions (ids q_rc2_101 … q_rc2_130, groupId null, passage null) covering vocabulary / word-form / preposition / pronoun / conjunction / comparison / infinitive / tense / phrase categories.
+   464→  - Part 6 (Q131-146): 16 text-completion questions in 4 passages (groups g_rc2_p6_1 … g_rc2_p6_4): Dellwyn Home Store furniture email, Keep Cool Service Contractors ad, Light Idea price-increase email, Kenneth Okim jewelry order email.
+   465→  - Part 7 (Q147-200): 54 reading-comprehension questions across 15 passages (groups g_rc2_p7_1 … g_rc2_p7_15): Savan Business Center webinar, Dine Out Darville, Rainsy LLC HQ move, printer-paper text chain, SFMA library letter (sentence-insertion), Claro Vision ad, Rosserry lease letter, Qualiview contract email (+vocabulary), shipping container shortage article (+sentence-insertion), construction team text chain, Karabel Industries ice-cream email+survey (5 q), Create Great job posting + Annie Smith letter (5 q), Fowler Office Supplies email exchange + receipt (5 q), Crawford and Duval article + web page + receipt (5 q), Osawa Corporate Team Building web page + form + review (5 q).
+   466→  - Each question has Vietnamese explanation referencing grammar rule, vocabulary meaning, or inference logic.
+   467→  - Test set ts_rc2_full: title "🎯 Đề TOEIC Reading Test 2 (100 câu · 75 phút)", type "full", durationMin 75.
+   468→- Ran `bun run scripts/seed-rc-test2.ts` → success:
+   469→  - Questions added: 100
+   470→  - Test set: ts_rc2_full
+   471→  - Total questions in DB: 268 (was 168 → +100 new)
+   472→  - Total test sets in DB: 10 (was 9 → +1 new)
+   473→
+   474→Stage Summary:
+   475→- Second 100-question TOEIC Reading full test (TEST 2 RC) is now in the database and appears on the Practice page as "🎯 Đề TOEIC Reading Test 2 (100 câu · 75 phút)".
+   476→- Together with TEST 1 RC, the platform now offers 200 full TOEIC Reading practice questions across 2 complete mock tests, all with Vietnamese explanations.
+   477→- Format identical to seed-rc-test1.ts (same Q helper, upsert pattern, test set shape) → consistent and maintainable.
+   478→
