@@ -88,9 +88,38 @@ export function AuthModal({
         onOpenChange(false)
         reset()
       } else {
+        // Pre-check: is the account locked? NextAuth v4 doesn't surface the
+        // specific authorize() error to the client, so we ask the status
+        // endpoint first to give the user a clear message.
+        try {
+          const stRes = await fetch('/api/auth/check-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+          })
+          if (stRes.ok) {
+            const st = await stRes.json()
+            if (st?.locked) {
+              toast({
+                title: 'Tài khoản đã bị khoá',
+                description: 'Tài khoản của bạn đã bị quản trị viên khoá. Vui lòng liên hệ hỗ trợ để được mở lại.',
+                variant: 'destructive',
+              })
+              setLoading(false)
+              return
+            }
+          }
+        } catch {
+          // Network/endpoint issue — fall through to normal signIn below.
+        }
+
         const r = await login(email, password)
         if (r?.error) {
-          toast({ title: 'Sign in failed', description: r.error, variant: 'destructive' })
+          toast({
+            title: 'Sign in failed',
+            description: 'Email hoặc mật khẩu không đúng. Vui lòng thử lại.',
+            variant: 'destructive',
+          })
           setLoading(false)
           return
         }

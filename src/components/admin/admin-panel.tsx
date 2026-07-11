@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Users, Brain, BookOpen, FileText, TrendingUp, Database, Plus, Pencil, Trash2, LayoutDashboard } from 'lucide-react'
+import { Users, Brain, BookOpen, FileText, TrendingUp, Database, Plus, Pencil, Trash2, LayoutDashboard, Lock, LockOpen } from 'lucide-react'
 import { AdminShell } from './admin-shell'
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -211,23 +211,118 @@ function UsersTab() {
   const { toast } = useToast()
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
   const fetchUsers = useCallback(async () => { setLoading(true); const res = await fetch('/api/admin/users'); const data = await res.json(); setUsers(data.users || []); setLoading(false) }, [])
   useEffect(() => { fetchUsers() }, [fetchUsers])
   const handleRoleChange = async (id: string, role: string) => { await fetch('/api/admin/users', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, role }) }); toast({ title: 'Đã đổi role' }); fetchUsers() }
-  const handleDelete = async (id: string) => { if (!confirm('Xóa?')) return; await fetch(`/api/admin/users?id=${id}`, { method: 'DELETE' }); toast({ title: 'Đã xóa' }); fetchUsers() }
+  const handleDelete = async (id: string) => { if (!confirm('Xoá tài khoản này?')) return; await fetch(`/api/admin/users?id=${id}`, { method: 'DELETE' }); toast({ title: 'Đã xoá' }); fetchUsers() }
+  const handleToggleLock = async (u: any) => {
+    const nextLocked = !u.locked
+    const verb = nextLocked ? 'khoá' : 'mở khoá'
+    if (!confirm(`Bạn có chắc muốn ${verb} tài khoản "${u.email}"?`)) return
+    setTogglingId(u.id)
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: u.id, locked: nextLocked }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast({ title: 'Không thể thay đổi trạng thái', description: data?.error || 'Lỗi không xác định', variant: 'destructive' })
+        return
+      }
+      toast({
+        title: nextLocked ? 'Đã khoá tài khoản' : 'Đã mở khoá tài khoản',
+        description: nextLocked
+          ? `${u.email} sẽ không thể đăng nhập cho đến khi được mở khoá.`
+          : `${u.email} có thể đăng nhập lại bình thường.`,
+      })
+      fetchUsers()
+    } catch {
+      toast({ title: 'Lỗi kết nối', variant: 'destructive' })
+    } finally {
+      setTogglingId(null)
+    }
+  }
   if (loading) return <Skeleton className="h-64 w-full" />
+
+  const lockedCount = users.filter(u => u.locked).length
+
   return (
-    <div className="rounded-lg border max-h-[60vh] overflow-y-auto">
-      <Table><TableHeader><TableRow><TableHead>Tên</TableHead><TableHead>Email</TableHead><TableHead>Role</TableHead><TableHead>Ngày đăng ký</TableHead><TableHead className="text-right">Thao tác</TableHead></TableRow></TableHeader>
-        <TableBody>{users.map(u => (
-          <TableRow key={u.id}>
-            <TableCell className="font-medium">{u.name}</TableCell><TableCell className="text-muted-foreground">{u.email}</TableCell>
-            <TableCell><Select value={u.role} onValueChange={v => handleRoleChange(u.id, v)}><SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="STUDENT">STUDENT</SelectItem><SelectItem value="INSTRUCTOR">INSTRUCTOR</SelectItem></SelectContent></Select></TableCell>
-            <TableCell className="text-muted-foreground text-sm">{new Date(u.createdAt).toLocaleDateString('en-US')}</TableCell>
-            <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete(u.id)}><Trash2 className="h-4 w-4 text-rose-500" /></Button></TableCell>
-          </TableRow>
-        ))}</TableBody>
-      </Table>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="secondary" className="gap-1.5"><Users className="h-3.5 w-3.5" /> {users.length} học sinh</Badge>
+        {lockedCount > 0 && (
+          <Badge variant="destructive" className="gap-1.5"><Lock className="h-3.5 w-3.5" /> {lockedCount} đã khoá</Badge>
+        )}
+      </div>
+      {users.length === 0 ? (
+        <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground">
+          Chưa có học sinh nào đăng ký.
+        </div>
+      ) : (
+        <div className="rounded-lg border max-h-[60vh] overflow-y-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tên</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead>Ngày đăng ký</TableHead>
+                <TableHead className="text-right">Thao tác</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map(u => (
+                <TableRow key={u.id} className={cn(u.locked && 'opacity-60')}>
+                  <TableCell className="font-medium">
+                    {u.name}
+                    {u.locked && <span className="ml-2 text-xs text-rose-500">(đã khoá)</span>}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                  <TableCell>
+                    <Select value={u.role} onValueChange={v => handleRoleChange(u.id, v)}>
+                      <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="STUDENT">STUDENT</SelectItem>
+                        <SelectItem value="INSTRUCTOR">INSTRUCTOR</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    {u.locked ? (
+                      <Badge variant="destructive" className="gap-1"><Lock className="h-3 w-3" /> Đã khoá</Badge>
+                    ) : (
+                      <Badge variant="outline" className="gap-1 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/15"><LockOpen className="h-3 w-3" /> Hoạt động</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">{new Date(u.createdAt).toLocaleDateString('en-US')}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="inline-flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title={u.locked ? 'Mở khoá tài khoản' : 'Khoá tài khoản'}
+                        disabled={togglingId === u.id}
+                        onClick={() => handleToggleLock(u)}
+                      >
+                        {u.locked
+                          ? <LockOpen className="h-4 w-4 text-emerald-600" />
+                          : <Lock className="h-4 w-4 text-amber-600" />}
+                      </Button>
+                      <Button variant="ghost" size="icon" title="Xoá tài khoản" onClick={() => handleDelete(u.id)}>
+                        <Trash2 className="h-4 w-4 text-rose-500" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   )
 }

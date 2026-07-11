@@ -604,3 +604,59 @@ Stage Summary:
     Password: admin123
 - To re-create/reset the admin account any time: `bun run scripts/seed-admin.ts` (override via ADMIN_EMAIL / ADMIN_PASSWORD / ADMIN_NAME env vars if desired).
 - Browser-verified: login modal → admin sign-in → navbar shows "Admin" button → admin panel renders with all 4 management sections. No console/runtime errors.
+
+---
+Task ID: 20
+Agent: main (Z.ai Code)
+Task: Add lock/unlock student account feature in admin panel UI.
+
+Work Log:
+- Read /home/z/my-project/worklog.md for prior context (admin login fixed in Task 19).
+- Used VLM skill to analyze the uploaded screenshot (pasted_image_1783789351334.png) of the existing "Quản lý Người dùng" panel. Confirmed it had columns: Tên, Email, Role, Ngày đăng ký, Thao tác (delete only) — no lock/unlock feature.
+- Read src/components/admin/admin-panel.tsx (UsersTab component), src/app/api/admin/users/route.ts, src/lib/auth/auth-options.ts, src/components/auth/auth-modal.tsx, src/lib/auth/use-auth.ts to understand the full auth + admin flow.
+- Designed the lock/unlock feature:
+  1. Prisma schema: add `locked Boolean @default(false)` to User model
+  2. Admin API: extend GET to return `locked`, extend PUT to accept `{ id, locked }` (plus safety: never modify ADMIN accounts)
+  3. Auth: reject locked users in `authorize()` — but NextAuth v4 doesn't propagate the thrown error message to the client (client only gets generic "CredentialsSignin")
+  4. Pre-check endpoint: create `/api/auth/check-status` POST that returns `{ exists, locked }` for a given email, so the login modal can show a clear Vietnamese "Tài khoản đã bị khoá" message
+  5. Login modal: call check-status before signIn; if locked, show toast and abort; otherwise proceed with normal signIn
+  6. UsersTab UI: add "Trạng thái" column (green "Hoạt động" / red "Đã khoá" badge), add lock/unlock button (amber Lock icon → emerald LockOpen icon), add summary badges at top, confirm dialog before toggling, opacity-60 for locked rows
+- Implementation:
+  - prisma/schema.prisma: added `locked Boolean @default(false)` field to User model
+  - Ran `bun run db:push` → schema synced, Prisma Client regenerated
+  - src/app/api/admin/users/route.ts: rewrote with `locked` in GET select, PUT accepts `role` and/or `locked`, added ADMIN-safety guards on both PUT and DELETE
+  - src/lib/auth/auth-options.ts: added `if (user.locked) throw new Error('ACCOUNT_LOCKED')` check in authorize()
+  - src/app/api/auth/check-status/route.ts: new POST endpoint returning `{ exists, locked }`
+  - src/components/auth/auth-modal.tsx: added pre-check fetch to /api/auth/check-status before signIn; shows "Tài khoản đã bị khoá" toast if locked; improved generic error message to Vietnamese "Email hoặc mật khẩu không đúng"
+  - src/components/admin/admin-panel.tsx: added Lock/LockOpen icons import; rewrote UsersTab with status column, lock/unlock button, confirm dialog, summary badges, empty-state, loading state per-row
+  - Fixed Badge variant issue: `variant="success"` doesn't exist, used `variant="outline"` with custom emerald classes
+- Dev server challenges: the sandbox has tight memory constraints. Cold Turbopack compilation of routes crashes the next-server process. Solved by:
+  - Setting NODE_OPTIONS=--max-old-space-size=2560
+  - Writing a warmup.sh script that compiles routes one at a time (restarting between each) to populate the .next cache
+  - Using `curl -4 ... 127.0.0.1:3000` instead of `localhost` (IPv6 resolution was causing instant connection refused)
+- Created test student account (student@test.com / test123) via register API for verification.
+- Browser verification (Agent Browser) — full end-to-end test:
+  1. ✅ Logged in as admin@toeic.com → Admin button appeared → entered Admin Panel → Users tab
+  2. ✅ New "Trạng thái" column visible with green "Hoạt động" badges for both students
+  3. ✅ VLM-confirmed screenshot: 6 columns, green status badges, amber lock icon + red trash icon in Actions
+  4. ✅ Clicked "Khoá tài khoản" on Test Student → confirm dialog "Bạn có chắc muốn khoá tài khoản 'student@test.com'?" → accepted
+  5. ✅ Row updated instantly: name shows "Test Student(đã khoá)", status badge changed to red "Đã khoá", button changed to "Mở khoá tài khoản"
+  6. ✅ Verified via API: `POST /api/auth/check-status` → `{"exists":true,"locked":true}`
+  7. ✅ Signed out → tried logging in as student@test.com → toast "Tài khoản đã bị khoá" appeared (VLM-confirmed from screenshot), login blocked, modal stayed open
+  8. ✅ Dev log confirmed: no `POST /api/auth/callback/credentials` was called (pre-check stopped it before NextAuth)
+  9. ✅ Logged back in as admin → clicked "Mở khoá tài khoản" → confirm dialog "Bạn có chắc muốn mở khoá tài khoản 'student@test.com'?" → accepted
+  10. ✅ Row updated: name back to "Test Student", status back to green "Hoạt động", button back to "Khoá tài khoản"
+  11. ✅ Verified via API: `{"exists":true,"locked":false}`
+  12. ✅ Signed out → logged in as student@test.com → success! Toast "Welcome back! 👋 You are now signed in." appeared, User menu visible
+- Cleaned up: deleted test student account, removed temp scripts (start-dev.sh, watchdog-dev.sh, warmup.sh) and screenshots.
+- Lint: `bun run lint` → clean (zero errors).
+- Final DB state: 2 users (admin@toeic.com/ADMIN/unlocked, vinhdong0899225163@gmail.com/STUDENT/unlocked).
+
+Stage Summary:
+- Admin panel now has full lock/unlock student account feature in the "Quản lý Người dùng" tab.
+- New "Trạng thái" column shows green "Hoạt động" (active) or red "Đã khoá" (locked) badge.
+- Lock/Unlock button in the Actions column toggles account status with a confirmation dialog.
+- Locked students cannot log in — they see a clear Vietnamese toast: "Tài khoản đã bị khoá — Tài khoản của bạn đã bị quản trị viên khoá. Vui lòng liên hệ hỗ trợ để được mở lại."
+- Unlocking restores login access immediately.
+- Safety guards: ADMIN accounts cannot be locked, demoted, or deleted from this endpoint.
+- All changes lint-clean and browser-verified end-to-end.

@@ -28,6 +28,12 @@ export const authOptions: NextAuthOptions = {
         if (!user) {
           throw new Error('No account found with that email. Please register first.')
         }
+        if (user.locked) {
+          // Thrown message is not propagated to the client by NextAuth v4 —
+          // the login modal does a pre-check against /api/auth/check-status
+          // to surface a friendly "account locked" message.
+          throw new Error('ACCOUNT_LOCKED')
+        }
         const valid = await bcrypt.compare(credentials.password, user.passwordHash)
         if (!valid) {
           throw new Error('Incorrect password. Please try again.')
