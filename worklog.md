@@ -569,3 +569,38 @@ Stage Summary:
 - Placeholder questions (Q42-43, Q60-64, Q84-94) have answer=0 and generic Option A/B/C/D options — these can be filled in later with real content extracted from the audio/PDF.
 - Format mirrors seed-rc-test1.ts (same Q helper shape, upsert pattern, test set block) → consistent and maintainable.
 - Next: wire `ts_lc1_full` into the Practice page UI (practice-list.tsx) under a Listening section, and verify the audio playback path `/audio/test_01_listening.mp3` works in the test engine.
+
+---
+Task ID: 19
+Agent: main (Z.ai Code)
+Task: Fix admin login not working — diagnose why user could not sign in as admin.
+
+Work Log:
+- Read recent dev.log → saw `POST /api/auth/callback/credentials 401` on the last admin login attempt.
+- Read src/lib/auth/auth-options.ts → CredentialsProvider uses `db.user.findUnique({ where: { email } })` then `bcrypt.compare(password, user.passwordHash)`. Auth logic itself is correct.
+- Read src/components/auth/auth-modal.tsx and src/app/api/auth/register/route.ts → login/register UI and API are correct.
+- Inspected the actual DB via `bun -e` Prisma script:
+    Total users: 1
+    { id: "cmrgjiliz0000n3w02bm338wi", email: "vinhdong0899225163@gmail.com", name: "Đồng Vinh", role: "STUDENT" }
+  → The admin account `admin@toeic.com` did NOT exist in the database. The DB was reset during the Listening test seeding (Task ID 18) and the admin account was never re-seeded.
+- Created /home/z/my-project/scripts/seed-admin.ts — idempotent upsert that creates/upgrades `admin@toeic.com` with role=ADMIN and bcrypt-hashed `admin123`. Env-overridable (ADMIN_EMAIL / ADMIN_PASSWORD / ADMIN_NAME).
+- Ran `bun run scripts/seed-admin.ts` → success. Admin row inserted:
+    { id: "cmrglrwfe0000n3ldvdww4jq7", email: "admin@toeic.com", name: "Administrator", role: "ADMIN" }
+- Verified password hash: `bcrypt.compare('admin123', hash)` → true; wrong password → false.
+- Verified end-to-end via Agent Browser:
+    1. Opened http://localhost:3000/
+    2. Clicked "Sign In" → login modal opened
+    3. Filled admin@toeic.com / admin123 → clicked Sign In
+    4. After login: "Sign In"/"Get Started" buttons disappeared, "User menu" avatar appeared, and a new "Admin" button showed in navbar (only visible when role === 'ADMIN')
+    5. Clicked "Admin" → Admin Panel rendered with sidebar: Dashboard / Từ vựng / Ngữ pháp / Người dùng / Xem trang web / Đăng xuất
+    6. Checked `agent-browser errors` (none) and `agent-browser console` (only HMR logs, no errors). dev.log shows no 401s.
+- Verified lint clean (no new errors introduced; seed-admin.ts is a standalone script).
+
+Stage Summary:
+- Root cause: the admin account was missing from the DB after the DB was reset during Task 18 (Listening test seed). The auth code was always correct.
+- Fix: created `scripts/seed-admin.ts` (idempotent) and ran it. Admin login now works end-to-end.
+- Admin credentials (working):
+    Email:    admin@toeic.com
+    Password: admin123
+- To re-create/reset the admin account any time: `bun run scripts/seed-admin.ts` (override via ADMIN_EMAIL / ADMIN_PASSWORD / ADMIN_NAME env vars if desired).
+- Browser-verified: login modal → admin sign-in → navbar shows "Admin" button → admin panel renders with all 4 management sections. No console/runtime errors.
