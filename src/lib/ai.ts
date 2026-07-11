@@ -62,9 +62,13 @@ async function getOpenAIClient(provider: Provider) {
   if (openaiClients.has(provider)) return openaiClients.get(provider)!
   // Dynamic import để tránh load SDK khi không dùng
   const { default: OpenAI } = await import('openai')
+  // Ollama local inference trên CPU có thể chậm → timeout dài hơn (5 phút)
+  const timeout = provider === 'ollama' ? 5 * 60 * 1000 : 60 * 1000
   const client = new OpenAI({
     apiKey: getApiKey(provider),
     baseURL: BASE_URLS[provider],
+    timeout,
+    maxRetries: provider === 'ollama' ? 1 : 2,
   })
   openaiClients.set(provider, client)
   return client
@@ -93,18 +97,103 @@ export async function aiChat(messages: { role: 'user' | 'assistant'; content: st
   // OpenAI-compatible providers (Ollama, OpenAI, OpenRouter, Groq, Gemini)
   const client = await getOpenAIClient(provider)
   const model = DEFAULT_MODELS[provider]
-  const completion = await client.chat.completions.create({
+
+  // Tune tham số theo provider:
+  // - Ollama + qwen2.5:3b (model nhỏ 3B): temperature thấp hơn để giảm "lan man",
+  //   max_tokens để tránh treo, không stream cho đơn giản.
+  // - Cloud providers: giữ nguyên 0.7.
+  const isOllama = provider === 'ollama'
+  const params: Record<string, unknown> = {
     model,
     messages,
-    temperature: 0.7,
-  })
-  return completion.choices[0]?.message?.content ?? ''
+    temperature: isOllama ? 0.5 : 0.7,
+  }
+  if (isOllama) {
+    params.max_tokens = 1024
+    params.stream = false
+  }
+
+  try {
+    const completion = await client.chat.completions.create(params)
+    const content = completion.choices[0]?.message?.content ?? ''
+    if (!content && isOllama) {
+      return '(Mô hình không trả về nội dung. Hãy thử chạy `ollama run qwen2.5:3b` để kiểm tra model hoạt động.)'
+    }
+    return content
+  } catch (err: any) {
+    if (isOllama) {
+      // Ollama không chạy / model chưa pull → trả message hướng dẫn thay vì crash
+      const msg = err?.message || String(err)
+      if (msg.includes('ECONNREFUSED') || msg.includes('fetch failed') || msg.includes('connect')) {
+        throw new Error(
+          'Không kết nối được với Ollama. Hãy chắc chắn Ollama đang chạy (`ollama serve`) và đã pull model (`ollama pull qwen2.5:3b`).'
+        )
+      }
+      if (msg.includes('model') && msg.includes('not found')) {
+        throw new Error(
+          `Model "${model}" chưa có trong Ollama. Chạy: \`ollama pull ${model}\``
+        )
+      }
+      throw new Error(`Lỗi Ollama: ${msg}`)
+    }
+    throw err
+  }
 }
 
 // Cho UI hiển thị provider hiện tại (debug/info)
 export function getCurrentProvider(): { provider: Provider; model: string } {
   const provider = detectProvider()
   return { provider, model: DEFAULT_MODELS[provider] }
+}
+
+/**
+ * Kiểm tra Ollama có đang chạy và model có sẵn không.
+ * Trả về { ok, message, models? }.
+ * Chỉ dùng khi provider === 'ollama'.
+ */
+export async function checkOllamaHealth(): Promise<{
+  ok: boolean
+  message: string
+  models?: string[]
+}> {
+  const baseUrl = (process.env.OLLAMA_BASE_URL || 'http://localhost:11434').replace(/\/v1\/?$/, '')
+  try {
+    const res = await fetch(`${baseUrl}/api/tags`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(5000),
+    })
+    if (!res.ok) {
+      return { ok: false, message: `Ollama responded HTTP ${res.status}` }
+    }
+    const data = (await res.json()) as { models?: { name: string }[] }
+    const models = (data.models || []).map((m) => m.name)
+    const model = process.env.OLLAMA_MODEL || 'qwen2.5:3b'
+    // Ollama trả về kèm :latest cho tag mặc định
+    const hasModel = models.some(
+      (m) => m === model || m === `${model}:latest` || m.startsWith(`${model}:`)
+    )
+    if (!hasModel) {
+      return {
+        ok: false,
+        message: `Ollama đang chạy nhưng chưa có model "${model}". Chạy: \`ollama pull ${model}\``,
+        models,
+      }
+    }
+    return { ok: true, message: `Ollama sẵn sàng — model "${model}" đã sẵn có.`, models }
+  } catch (e: any) {
+    const msg = e?.message || String(e)
+    if (msg.includes('ECONNREFUSED') || msg.includes('fetch failed') || msg.includes('connect')) {
+      return {
+        ok: false,
+        message:
+          'Không kết nối được với Ollama. Hãy chạy `ollama serve` (hoặc mở app Ollama) rồi thử lại.',
+      }
+    }
+    if (msg.includes('abort') || msg.includes('timeout')) {
+      return { ok: false, message: 'Ollama không phản hồi sau 5s — có thể đang khởi động.' }
+    }
+    return { ok: false, message: `Lỗi kết nối Ollama: ${msg}` }
+  }
 }
 
 // ===================================================================

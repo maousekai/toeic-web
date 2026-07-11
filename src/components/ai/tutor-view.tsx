@@ -19,6 +19,7 @@ type ProviderInfo = {
   name: string
   icon: string
   isLocal: boolean
+  health?: { ok: boolean; message: string; models?: string[] }
 }
 
 const SUGGESTIONS = [
@@ -100,10 +101,26 @@ export function TutorView() {
               <span className="truncate">Online · replying in {labels.flag} {labels.long}</span>
             </p>
             {providerInfo && (
-              <Badge variant="outline" className="mt-1 gap-1 text-[10px]" title={`Model: ${providerInfo.model}`}>
-                {providerInfo.icon} {providerInfo.name}
-                {providerInfo.isLocal && <span className="text-emerald-500">· 100% offline</span>}
-              </Badge>
+              <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                <Badge variant="outline" className="gap-1 text-[10px]" title={`Model: ${providerInfo.model}`}>
+                  {providerInfo.icon} {providerInfo.name}
+                  {providerInfo.isLocal && <span className="text-emerald-500">· 100% offline</span>}
+                </Badge>
+                {providerInfo.isLocal && providerInfo.health && (
+                  <Badge
+                    variant="outline"
+                    className={
+                      'gap-1 text-[10px] ' +
+                      (providerInfo.health.ok
+                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600'
+                        : 'border-amber-500/30 bg-amber-500/10 text-amber-600')
+                    }
+                    title={providerInfo.health.message}
+                  >
+                    {providerInfo.health.ok ? '✅ Sẵn sàng' : '⚠️ Chưa kết nối'}
+                  </Badge>
+                )}
+              </div>
             )}
           </div>
         </div>
