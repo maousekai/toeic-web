@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import {
   Clock, FileText, Headphones, Layers, Play, ArrowRight, Trophy, AlertTriangle,
-  ShieldCheck, VolumeX, EyeOff, Timer, BookOpen, ExternalLink, CheckCircle2,
+  ShieldCheck, VolumeX, EyeOff, Timer, BookOpen, ExternalLink, CheckCircle2, Volume2,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -77,7 +77,8 @@ export function PracticeList() {
   const examTests = tests.filter((t) => t.type === 'exam')
   // Đề Reading đầy đủ (Test 1, Test 2...) — ưu tiên hiển thị lên đầu
   const fullReadingTests = tests.filter((t) => t.id === 'ts_rc1_full' || t.id === 'ts_rc2_full' || t.id === 'ts_rc3_full')
-  const practiceTests = tests.filter((t) => t.type !== 'exam' && t.id !== 'ts_rc1_full' && t.id !== 'ts_rc2_full' && t.id !== 'ts_rc3_full')
+  const listeningTests = tests.filter((t) => t.id === 'ts_lc1_full')
+  const practiceTests = tests.filter((t) => t.type !== 'exam' && t.id !== 'ts_rc1_full' && t.id !== 'ts_rc2_full' && t.id !== 'ts_rc3_full' && t.id !== 'ts_lc1_full')
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -88,6 +89,60 @@ export function PracticeList() {
           và <strong>thi thật</strong> (mô phỏng phòng thi, nghiêm ngặt).
         </p>
       </div>
+
+      {/* ĐỀ LISTING ĐẦY ĐỦ — Section đầu tiên */}
+      {listeningTests.length > 0 && (
+        <div className="mb-10">
+          <div className="mb-4 flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/15 text-teal-600">
+              <Headphones className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">🎧 Đề TOEIC Listening (Audio MP3 thật)</h2>
+              <p className="text-xs text-muted-foreground">Đề thi thật TOEIC Listening — Parts 1-4 với file audio MP3</p>
+            </div>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {listeningTests.map((t, i) => (
+              <motion.div key={t.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }}>
+                <Card className="group relative overflow-hidden border-teal-500/30 transition-all hover:-translate-y-1 hover:shadow-xl">
+                  <div className="absolute inset-0 -z-10 bg-gradient-to-br from-teal-500/8 to-transparent" />
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600">
+                        <Headphones className="h-6 w-6" />
+                      </div>
+                      <Badge variant="secondary" className="gap-1 bg-teal-500/10 text-teal-600">
+                        <Clock className="h-3 w-3" /> {t.durationMin}'
+                      </Badge>
+                    </div>
+                    <CardTitle className="mt-3 text-lg">{t.title}</CardTitle>
+                    <CardDescription className="text-sm leading-relaxed line-clamp-3">{t.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge variant="secondary" className="gap-1 text-[10px]"><Headphones className="h-3 w-3" /> Part 1 (6 câu)</Badge>
+                      <Badge variant="secondary" className="gap-1 text-[10px]"><Headphones className="h-3 w-3" /> Part 2 (25 câu)</Badge>
+                      <Badge variant="secondary" className="gap-1 text-[10px]"><Headphones className="h-3 w-3" /> Part 3 (39 câu)</Badge>
+                      <Badge variant="secondary" className="gap-1 text-[10px]"><Headphones className="h-3 w-3" /> Part 4 (30 câu)</Badge>
+                      <Badge variant="secondary" className="gap-1 text-[10px]"><Volume2 className="h-3 w-3" /> Audio MP3</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1"><Layers className="h-3.5 w-3.5" /> {t.questionCount} câu</span>
+                        <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {t.durationMin} phút</span>
+                      </div>
+                      <Button size="sm" className="bg-teal-600 hover:bg-teal-700" onClick={() => startTest(t)}>
+                        <Play className="mr-1 h-3.5 w-3.5" /> Bắt đầu
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ĐỀ READING ĐẦY ĐỦ — Section ưu tiên hiển thị đầu trang */}
       {fullReadingTests.length > 0 && (

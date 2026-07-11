@@ -149,9 +149,11 @@ export function TestEngine({ testSetId, mode = 'practice' }: { testSetId: string
     }
   }, [timeLeft, loading, questions.length, submit, submitting, toast, isExam])
 
-  // Listening: auto-play audio when entering a listening question
+  // Listening: auto-play TTS audio when entering a listening question (chỉ cho đề không có MP3)
   const playAudio = useCallback((q: Question) => {
     if (typeof window === 'undefined' || !window.speechSynthesis || !q.audioScript) return
+    // Nếu audioScript chứa "🎧 Phát audio MP3" → không dùng TTS (sẽ dùng MP3 player)
+    if (q.audioScript.includes('🎧') || q.audioScript.includes('MP3')) return
     const u = new SpeechSynthesisUtterance(q.audioScript)
     u.lang = 'en-US'
     u.rate = 0.95
@@ -193,6 +195,9 @@ export function TestEngine({ testSetId, mode = 'practice' }: { testSetId: string
   const isListening = q.part <= 4
   const lowTime = timeLeft <= 60
   const warningTime = isExam && timeLeft <= 300 && timeLeft > 60
+  // Kiểm tra đề có audio MP3 thật không
+  const hasMp3Audio = isListening && q.audioScript && (q.audioScript.includes('🎧') || q.audioScript.includes('MP3'))
+  const mp3Url = testSet?.id === 'ts_lc1_full' ? '/audio/test_01_listening.mp3' : null
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
@@ -331,14 +336,29 @@ export function TestEngine({ testSetId, mode = 'practice' }: { testSetId: string
                     ? 'border-rose-500/30 bg-rose-500/5'
                     : 'border-teal-500/30 bg-teal-500/5'
                 }`}>
-                  {isExam ? (
-                    // EXAM MODE: chỉ hiện thông báo, KHÔNG có replay, KHÔNG có transcript
+                  {hasMp3Audio && mp3Url ? (
+                    // MP3 AUDIO MODE — Phát file MP3 thật
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-teal-700 dark:text-teal-300">
+                        <Headphones className="h-4 w-4" />
+                        <span>🎧 Phát audio MP3 — Lắng nghe và chọn đáp án</span>
+                      </div>
+                      <audio controls autoPlay className="w-full">
+                        <source src={mp3Url} type="audio/mpeg" />
+                        Trình duyệt không hỗ trợ audio.
+                      </audio>
+                      {isExam && (
+                        <p className="text-xs text-rose-600">⚠️ Chế độ thi thật: Audio chỉ phát 1 lần, không replay.</p>
+                      )}
+                    </div>
+                  ) : isExam ? (
+                    // EXAM MODE TTS: chỉ hiện thông báo
                     <div className="flex items-center gap-2 text-sm text-rose-700 dark:text-rose-400">
                       <Volume2 className="h-4 w-4 animate-pulse" />
                       <span>Audio đang phát <strong>1 lần duy nhất</strong>. Lắng nghe kỹ và chọn đáp án.</span>
                     </div>
                   ) : (
-                    // PRACTICE MODE: có replay + transcript như cũ
+                    // PRACTICE MODE TTS: có replay + transcript
                     <>
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2 text-sm text-teal-700 dark:text-teal-300">
