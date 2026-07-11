@@ -378,7 +378,18 @@ export function TestEngine({ testSetId, mode = 'practice' }: { testSetId: string
                 </div>
               )}
 
-              <p className="text-base font-medium leading-relaxed">{q.question}</p>
+              {/* Part 1: Hiển thị ảnh photograph */}
+              {q.part === 1 && q.imagePrompt && q.imagePrompt.startsWith('/') && (
+                <div className="rounded-xl border border-border overflow-hidden">
+                  <img
+                    src={q.imagePrompt}
+                    alt="Part 1 photograph"
+                    className="w-full max-h-80 object-contain bg-secondary/20"
+                  />
+                </div>
+              )}
+
+              <p className="text-base font-medium leading-relaxed" suppressHydrationWarning>{q.question}</p>
 
               <div className="space-y-2.5">
                 {q.options.map((opt, i) => {
