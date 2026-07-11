@@ -4,74 +4,68 @@ export type Language = 'vi' | 'en' | 'bi'
 
 // ===================================================================
 //  AI PROVIDER ADAPTER
-//  - Tự động chọn provider dựa trên biến môi trường
-//  - Thứ tự ưu tiên:
-//    1. OLLAMA_BASE_URL     → chạy AI local (Ollama, miễn phí)
-//    2. OPENAI_API_KEY      → OpenAI cloud
-//    3. OPENROUTER_API_KEY  → OpenRouter (1 key, nhiều model)
-//    4. GROQ_API_KEY        → Groq (cực nhanh, free)
-//    5. GEMINI_API_KEY      → Google Gemini (free tier hào phóng)
-//    6. (fallback) ZAI SDK  → sandbox Z.ai
+//  - Tự nhận diện Ollama + qwen2.5:3b đang chạy trên máy (không cần env)
+//  - Nếu Ollama không chạy → fallback qua ZAI cloud (sandbox)
 // ===================================================================
 
-type Provider = 'ollama' | 'openai' | 'openrouter' | 'groq' | 'gemini' | 'zai'
+type Provider = 'ollama' | 'zai'
 
-function detectProvider(): Provider {
-  if (process.env.OLLAMA_BASE_URL) return 'ollama'
-  if (process.env.OPENAI_API_KEY) return 'openai'
-  if (process.env.OPENROUTER_API_KEY) return 'openrouter'
-  if (process.env.GROQ_API_KEY) return 'groq'
-  if (process.env.GEMINI_API_KEY) return 'gemini'
-  return 'zai'
-}
+// Cấu hình Ollama mặc định (qwen2.5:3b)
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434/v1'
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'qwen2.5:3b'
+const OLLAMA_HOST = OLLAMA_BASE_URL.replace(/\/v1\/?$/, '')
 
-const DEFAULT_MODELS: Record<Provider, string> = {
-  ollama: process.env.OLLAMA_MODEL || 'qwen2.5:3b',
-  openai: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-  openrouter: process.env.OPENROUTER_MODEL || 'qwen/qwen-2.5-7b-instruct:free',
-  groq: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
-  gemini: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
-  zai: 'zai-default',
-}
+// Cache kết quả probe để không gọi lại mỗi request
+let probed: { provider: Provider; at: number } | null = null
+const PROBE_TTL = 30_000 // 30s
 
-const BASE_URLS: Record<Provider, string | undefined> = {
-  ollama: process.env.OLLAMA_BASE_URL || 'http://localhost:11434/v1',
-  openai: undefined, // SDK default
-  openrouter: 'https://openrouter.ai/api/v1',
-  groq: 'https://api.groq.com/openai/v1',
-  gemini: 'https://generativelanguage.googleapis.com/v1beta/openai/',
-  zai: undefined,
-}
+/**
+ * Tự nhận diện provider:
+ *  1. Gọi `GET http://localhost:11434/api/tags` — nếu Ollama phản hồi
+ *     và có qwen2.5:3b trong danh sách model → dùng Ollama.
+ *  2. Nếu Ollama không chạy / không có qwen2.5:3b → fallback ZAI cloud.
+ *
+ * Kết quả được cache 30s để tránh probe mỗi request.
+ */
+async function detectProvider(): Promise<Provider> {
+  const now = Date.now()
+  if (probed && now - probed.at < PROBE_TTL) return probed.provider
 
-function getApiKey(provider: Provider): string {
-  switch (provider) {
-    case 'ollama': return 'ollama' // Ollama không cần key, dùng string bất kỳ
-    case 'openai': return process.env.OPENAI_API_KEY || ''
-    case 'openrouter': return process.env.OPENROUTER_API_KEY || ''
-    case 'groq': return process.env.GROQ_API_KEY || ''
-    case 'gemini': return process.env.GEMINI_API_KEY || ''
-    case 'zai': return ''
+  try {
+    const res = await fetch(`${OLLAMA_HOST}/api/tags`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(3000),
+    })
+    if (res.ok) {
+      const data = (await res.json()) as { models?: { name: string }[] }
+      const models = (data.models || []).map((m) => m.name)
+      const hasQwen = models.some(
+        (m) => m === OLLAMA_MODEL || m === `${OLLAMA_MODEL}:latest` || m.startsWith(`${OLLAMA_MODEL}:`),
+      )
+      probed = { provider: hasQwen ? 'ollama' : 'zai', at: now }
+      return probed.provider
+    }
+  } catch {
+    // Ollama không chạy → fallback
   }
+  probed = { provider: 'zai', at: now }
+  return 'zai'
 }
 
 // Singleton instances
 let zaiInstance: Awaited<ReturnType<typeof ZAI.create>> | null = null
-const openaiClients = new Map<Provider, any>()
+let ollamaClient: any = null
 
-async function getOpenAIClient(provider: Provider) {
-  if (openaiClients.has(provider)) return openaiClients.get(provider)!
-  // Dynamic import để tránh load SDK khi không dùng
+async function getOllamaClient() {
+  if (ollamaClient) return ollamaClient
   const { default: OpenAI } = await import('openai')
-  // Ollama local inference trên CPU có thể chậm → timeout dài hơn (5 phút)
-  const timeout = provider === 'ollama' ? 5 * 60 * 1000 : 60 * 1000
-  const client = new OpenAI({
-    apiKey: getApiKey(provider),
-    baseURL: BASE_URLS[provider],
-    timeout,
-    maxRetries: provider === 'ollama' ? 1 : 2,
+  ollamaClient = new OpenAI({
+    apiKey: 'ollama', // Ollama không cần key
+    baseURL: OLLAMA_BASE_URL,
+    timeout: 5 * 60 * 1000, // 5 phút (CPU inference chậm)
+    maxRetries: 1,
   })
-  openaiClients.set(provider, client)
-  return client
+  return ollamaClient
 }
 
 async function getZAI() {
@@ -82,10 +76,9 @@ async function getZAI() {
 }
 
 export async function aiChat(messages: { role: 'user' | 'assistant'; content: string }[]): Promise<string> {
-  const provider = detectProvider()
+  const provider = await detectProvider()
 
   if (provider === 'zai') {
-    // ZAI SDK (sandbox Z.ai)
     const zai = await getZAI()
     const completion = await zai.chat.completions.create({
       messages: messages as any,
@@ -94,99 +87,73 @@ export async function aiChat(messages: { role: 'user' | 'assistant'; content: st
     return completion.choices[0]?.message?.content ?? ''
   }
 
-  // OpenAI-compatible providers (Ollama, OpenAI, OpenRouter, Groq, Gemini)
-  const client = await getOpenAIClient(provider)
-  const model = DEFAULT_MODELS[provider]
-
-  // Tune tham số theo provider:
-  // - Ollama + qwen2.5:3b (model nhỏ 3B): temperature thấp hơn để giảm "lan man",
-  //   max_tokens để tránh treo, không stream cho đơn giản.
-  // - Cloud providers: giữ nguyên 0.7.
-  const isOllama = provider === 'ollama'
-  const params: Record<string, unknown> = {
-    model,
-    messages,
-    temperature: isOllama ? 0.5 : 0.7,
-  }
-  if (isOllama) {
-    params.max_tokens = 1024
-    params.stream = false
-  }
-
+  // Ollama + qwen2.5:3b
+  const client = await getOllamaClient()
   try {
-    const completion = await client.chat.completions.create(params)
-    const content = completion.choices[0]?.message?.content ?? ''
-    if (!content && isOllama) {
-      return '(Mô hình không trả về nội dung. Hãy thử chạy `ollama run qwen2.5:3b` để kiểm tra model hoạt động.)'
-    }
-    return content
+    const completion = await client.chat.completions.create({
+      model: OLLAMA_MODEL,
+      messages,
+      temperature: 0.5, // model 3B nhỏ → nhiệt độ thấp để giảm "lan man"
+      max_tokens: 1024,
+      stream: false,
+    })
+    return completion.choices[0]?.message?.content ?? ''
   } catch (err: any) {
-    if (isOllama) {
-      // Ollama không chạy / model chưa pull → trả message hướng dẫn thay vì crash
-      const msg = err?.message || String(err)
-      if (msg.includes('ECONNREFUSED') || msg.includes('fetch failed') || msg.includes('connect')) {
-        throw new Error(
-          'Không kết nối được với Ollama. Hãy chắc chắn Ollama đang chạy (`ollama serve`) và đã pull model (`ollama pull qwen2.5:3b`).'
-        )
-      }
-      if (msg.includes('model') && msg.includes('not found')) {
-        throw new Error(
-          `Model "${model}" chưa có trong Ollama. Chạy: \`ollama pull ${model}\``
-        )
-      }
-      throw new Error(`Lỗi Ollama: ${msg}`)
+    const msg = err?.message || String(err)
+    if (msg.includes('ECONNREFUSED') || msg.includes('fetch failed') || msg.includes('connect') || msg.includes('Connection error')) {
+      throw new Error(
+        'Không kết nối được với Ollama. Hãy chạy `ollama serve` và `ollama pull qwen2.5:3b` rồi thử lại.',
+      )
     }
-    throw err
+    if (msg.includes('model') && msg.includes('not found')) {
+      throw new Error(`Model "${OLLAMA_MODEL}" chưa có. Chạy: \`ollama pull ${OLLAMA_MODEL}\``)
+    }
+    throw new Error(`Lỗi Ollama: ${msg}`)
   }
 }
 
-// Cho UI hiển thị provider hiện tại (debug/info)
-export function getCurrentProvider(): { provider: Provider; model: string } {
-  const provider = detectProvider()
-  return { provider, model: DEFAULT_MODELS[provider] }
+// Cho UI hiển thị provider hiện tại (gọi detect để probe)
+export async function getCurrentProvider(): Promise<{ provider: Provider; model: string }> {
+  const provider = await detectProvider()
+  return {
+    provider,
+    model: provider === 'ollama' ? OLLAMA_MODEL : 'zai-default',
+  }
 }
 
 /**
- * Kiểm tra Ollama có đang chạy và model có sẵn không.
- * Trả về { ok, message, models? }.
- * Chỉ dùng khi provider === 'ollama'.
+ * Kiểm tra Ollama có đang chạy và có qwen2.5:3b không.
  */
 export async function checkOllamaHealth(): Promise<{
   ok: boolean
   message: string
   models?: string[]
 }> {
-  const baseUrl = (process.env.OLLAMA_BASE_URL || 'http://localhost:11434').replace(/\/v1\/?$/, '')
   try {
-    const res = await fetch(`${baseUrl}/api/tags`, {
+    const res = await fetch(`${OLLAMA_HOST}/api/tags`, {
       method: 'GET',
       signal: AbortSignal.timeout(5000),
     })
-    if (!res.ok) {
-      return { ok: false, message: `Ollama responded HTTP ${res.status}` }
-    }
+    if (!res.ok) return { ok: false, message: `Ollama responded HTTP ${res.status}` }
     const data = (await res.json()) as { models?: { name: string }[] }
     const models = (data.models || []).map((m) => m.name)
-    const model = process.env.OLLAMA_MODEL || 'qwen2.5:3b'
-    // Ollama trả về kèm :latest cho tag mặc định
     const hasModel = models.some(
-      (m) => m === model || m === `${model}:latest` || m.startsWith(`${model}:`)
+      (m) => m === OLLAMA_MODEL || m === `${OLLAMA_MODEL}:latest` || m.startsWith(`${OLLAMA_MODEL}:`),
     )
     if (!hasModel) {
       return {
         ok: false,
-        message: `Ollama đang chạy nhưng chưa có model "${model}". Chạy: \`ollama pull ${model}\``,
+        message: `Ollama đang chạy nhưng chưa có model "${OLLAMA_MODEL}". Chạy: \`ollama pull ${OLLAMA_MODEL}\``,
         models,
       }
     }
-    return { ok: true, message: `Ollama sẵn sàng — model "${model}" đã sẵn có.`, models }
+    return { ok: true, message: `Ollama sẵn sàng — model "${OLLAMA_MODEL}" đã sẵn có.`, models }
   } catch (e: any) {
     const msg = e?.message || String(e)
     if (msg.includes('ECONNREFUSED') || msg.includes('fetch failed') || msg.includes('connect')) {
       return {
         ok: false,
-        message:
-          'Không kết nối được với Ollama. Hãy chạy `ollama serve` (hoặc mở app Ollama) rồi thử lại.',
+        message: 'Không kết nối được với Ollama. Hãy chạy `ollama serve` (hoặc mở app Ollama) rồi thử lại.',
       }
     }
     if (msg.includes('abort') || msg.includes('timeout')) {

@@ -660,3 +660,36 @@ Stage Summary:
 - Unlocking restores login access immediately.
 - Safety guards: ADMIN accounts cannot be locked, demoted, or deleted from this endpoint.
 - All changes lint-clean and browser-verified end-to-end.
+
+---
+Task ID: 21
+Agent: main (Z.ai Code)
+Task: Simplify AI config — viết hàm tự nhận diện Ollama + qwen2.5:3b (không cần cấu hình env thủ công).
+
+Work Log:
+- User反馈: "chỉ cần viết hàm tự nhận diện model qwen2.5:3b thôi mà" → đơn giản hóa logic provider.
+- Đọc src/lib/ai.ts hiện tại: có 6 provider (ollama/openai/openrouter/groq/gemini/zai) phát hiện qua env vars → phức tạp, user phải set OLLAMA_BASE_URL trong .env.
+- Viết lại src/lib/ai.ts với logic tự nhận diện đơn giản:
+  - `detectProvider()` giờ là ASYNC, gọi `GET http://localhost:11434/api/tags` (timeout 3s) để probe Ollama.
+  - Nếu Ollama phản hồi VÀ có qwen2.5:3b trong danh sách models → dùng Ollama.
+  - Nếu Ollama không chạy / không có model → fallback sang ZAI Cloud (sandbox).
+  - Cache kết quả probe 30s (PROBE_TTL) để tránh gọi lại mỗi request.
+  - Type Provider rút gọn từ 6 → 2: `'ollama' | 'zai'`.
+- `getCurrentProvider()` giờ là async (gọi detectProvider) → cập nhật src/app/api/ai/provider/route.ts thành `await getCurrentProvider()`.
+- Xóa 2 dòng OLLAMA_BASE_URL / OLLAMA_MODEL khỏi .env (không cần nữa — tự nhận diện).
+- Vẫn giữ override qua env nếu user muốn đổi model: `OLLAMA_MODEL` và `OLLAMA_BASE_URL` (mặc định `qwen2.5:3b` và `http://localhost:11434/v1`).
+- Tune tham số cho qwen2.5:3b: temperature=0.5, max_tokens=1024, stream=false, timeout=5 phút (CPU inference chậm).
+- Error handling tiếng Việt: "Không kết nối được với Ollama. Hãy chạy `ollama serve` và `ollama pull qwen2.5:3b` rồi thử lại."
+- Lint: `bun run lint` → clean.
+- Browser verification:
+  - GET /api/ai/provider → `{"provider":"zai","model":"zai-default","name":"ZAI Cloud","icon":"🤖","isLocal":false}` (sandbox không có Ollama → fallback đúng).
+  - POST /api/ai/chat → trả lời tiếng Việt OK (fallback ZAI Cloud hoạt động).
+  - UI AI Tutor hiển thị badge "🤖 ZAI Cloud".
+  - Trên máy user (có Ollama + qwen2.5:3b chạy) sẽ tự nhận diện → badge "🦙 Ollama (Local AI) · 100% offline · ✅ Sẵn sàng".
+
+Stage Summary:
+- Đã đơn giản hóa: KHÔNG cần set bất kỳ env nào — code tự probe Ollama, tự nhận diện qwen2.5:3b.
+- Trên máy user: chỉ cần `ollama serve` + `ollama pull qwen2.5:3b` → app tự dùng Ollama local.
+- Nếu Ollama tắt / chưa pull model → tự fallback sang ZAI Cloud (không crash).
+- Provider badge trong UI AI Tutor tự cập nhật theo trạng thái thực tế.
+- Lint clean, browser-verified.
