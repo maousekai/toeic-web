@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/auth-helpers'
 import { db } from '@/lib/db'
+import bcrypt from 'bcryptjs'
 
 async function checkAdmin() {
   const user = await getSessionUser()
@@ -78,18 +79,45 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   })
 }
 
-// PUT: update user (lock/unlock, role, aiMessageCount reset)
+// PUT: update user — name, email, locked, role, resetAiCount, addBalance, resetPassword
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await checkAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   const { id } = await params
   const body = (await req.json()) as {
-    locked?: boolean; role?: string; resetAiCount?: boolean; addBalance?: number
+    name?: string
+    email?: string
+    locked?: boolean
+    role?: string
+    resetAiCount?: boolean
+    addBalance?: number
+    resetPassword?: string
+  }
+
+  // Kiểm tra user tồn tại
+  const target = await db.user.findUnique({ where: { id }, select: { id: true, role: true } })
+  if (!target) return NextResponse.json({ error: 'Không tìm thấy user' }, { status: 404 })
+  // Không cho sửa ADMIN
+  if (target.role === 'ADMIN') {
+    return NextResponse.json({ error: 'Không thể sửa tài khoản ADMIN' }, { status: 400 })
   }
 
   const data: any = {}
+  if (body.name !== undefined) data.name = body.name
+  if (body.email !== undefined) {
+    // Kiểm tra email trùng
+    const existing = await db.user.findUnique({ where: { email: body.email.toLowerCase().trim() } })
+    if (existing && existing.id !== id) {
+      return NextResponse.json({ error: 'Email đã được sử dụng' }, { status: 400 })
+    }
+    data.email = body.email.toLowerCase().trim()
+  }
   if (body.locked !== undefined) data.locked = body.locked
-  if (body.role !== undefined) data.role = body.role
+  if (body.role !== undefined && body.role !== 'ADMIN') data.role = body.role
   if (body.resetAiCount) data.aiMessageCount = 0
+  // Reset password
+  if (body.resetPassword && body.resetPassword.length >= 6) {
+    data.passwordHash = await bcrypt.hash(body.resetPassword, 10)
+  }
 
   const updates: any[] = [db.user.update({ where: { id }, data })]
 
@@ -116,5 +144,18 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   await db.$transaction(updates)
+  return NextResponse.json({ success: true })
+}
+
+// DELETE: delete user (cannot delete ADMIN)
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await checkAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+  const { id } = await params
+  const target = await db.user.findUnique({ where: { id }, select: { role: true } })
+  if (!target) return NextResponse.json({ error: 'Không tìm thấy user' }, { status: 404 })
+  if (target.role === 'ADMIN') {
+    return NextResponse.json({ error: 'Không thể xoá tài khoản ADMIN' }, { status: 400 })
+  }
+  await db.user.delete({ where: { id } })
   return NextResponse.json({ success: true })
 }

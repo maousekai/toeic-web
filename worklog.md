@@ -1475,3 +1475,71 @@ Stage Summary:
 - Teachers: no VIP/Wallet UI, no Teachers page access, redirected to teacher-dashboard
 - Admin student list: excludes both ADMIN and TEACHER accounts (only students)
 - Lint clean.
+
+---
+Task ID: 37
+Agent: main (Z.ai Code)
+Task: Verify + enhance admin CRUD for students + teachers (edit info, reset password, delete).
+
+Work Log:
+- User asked: "admin có quyền thêm sửa xoá và các thông tin của tài khoản học sinh và giáo viên chứ"
+
+=== VERIFIED EXISTING CAPABILITIES ===
+Admin CAN already:
+- View student list (Students tab) + detail modal
+- View teacher list (Teachers tab) + edit modal
+- Lock/unlock users
+- Change user role (STUDENT ↔ INSTRUCTOR)
+- Gift money (add balance)
+- Reset AI counter
+- Delete users
+- Add/edit/delete VIP packages
+- View all transactions
+
+=== ADDED: Full user edit capabilities ===
+
+1. **API /api/admin/users/[id]** — added:
+   - PUT now accepts: name, email, locked, role, resetAiCount, addBalance, resetPassword
+   - Edit name: `data.name = body.name`
+   - Edit email: check duplicate first, then `data.email = body.email.toLowerCase().trim()`
+   - Reset password: `data.passwordHash = await bcrypt.hash(body.resetPassword, 10)`
+   - DELETE method: delete user (blocks ADMIN deletion)
+   - Safety: cannot edit/delete ADMIN accounts
+
+2. **UserDetailModal** — added 3 new actions + forms:
+   - "Sửa thông tin" button → toggle form (edit name + email)
+   - "Đặt lại mật khẩu" button → toggle form (new password input, min 6 chars)
+   - "Xoá tài khoản" button → confirm → DELETE user
+   - All actions show toast feedback + refresh data
+
+=== FINAL ADMIN CAPABILITIES ===
+
+**Students tab:**
+- View list (excludes ADMIN + TEACHER)
+- Click 👁️ → detail modal with:
+  - View: profile, wallet, VIP, payments, chat rooms, classes, test attempts, stats
+  - Actions: Sửa thông tin, Đặt lại mật khẩu, Khoá/Mở khoá, Reset AI, Tặng tiền, Xoá tài khoản
+
+**Teachers tab:**
+- View list
+- Click ✏️ → edit modal (bio, subjects, hourlyRate, rating)
+- Toggle online/offline
+- Delete (demote to STUDENT)
+
+**VIP packages tab:**
+- CRUD packages (add/edit/delete)
+
+**Payments tab:**
+- View all transactions + filter + summary
+
+=== LINT ===
+- Clean (0 errors)
+
+Stage Summary:
+- Admin has FULL CRUD on both students + teachers:
+  - Students: view, edit (name/email), reset password, lock/unlock, change role, gift money, reset AI counter, delete
+  - Teachers: view, edit (bio/subjects/rate/rating), toggle online, delete (demote)
+  - VIP packages: full CRUD
+  - Payments: view all
+- Safety guards: cannot edit/delete ADMIN accounts
+- Lint clean.

@@ -355,12 +355,21 @@ function UserDetailModal({ userId, onClose }: { userId: string; onClose: () => v
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [giftAmount, setGiftAmount] = useState('100000')
+  const [editName, setEditName] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [showEditInfo, setShowEditInfo] = useState(false)
+  const [showResetPwd, setShowResetPwd] = useState(false)
 
   const fetchDetail = useCallback(async () => {
     setLoading(true)
     const res = await fetch(`/api/admin/users/${userId}`)
     const d = await res.json().catch(() => ({}))
     setData(d)
+    if (d.user) {
+      setEditName(d.user.name || '')
+      setEditEmail(d.user.email || '')
+    }
     setLoading(false)
   }, [userId])
 
@@ -403,6 +412,54 @@ function UserDetailModal({ userId, onClose }: { userId: string; onClose: () => v
     })
     toast({ title: data.user.locked ? 'Đã mở khoá' : 'Đã khoá' })
     fetchDetail()
+  }
+
+  const handleSaveInfo = async () => {
+    const res = await fetch(`/api/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: editName, email: editEmail }),
+    })
+    const d = await res.json().catch(() => ({}))
+    if (res.ok) {
+      toast({ title: '✅ Đã cập nhật thông tin' })
+      setShowEditInfo(false)
+      fetchDetail()
+    } else {
+      toast({ title: 'Lỗi', description: d.error, variant: 'destructive' })
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (newPassword.length < 6) {
+      toast({ title: 'Mật khẩu quá ngắn', description: 'Tối thiểu 6 ký tự', variant: 'destructive' })
+      return
+    }
+    if (!confirm(`Đặt lại mật khẩu cho user này?`)) return
+    const res = await fetch(`/api/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resetPassword: newPassword }),
+    })
+    if (res.ok) {
+      toast({ title: '✅ Đã đặt lại mật khẩu', description: `Mật khẩu mới: ${newPassword}` })
+      setNewPassword('')
+      setShowResetPwd(false)
+    } else {
+      toast({ title: 'Lỗi', variant: 'destructive' })
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!confirm(`Xoá hoàn toàn tài khoản "${data.user.email}"? Không thể hoàn tác!`)) return
+    const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' })
+    const d = await res.json().catch(() => ({}))
+    if (res.ok) {
+      toast({ title: '✅ Đã xoá tài khoản' })
+      onClose()
+    } else {
+      toast({ title: 'Lỗi', description: d.error, variant: 'destructive' })
+    }
   }
 
   if (loading) return <Dialog open onOpenChange={onClose}><DialogContent><Skeleton className="h-96 w-full" /></DialogContent></Dialog>
@@ -469,11 +526,20 @@ function UserDetailModal({ userId, onClose }: { userId: string; onClose: () => v
           <Card><CardContent className="p-4 space-y-3">
             <div className="text-sm font-semibold">Quản lý tài khoản</div>
             <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShowEditInfo(!showEditInfo)}>
+                <Pencil className="h-3.5 w-3.5" /> Sửa thông tin
+              </Button>
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShowResetPwd(!showResetPwd)}>
+                <RefreshCw className="h-3.5 w-3.5" /> Đặt lại mật khẩu
+              </Button>
               <Button size="sm" variant="outline" className="gap-1.5" onClick={handleToggleLock}>
                 {user.locked ? <><LockOpen className="h-3.5 w-3.5" /> Mở khoá</> : <><Lock className="h-3.5 w-3.5" /> Khoá</>}
               </Button>
               <Button size="sm" variant="outline" className="gap-1.5" onClick={handleResetAi}>
                 <RefreshCw className="h-3.5 w-3.5" /> Reset AI counter
+              </Button>
+              <Button size="sm" variant="destructive" className="gap-1.5" onClick={handleDelete}>
+                <Trash2 className="h-3.5 w-3.5" /> Xoá tài khoản
               </Button>
               <div className="flex items-center gap-1.5">
                 <Input
@@ -488,6 +554,33 @@ function UserDetailModal({ userId, onClose }: { userId: string; onClose: () => v
                 </Button>
               </div>
             </div>
+
+            {/* Edit info form */}
+            {showEditInfo && (
+              <div className="mt-3 rounded-lg border p-3 space-y-2 bg-secondary/30">
+                <div className="text-xs font-medium">Sửa tên + email:</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Tên" className="h-8" />
+                  <Input value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder="Email" className="h-8" />
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={handleSaveInfo}>Lưu</Button>
+                  <Button size="sm" variant="outline" onClick={() => setShowEditInfo(false)}>Hủy</Button>
+                </div>
+              </div>
+            )}
+
+            {/* Reset password form */}
+            {showResetPwd && (
+              <div className="mt-3 rounded-lg border p-3 space-y-2 bg-secondary/30">
+                <div className="text-xs font-medium">Đặt mật khẩu mới (tối thiểu 6 ký tự):</div>
+                <Input type="text" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mật khẩu mới" className="h-8" />
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={handleResetPassword}>Đặt mật khẩu</Button>
+                  <Button size="sm" variant="outline" onClick={() => setShowResetPwd(false)}>Hủy</Button>
+                </div>
+              </div>
+            )}
           </CardContent></Card>
 
           {/* Revenue summary */}
