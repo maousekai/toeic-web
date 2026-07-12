@@ -153,16 +153,21 @@ export function TeachersView() {
                     className="gap-1.5"
                     onClick={() => {
                       if (!user) { openAuth('login'); return }
-                      // Create class via API then navigate
+                      // Student requests call with this teacher
                       fetch('/api/class/create', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ studentUserId: user.id }),
+                        body: JSON.stringify({ teacherUserId: t.userId }),
                       })
                         .then((r) => r.json().catch(() => ({})))
                         .then((d) => {
                           if (d.session) navigate({ name: 'class', roomCode: d.session.roomCode })
-                          else toast({ title: 'Lỗi', description: d.error || 'Không tạo được phòng', variant: 'destructive' })
+                          else if (d.needVip) {
+                            toast({ title: 'Cần VIP', description: d.error, variant: 'destructive' })
+                            setTimeout(() => navigate({ name: 'vip' }), 1500)
+                          } else {
+                            toast({ title: 'Lỗi', description: d.error || 'Không tạo được phòng', variant: 'destructive' })
+                          }
                         })
                     }}
                   >

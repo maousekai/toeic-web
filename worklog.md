@@ -1296,3 +1296,58 @@ Stage Summary:
 - Teachers now have dedicated UI when logged in
 - Can: view stats, manage profile, see students, see chat rooms, see class sessions, see earnings
 - Lint clean.
+
+---
+Task ID: 33
+Agent: main (Z.ai Code)
+Task: Fix teacher chat + video call with students (was blocked by VIP gate).
+
+Work Log:
+- User asked: "giáo viên có nhắn tin và nói chuyện được với học sinh k"
+- Found bug: /api/chat/rooms POST blocked ALL users (including teachers) with VIP gate. Teachers couldn't chat with students.
+- Found bug: /api/class/create only allowed teachers, but students clicking "Call" on teachers page sent wrong payload.
+
+=== FIX 1: /api/chat/rooms POST ===
+- Now handles 2 cases:
+  - Teacher/Admin: creates chat with student (no VIP needed) — body: { studentUserId }
+  - Student: creates chat with teacher (VIP required) — body: { teacherUserId }
+- Logic: if user.role === TEACHER → teacherId = user.id, studentId = body.studentUserId
+         else → check VIP, studentId = user.id, teacherId = body.teacherUserId
+
+=== FIX 2: /api/class/create POST ===
+- Now handles 2 cases:
+  - Teacher/Admin: creates class for student — body: { studentUserId }
+  - Student (VIP): requests call with teacher — body: { teacherUserId }
+- Logic: if user.role === TEACHER → teacherId = user.id, studentId = body.studentUserId
+         else → check VIP, studentId = user.id, teacherId = body.teacherUserId
+
+=== FIX 3: teachers-view.tsx Call button ===
+- Was sending { studentUserId: user.id } (wrong — student can't be teacherId)
+- Now sends { teacherUserId: t.userId } (correct — student requests call with teacher)
+- Added needVip handling → toast + redirect to VIP page
+
+=== FIX 4: teacher-dashboard-view.tsx ===
+- Students tab Chat button: now sends { studentUserId: s.id } (teacher initiates chat with student)
+- Classes tab: added "Mở lớp mới cho học sinh" section with student buttons (teacher creates class for student)
+- Clicking student name → creates class → navigates to video call room
+
+=== TEACHER ↔ STUDENT FLOW (now working both directions) ===
+
+**Chat:**
+- Student → Teacher: student clicks Chat on Teachers page → VIP gate → room created
+- Teacher → Student: teacher clicks Chat in Students tab → NO VIP gate → room created
+
+**Video Call:**
+- Student → Teacher: student clicks Call on Teachers page → VIP gate → class created → student joins
+- Teacher → Student: teacher clicks student name in Classes tab → class created → teacher joins
+
+=== LINT ===
+- Clean (0 errors)
+
+Stage Summary:
+- FIXED: teachers can now chat + video call with students (was blocked by VIP gate)
+- Both directions work:
+  - Student initiates (needs VIP)
+  - Teacher initiates (no VIP needed)
+- Teacher Dashboard "Classes" tab now has "Mở lớp mới cho học sinh" with student buttons
+- Lint clean.

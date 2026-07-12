@@ -290,7 +290,20 @@ export function TeacherDashboardView() {
                             size="sm"
                             variant="outline"
                             className="gap-1"
-                            onClick={() => navigate({ name: 'chat', roomId: s.chatRoomId })}
+                            onClick={async () => {
+                              // Teacher tạo/mở chat với học sinh này
+                              const res = await fetch('/api/chat/rooms', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ studentUserId: s.id }),
+                              })
+                              const d = await res.json().catch(() => ({}))
+                              if (res.ok && d.room) {
+                                navigate({ name: 'chat', roomId: d.room.id })
+                              } else {
+                                toast({ title: 'Lỗi', description: d.error || 'Không tạo được phòng chat', variant: 'destructive' })
+                              }
+                            }}
                           >
                             <MessageSquare className="h-3.5 w-3.5" /> Chat
                           </Button>
@@ -307,23 +320,66 @@ export function TeacherDashboardView() {
 
       {/* Classes tab */}
       {activeTab === 'classes' && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Video className="h-4 w-4 text-violet-600" /> Lớp học của tôi
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {upcomingClasses.length === 0 ? (
-              <div className="text-center py-8">
-                <Video className="mx-auto h-12 w-12 text-muted-foreground" />
-                <p className="mt-2 text-sm text-muted-foreground">Chưa có lớp học nào.</p>
-                <p className="text-xs text-muted-foreground">Học sinh sẽ tạo lớp và gửi mã phòng cho bạn.</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {upcomingClasses.map((c: any) => (
-                  <div key={c.id} className="flex items-center justify-between rounded-lg border p-3">
+        <div className="space-y-4">
+          {/* Create class for student */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <VideoIcon className="h-4 w-4 text-violet-600" /> Mở lớp mới cho học sinh
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {students.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Chưa có học sinh nào để mở lớp.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {students.slice(0, 8).map((s) => (
+                    <Button
+                      key={s.id}
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5"
+                      onClick={async () => {
+                        const res = await fetch('/api/class/create', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ studentUserId: s.id }),
+                        })
+                        const d = await res.json().catch(() => ({}))
+                        if (d.session) {
+                          toast({ title: '✅ Đã tạo lớp', description: `Mã phòng: ${d.session.roomCode}` })
+                          navigate({ name: 'class', roomCode: d.session.roomCode })
+                        } else {
+                          toast({ title: 'Lỗi', description: d.error || 'Không tạo được', variant: 'destructive' })
+                        }
+                      }}
+                    >
+                      <VideoIcon className="h-3.5 w-3.5" /> {s.name}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Upcoming/active classes */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Video className="h-4 w-4 text-violet-600" /> Lớp học đang chờ/đang diễn ra
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {upcomingClasses.length === 0 ? (
+                <div className="text-center py-8">
+                  <Video className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <p className="mt-2 text-sm text-muted-foreground">Chưa có lớp học nào.</p>
+                  <p className="text-xs text-muted-foreground">Mở lớp mới ở trên hoặc chờ học sinh tạo.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {upcomingClasses.map((c: any) => (
+                    <div key={c.id} className="flex items-center justify-between rounded-lg border p-3">
                     <div>
                       <div className="font-medium">{c.student.name}</div>
                       <div className="text-xs text-muted-foreground">
@@ -347,8 +403,9 @@ export function TeacherDashboardView() {
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Earnings tab */}
