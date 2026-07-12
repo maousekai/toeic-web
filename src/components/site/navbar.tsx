@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Menu, X, GraduationCap, Sparkles } from 'lucide-react'
+import { Menu, X, GraduationCap, Sparkles, Crown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter, View } from '@/lib/router'
 import { useAuth } from '@/lib/auth/use-auth'
@@ -14,8 +14,8 @@ const NAV: { label: string; view: View }[] = [
   { label: 'Home', view: { name: 'home' } },
   { label: 'Learn', view: { name: 'learn' } },
   { label: 'Practice', view: { name: 'practice' } },
+  { label: 'Teachers', view: { name: 'teachers' } },
   { label: 'AI Tutor', view: { name: 'tutor' } },
-  { label: 'AI Tools', view: { name: 'tools' } },
   { label: 'Dashboard', view: { name: 'dashboard' } },
 ]
 
@@ -73,6 +73,16 @@ export function Navbar() {
         <div className="flex items-center gap-1.5">
           <LanguageToggle />
           <ThemeToggle />
+          {mounted && user && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="hidden gap-1.5 border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/15 hover:text-amber-600 sm:inline-flex"
+              onClick={() => navigate({ name: 'wallet' })}
+            >
+              <Crown className="h-3.5 w-3.5" /> Ví
+            </Button>
+          )}
           <div className="hidden sm:block">
             <UserMenu />
           </div>

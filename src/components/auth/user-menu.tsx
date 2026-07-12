@@ -11,7 +11,7 @@ import { useAuth } from '@/lib/auth/use-auth'
 import { useAuthUI } from '@/lib/auth/auth-ui-context'
 import { useRouter, View } from '@/lib/router'
 import { useToast } from '@/hooks/use-toast'
-import { LogOut, User as UserIcon, LayoutDashboard, LogIn, UserPlus, ChevronDown, Shield } from 'lucide-react'
+import { LogOut, User as UserIcon, LayoutDashboard, LogIn, UserPlus, ChevronDown, Shield, Wallet, Crown, GraduationCap } from 'lucide-react'
 
 function initials(name: string) {
   return name
@@ -68,8 +68,17 @@ export function UserMenu() {
         <DropdownMenuItem onClick={() => { navigate({ name: 'dashboard' }); setOpen(false) }}>
           <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => { navigate({ name: 'teachers' }); setOpen(false) }}>
+          <GraduationCap className="mr-2 h-4 w-4" /> Giáo viên
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => { navigate({ name: 'tutor' }); setOpen(false) }}>
           <UserIcon className="mr-2 h-4 w-4" /> AI Tutor
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => { navigate({ name: 'wallet' }); setOpen(false) }}>
+          <Wallet className="mr-2 h-4 w-4" /> Ví của tôi
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => { navigate({ name: 'vip' }); setOpen(false) }}>
+          <Crown className="mr-2 h-4 w-4 text-amber-500" /> VIP Membership
         </DropdownMenuItem>
         {user.role === 'ADMIN' && (
           <DropdownMenuItem onClick={() => { navigate({ name: 'admin' }); setOpen(false) }}>

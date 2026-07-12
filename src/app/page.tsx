@@ -14,6 +14,11 @@ import { TutorView } from '@/components/ai/tutor-view'
 import { ToolsView } from '@/components/ai/tools-view'
 import { DashboardView } from '@/components/dashboard/dashboard-view'
 import { AdminPanel } from '@/components/admin/admin-panel'
+import { TeachersView } from '@/components/teachers/teachers-view'
+import { ChatView } from '@/components/chat/chat-view'
+import { ClassRoomView } from '@/components/class-room/class-room-view'
+import { WalletView } from '@/components/wallet/wallet-view'
+import { VipView } from '@/components/vip/vip-view'
 
 function CurrentView() {
   const { view } = useRouter()
@@ -46,6 +51,16 @@ function CurrentView() {
       return <DashboardView />
     case 'admin':
       return <AdminPanel />
+    case 'teachers':
+      return <TeachersView />
+    case 'chat':
+      return <ChatView />
+    case 'class':
+      return <ClassRoomView />
+    case 'wallet':
+      return <WalletView />
+    case 'vip':
+      return <VipView />
     default:
       return <HomeView />
   }
@@ -54,7 +69,7 @@ function CurrentView() {
 function Shell() {
   const { view } = useRouter()
   const isAdmin = view.name === 'admin'
-  const hideFooter = view.name === 'test' || view.name === 'tutor' || isAdmin
+  const hideFooter = view.name === 'test' || view.name === 'tutor' || view.name === 'chat' || view.name === 'class' || isAdmin
   const hideNavbar = isAdmin
 
   return (

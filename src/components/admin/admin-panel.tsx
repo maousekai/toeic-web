@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Users, Brain, BookOpen, FileText, TrendingUp, Database, Plus, Pencil, Trash2, LayoutDashboard, Lock, LockOpen } from 'lucide-react'
+import { Users, Brain, BookOpen, FileText, TrendingUp, Database, Plus, Pencil, Trash2, LayoutDashboard, Lock, LockOpen, GraduationCap, Crown, Wallet } from 'lucide-react'
 import { AdminShell } from './admin-shell'
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -41,6 +41,10 @@ function DashboardTab() {
   if (!stats) return <p className="text-muted-foreground">Lỗi tải dữ liệu.</p>
   const cards = [
     { label: 'Người dùng', value: stats.users, icon: Users, color: 'bg-blue-500/10 text-blue-600' },
+    { label: 'Giáo viên', value: stats.teachers || 0, icon: GraduationCap, color: 'bg-teal-500/10 text-teal-600' },
+    { label: 'VIP active', value: stats.activeVipSubs || 0, icon: Crown, color: 'bg-amber-500/10 text-amber-600' },
+    { label: 'Tổng nạp tiền', value: `${((stats.totalTopup || 0) / 1000).toFixed(0)}k₫`, icon: Wallet, color: 'bg-emerald-500/10 text-emerald-600' },
+    { label: 'Doanh thu VIP', value: `${((stats.totalVipRevenue || 0) / 1000).toFixed(0)}k₫`, icon: TrendingUp, color: 'bg-rose-500/10 text-rose-600' },
     { label: 'Từ vựng', value: stats.vocabs, icon: Brain, color: 'bg-emerald-500/10 text-emerald-600' },
     { label: 'Bài ngữ pháp', value: stats.grammarLessons, icon: BookOpen, color: 'bg-teal-500/10 text-teal-600' },
     { label: 'Câu hỏi', value: stats.questions, icon: FileText, color: 'bg-amber-500/10 text-amber-600' },
