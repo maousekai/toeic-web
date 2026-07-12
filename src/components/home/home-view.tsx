@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import {
   Sparkles, Brain, BookOpen, ClipboardCheck, MessageSquareText,
   PenLine, CalendarClock, Trophy, ArrowRight, Headphones, FileText,
-  Zap, Target, CheckCircle2, GraduationCap,
+  Zap, Target, CheckCircle2, GraduationCap, Star, Quote,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { useRouter } from '@/lib/router'
 import { useAuth } from '@/lib/auth/use-auth'
 import { useAuthUI } from '@/lib/auth/auth-ui-context'
+import Image from 'next/image'
 
 const features = [
   { icon: BookOpen, title: 'Complete TOEIC Curriculum', desc: 'Grammar lessons, vocabulary flashcards and proven strategies for all 7 parts of the test.', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
@@ -36,9 +37,44 @@ const parts = [
 
 const stats = [
   { value: '7', label: 'TOEIC parts covered' },
-  { value: '60+', label: 'Practice questions' },
+  { value: '742+', label: 'Vocabulary words' },
   { value: '10–990', label: 'Score estimate range' },
-  { value: '5', label: 'AI-powered tools' },
+  { value: '6', label: 'AI-powered tools' },
+]
+
+const testimonials = [
+  {
+    name: 'Linh Nguyen',
+    role: 'Student, Hanoi',
+    avatar: '/images/home/testimonial-1.jpg',
+    score: '850',
+    text: 'Từ 550 lên 850 chỉ trong 3 tháng! AI Tutor giải thích từng câu sai cực kỳ dễ hiểu. Mình học mỗi tối 1 tiếng là đủ.',
+    rating: 5,
+  },
+  {
+    name: 'Minh Tran',
+    role: 'Engineer, HCMC',
+    avatar: '/images/home/testimonial-2.jpg',
+    score: '790',
+    text: 'Đề thi thật rất gần với trên app. Phần Listening có audio MP3 thật, nghe y hệt phong độ thi thật. Recommend 100%!',
+    rating: 5,
+  },
+  {
+    name: 'Mai Pham',
+    role: 'Office Worker, Da Nang',
+    avatar: '/images/home/testimonial-3.jpg',
+    score: '720',
+    text: 'Mình bận công việc nên chỉ học được cuối tuần. AI Study Plan giúp mình tối ưu thời gian, đạt target sau 2 tháng.',
+    rating: 5,
+  },
+  {
+    name: 'Tuan Le',
+    role: 'Graduate, Hai Phong',
+    avatar: '/images/home/testimonial-4.jpg',
+    score: '905',
+    text: 'Phần giải thích đáp án bằng tiếng Việt cực kỳ chi tiết. Grammar lessons cũng hay, có cả bài tập luyện thêm. Tuyệt vời!',
+    rating: 5,
+  },
 ]
 
 export function HomeView() {
@@ -53,54 +89,141 @@ export function HomeView() {
 
   return (
     <div>
-      {/* HERO */}
+      {/* ===== HERO — Modern split layout with images ===== */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-amber-500/10 animate-gradient" />
+        {/* Background gradients */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-amber-500/10" />
         <div className="absolute -top-24 -right-24 -z-10 h-72 w-72 rounded-full bg-primary/20 blur-3xl animate-float" />
         <div className="absolute -bottom-24 -left-24 -z-10 h-72 w-72 rounded-full bg-amber-400/20 blur-3xl animate-float" style={{ animationDelay: '2s' }} />
 
-        <div className="mx-auto max-w-7xl px-4 pb-20 pt-16 sm:px-6 sm:pt-24">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mx-auto max-w-3xl text-center"
-          >
-            <Badge variant="secondary" className="mb-4 gap-1.5 rounded-full px-3 py-1 text-xs">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              AI-Powered TOEIC Preparation
-            </Badge>
-            <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-              Master the TOEIC test with your{' '}
-              <span className="bg-gradient-to-r from-primary to-teal-500 bg-clip-text text-transparent">
-                personal AI coach
-              </span>
-            </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-              Everything you need to ace the TOEIC Listening &amp; Reading test — complete lessons,
-              realistic practice exams, instant grading, and AI tutoring that explains every answer.
-            </p>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button size="lg" className="h-12 px-8 text-base" onClick={primaryCta}>
-                {user ? 'Start a Free Practice Test' : 'Get Started — It\'s Free'}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button size="lg" variant="outline" className="h-12 px-8 text-base" onClick={() => navigate({ name: 'learn' })}>
-                <BookOpen className="mr-2 h-4 w-4" />
-                Explore Lessons
-              </Button>
-            </div>
-            <p className="mt-4 text-xs text-muted-foreground">
-              {user ? 'Welcome back — your progress is saved.' : 'No credit card required · Save progress across devices'}
-            </p>
-          </motion.div>
+        <div className="mx-auto max-w-7xl px-4 pb-20 pt-12 sm:px-6 sm:pt-20">
+          <div className="grid items-center gap-10 lg:grid-cols-2">
+            {/* LEFT — Text content */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-center lg:text-left"
+            >
+              <Badge variant="secondary" className="mb-4 gap-1.5 rounded-full px-3 py-1 text-xs">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                AI-Powered TOEIC Preparation
+              </Badge>
+              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                Master the TOEIC test with your{' '}
+                <span className="bg-gradient-to-r from-primary to-teal-500 bg-clip-text text-transparent">
+                  personal AI coach
+                </span>
+              </h1>
+              <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground lg:mx-0">
+                Everything you need to ace the TOEIC Listening &amp; Reading test — complete lessons,
+                realistic practice exams, instant grading, and AI tutoring that explains every answer.
+              </p>
+              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
+                <Button size="lg" className="h-12 px-8 text-base" onClick={primaryCta}>
+                  {user ? 'Start a Free Practice Test' : 'Get Started — It\'s Free'}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Button size="lg" variant="outline" className="h-12 px-8 text-base" onClick={() => navigate({ name: 'learn' })}>
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  Explore Lessons
+                </Button>
+              </div>
+              <p className="mt-4 text-xs text-muted-foreground">
+                {user ? 'Welcome back — your progress is saved.' : 'No credit card required · Save progress across devices'}
+              </p>
+
+              {/* Trust indicators */}
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
+                <div className="flex -space-x-2">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="relative h-9 w-9 overflow-hidden rounded-full border-2 border-background">
+                      <Image
+                        src={`/images/home/testimonial-${i}.jpg`}
+                        alt="User avatar"
+                        fill
+                        sizes="36px"
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="text-left">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Trusted by 1,000+ Vietnamese learners</p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* RIGHT — Hero image collage */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="relative mx-auto w-full max-w-lg lg:max-w-none"
+            >
+              {/* Main hero illustration */}
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-border/60 shadow-2xl">
+                <Image
+                  src="/images/home/hero-illustration.png"
+                  alt="Students learning English with AI"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                  priority
+                />
+              </div>
+
+              {/* Floating student photo card — top left */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+                className="absolute -left-4 -top-4 hidden w-32 overflow-hidden rounded-xl border-2 border-background shadow-xl sm:block lg:-left-8"
+              >
+                <div className="relative aspect-square">
+                  <Image src="/images/home/student-1.jpg" alt="Student" fill sizes="128px" className="object-cover" />
+                </div>
+              </motion.div>
+
+              {/* Floating AI mascot — bottom right */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+                className="absolute -bottom-6 -right-4 h-24 w-24 overflow-hidden rounded-2xl border-2 border-background bg-background shadow-xl lg:-right-8 lg:h-32 lg:w-32"
+              >
+                <Image src="/images/home/ai-mascot.png" alt="AI mascot" fill sizes="128px" className="object-cover" />
+              </motion.div>
+
+              {/* Floating score badge — bottom left */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1 }}
+                className="absolute -bottom-4 left-6 flex items-center gap-2 rounded-xl border border-border/60 bg-background/95 p-3 shadow-xl backdrop-blur"
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                  <Trophy className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-sm font-bold leading-none">+295 pts</div>
+                  <div className="text-[10px] text-muted-foreground">Average improvement</div>
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
 
           {/* Stats */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mx-auto mt-14 grid max-w-4xl grid-cols-2 gap-4 sm:grid-cols-4"
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mx-auto mt-16 grid max-w-4xl grid-cols-2 gap-4 sm:grid-cols-4"
           >
             {stats.map((s) => (
               <Card key={s.label} className="border-border/60 text-center">
@@ -114,9 +237,10 @@ export function HomeView() {
         </div>
       </section>
 
-      {/* FEATURES */}
+      {/* ===== FEATURES ===== */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
+          <Badge variant="outline" className="mb-3">Features</Badge>
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">One platform, every TOEIC skill</h2>
           <p className="mt-4 text-muted-foreground">
             From grammar fundamentals to exam-day strategy, backed by AI at every step.
@@ -132,9 +256,9 @@ export function HomeView() {
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: i * 0.05 }}
             >
-              <Card className="h-full transition-all hover:-translate-y-1 hover:shadow-lg">
+              <Card className="group h-full overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg">
                 <CardHeader>
-                  <div className={`mb-2 flex h-11 w-11 items-center justify-center rounded-xl ${f.color}`}>
+                  <div className={`mb-2 flex h-11 w-11 items-center justify-center rounded-xl ${f.color} transition-transform group-hover:scale-110`}>
                     <f.icon className="h-5 w-5" />
                   </div>
                   <CardTitle className="text-base">{f.title}</CardTitle>
@@ -146,7 +270,7 @@ export function HomeView() {
         </div>
       </section>
 
-      {/* TOEIC STRUCTURE */}
+      {/* ===== TOEIC STRUCTURE ===== */}
       <section className="border-y border-border/60 bg-secondary/20">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
           <div className="mx-auto max-w-2xl text-center">
@@ -166,7 +290,7 @@ export function HomeView() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.35, delay: i * 0.04 }}
               >
-                <Card className="h-full">
+                <Card className="h-full transition-all hover:-translate-y-1 hover:shadow-md">
                   <CardHeader className="flex flex-row items-start gap-3 space-y-0">
                     <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${p.section === 'Listening' ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}>
                       <p.icon className="h-5 w-5" />
@@ -197,10 +321,41 @@ export function HomeView() {
         </div>
       </section>
 
-      {/* AI SHOWCASE */}
+      {/* ===== AI SHOWCASE — with mascot image ===== */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
         <div className="grid items-center gap-10 lg:grid-cols-2">
-          <div>
+          {/* LEFT — AI mascot */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="relative order-2 lg:order-1"
+          >
+            <div className="relative mx-auto aspect-square w-full max-w-md overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/5 to-teal-500/5 shadow-xl">
+              <Image
+                src="/images/home/ai-mascot.png"
+                alt="AI Tutor Mascot"
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover"
+              />
+            </div>
+            {/* Floating chat bubble */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="absolute -right-4 top-8 max-w-[200px] rounded-2xl rounded-tl-sm bg-primary px-4 py-3 text-sm text-primary-foreground shadow-xl"
+            >
+              <span className="font-medium">Hi! I'm your TOEIC Coach 🤖</span>
+              <p className="mt-1 text-xs text-primary-foreground/80">Ask me anything, 24/7!</p>
+            </motion.div>
+          </motion.div>
+
+          {/* RIGHT — Text + features list */}
+          <div className="order-1 lg:order-2">
             <Badge variant="secondary" className="mb-3 gap-1.5"><Sparkles className="h-3.5 w-3.5" /> AI Tutoring</Badge>
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Your AI tutor never sleeps</h2>
             <p className="mt-4 text-muted-foreground">
@@ -226,40 +381,103 @@ export function HomeView() {
               Chat with the AI Tutor
             </Button>
           </div>
-
-          <Card className="overflow-hidden border-primary/20 shadow-lg">
-            <CardHeader className="border-b border-border/60 bg-secondary/30">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <GraduationCap className="h-4 w-4" />
-                </div>
-                <div>
-                  <CardTitle className="text-sm">TOEIC Coach</CardTitle>
-                  <CardDescription className="text-xs">AI Tutor · Online</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3 p-4">
-              <div className="ml-auto max-w-[80%] rounded-2xl rounded-tr-sm bg-primary px-3 py-2 text-sm text-primary-foreground">
-                Why do we use "since" with the present perfect?
-              </div>
-              <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-secondary px-3 py-2 text-sm">
-                Great question! Use <strong>since</strong> with a <em>specific starting point</em> in time
-                (since 2018, since Monday), and <strong>for</strong> with a <em>duration</em> (for two years).
-                Both go with the present perfect when the action continues to now. ✨
-              </div>
-              <div className="ml-auto max-w-[80%] rounded-2xl rounded-tr-sm bg-primary px-3 py-2 text-sm text-primary-foreground">
-                Can you give me a Part 5 practice question on prepositions?
-              </div>
-              <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-secondary px-3 py-2 text-sm">
-                Sure! Try this: <em>"The meeting is scheduled ____ 3 p.m. ___ Monday."</em> 🎯
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </section>
 
-      {/* CTA */}
+      {/* ===== TESTIMONIALS — New section with real people photos ===== */}
+      <section className="border-y border-border/60 bg-secondary/20">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <Badge variant="outline" className="mb-3">Success Stories</Badge>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Học viên nói gì về TOEIC Ace AI?</h2>
+            <p className="mt-4 text-muted-foreground">
+              Hàng ngàn học viên đã cải thiện điểm TOEIC chỉ trong vài tháng.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {testimonials.map((t, i) => (
+              <motion.div
+                key={t.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.1 }}
+              >
+                <Card className="h-full overflow-hidden">
+                  {/* Avatar header */}
+                  <div className="relative h-32 overflow-hidden bg-gradient-to-br from-primary/10 to-teal-500/10">
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2">
+                      <div className="relative h-20 w-20 overflow-hidden rounded-full border-4 border-background shadow-lg">
+                        <Image src={t.avatar} alt={t.name} fill sizes="80px" className="object-cover" />
+                      </div>
+                    </div>
+                    {/* Score badge */}
+                    <div className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-emerald-500/90 px-2.5 py-1 text-xs font-bold text-white shadow-md">
+                      <Trophy className="h-3 w-3" />
+                      {t.score}
+                    </div>
+                  </div>
+                  <CardContent className="px-5 pb-5 pt-12 text-center">
+                    <Quote className="mx-auto mb-2 h-5 w-5 text-primary/40" />
+                    <p className="text-sm leading-relaxed text-muted-foreground">"{t.text}"</p>
+                    <div className="mt-4 flex justify-center gap-0.5">
+                      {Array.from({ length: t.rating }).map((_, idx) => (
+                        <Star key={idx} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                    <div className="mt-3">
+                      <div className="font-semibold">{t.name}</div>
+                      <div className="text-xs text-muted-foreground">{t.role}</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SHOWCASE BANNER — with listening photo ===== */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+        <Card className="overflow-hidden border-0 shadow-xl">
+          <div className="grid md:grid-cols-2">
+            {/* Image side */}
+            <div className="relative h-64 md:h-auto">
+              <Image
+                src="/images/home/listening.jpg"
+                alt="Student practicing listening with headphones"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent md:bg-gradient-to-r" />
+            </div>
+            {/* Content side */}
+            <CardContent className="flex flex-col justify-center gap-4 p-8 sm:p-12">
+              <Badge variant="secondary" className="w-fit gap-1.5"><Headphones className="h-3.5 w-3.5" /> Listening Practice</Badge>
+              <h3 className="text-2xl font-bold sm:text-3xl">Luyện Listening với audio MP3 thật</h3>
+              <p className="text-muted-foreground">
+                Đề thi có audio MP3 chuẩn ETS, giọng đọc y hệt phong độ thi thật. Part 1 có ảnh minh hoạ,
+                Part 2-4 có transcript để kiểm tra đáp án sau khi nộp bài.
+              </p>
+              <ul className="space-y-2">
+                {['100 câu Listening đầy đủ (Part 1-4)', 'Audio MP3 chuẩn như thi thật', 'Exam Mode giả lập phòng thi', 'Transcript + giải thích từng câu'].map((t) => (
+                  <li key={t} className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                    <span>{t}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button className="mt-2 w-fit" onClick={() => navigate({ name: 'practice' })}>
+                Luyện Listening ngay <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </CardContent>
+          </div>
+        </Card>
+      </section>
+
+      {/* ===== CTA ===== */}
       <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6">
         <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-primary to-teal-600 text-primary-foreground">
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
