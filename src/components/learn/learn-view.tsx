@@ -12,6 +12,7 @@ import { GrammarList } from './grammar-list'
 import { GrammarDetail } from './grammar-detail'
 import { VocabFlashcards } from './vocab-flashcards'
 import { StrategiesView } from './strategies-view'
+import Image from 'next/image'
 
 export function LearnView() {
   const { view, navigate } = useRouter()
@@ -43,11 +44,11 @@ export function LearnView() {
   }
 
   const hubCards = [
-    { icon: BookOpen, title: 'Grammar Lessons', desc: 'Clear explanations of the grammar points tested on the TOEIC, with examples and audio.', cta: 'Browse lessons', view: 'grammar' as const, needAuth: true },
-    { icon: Brain, title: 'Vocabulary Flashcards', desc: 'Flip, listen and review high-frequency business English words with spaced repetition.', cta: 'Start flashcards', view: 'vocab' as const, needAuth: true },
-    { icon: Mic, title: 'Luyện phát âm', desc: 'Nghe câu mẫu, ghi âm giọng nói, nhận feedback AI chi tiết về phát âm, trọng âm, ngữ điệu.', cta: 'Luyện ngay', view: 'pronunciation' as const, needAuth: true },
-    { icon: Lightbulb, title: 'Test Strategies', desc: 'Section-by-section tactics for Listening and Reading — plus test-day tips.', cta: 'See strategies', view: 'strategies' as const, needAuth: false },
-    { icon: PenLine, title: 'AI Writing Check', desc: 'Get your sentences corrected instantly by AI and learn from the feedback.', cta: 'Try AI tools', view: 'tools' as const, needAuth: true },
+    { icon: BookOpen, title: 'Grammar Lessons', desc: 'Clear explanations of the grammar points tested on the TOEIC, with examples and audio.', cta: 'Browse lessons', view: 'grammar' as const, needAuth: true, image: '/images/learn/grammar.jpg' },
+    { icon: Brain, title: 'Vocabulary Flashcards', desc: 'Flip, listen and review high-frequency business English words with spaced repetition.', cta: 'Start flashcards', view: 'vocab' as const, needAuth: true, image: '/images/learn/vocab.jpg' },
+    { icon: Mic, title: 'Luyện phát âm', desc: 'Nghe câu mẫu, ghi âm giọng nói, nhận feedback AI chi tiết về phát âm, trọng âm, ngữ điệu.', cta: 'Luyện ngay', view: 'pronunciation' as const, needAuth: true, image: '/images/learn/pronunciation.jpg' },
+    { icon: Lightbulb, title: 'Test Strategies', desc: 'Section-by-section tactics for Listening and Reading — plus test-day tips.', cta: 'See strategies', view: 'strategies' as const, needAuth: false, image: '/images/learn/strategies.jpg' },
+    { icon: PenLine, title: 'AI Writing Check', desc: 'Get your sentences corrected instantly by AI and learn from the feedback.', cta: 'Try AI tools', view: 'tools' as const, needAuth: true, image: '/images/ai/writing.jpg' },
   ]
 
   return (
@@ -61,26 +62,39 @@ export function LearnView() {
         </p>
       </div>
 
-      {/* Hub cards */}
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-10">
+      {/* Hub cards with images */}
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-10">
         {hubCards.map((c) => (
-          <Card key={c.title} className="group cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md" onClick={() => {
+          <Card key={c.title} className="group cursor-pointer overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg" onClick={() => {
             if (c.needAuth) {
               requireAuth({ name: c.view } as View, c.title)
             } else {
               navigate({ name: c.view } as View)
             }
           }}>
-            <CardHeader>
-              <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <c.icon className="h-5 w-5" />
+            {/* Image header */}
+            <div className="relative h-40 w-full overflow-hidden bg-secondary">
+              <Image
+                src={c.image}
+                alt={c.title}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              {/* Icon badge */}
+              <div className="absolute left-3 top-3 flex h-10 w-10 items-center justify-center rounded-xl bg-background/95 shadow-md backdrop-blur">
+                <c.icon className="h-5 w-5 text-primary" />
               </div>
-              <CardTitle className="text-base">{c.title}</CardTitle>
-              <CardDescription className="text-sm">{c.desc}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                {c.cta} <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+              {/* Title overlay */}
+              <div className="absolute bottom-3 left-3 right-3">
+                <CardTitle className="text-base font-semibold text-white drop-shadow-md">{c.title}</CardTitle>
+              </div>
+            </div>
+            <CardContent className="p-5">
+              <CardDescription className="text-sm leading-relaxed">{c.desc}</CardDescription>
+              <div className="mt-3 flex items-center text-xs font-medium text-primary">
+                {c.cta} <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-1" />
               </div>
             </CardContent>
           </Card>

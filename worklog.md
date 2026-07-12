@@ -772,3 +772,61 @@ Stage Summary:
 - Hero section now has split layout with image collage (illustration + student photo + mascot + score badge).
 - All images optimized via Next.js Image component.
 - VLM-verified: 8/10 design quality, all images load properly, no broken layouts.
+
+---
+Task ID: 24
+Agent: main (Z.ai Code)
+Task: Fix missing data + add contextual images to all feature pages.
+
+Work Log:
+- Issue 1: User reported "các chức năng mất hết dữ liệu" — checked DB, ALL tables empty (0 records).
+  - Root cause: prisma generate/db:push during lock feature (Task 20) likely reset the SQLite DB.
+  - Fix: re-ran all 7 seed scripts in order:
+    1. seed.ts → 32 vocab + 10 grammar + 6 strategies + 61 questions + 7 test sets
+    2. seed-admin.ts → admin@toeic.com (ADMIN)
+    3. seed-exercises.ts → 200 grammar exercises
+    4. seed-vocab-levels.ts → 742 vocab total (A0-C2)
+    5. seed-rc-test1.ts → 100 Reading questions (TEST 1)
+    6. seed-rc-test2.ts → 100 Reading questions (TEST 2)
+    7. seed-rc-test3.ts → 100 Reading questions (TEST 3)
+    8. seed-lc-test1.ts → 100 Listening questions + audio
+  - Final DB: 1 user, 742 vocab, 10 grammar lessons, 200 exercises, 6 strategies, 461 questions, 11 test sets.
+
+- Issue 2: Add contextual images to all feature pages.
+  - Used z-ai image-search to find 9 stock photos for different contexts:
+    - Grammar: english grammar book
+    - Vocab: colorful flashcards
+    - Pronunciation: person speaking/mouth
+    - Strategies: student taking notes
+    - Reading: person reading english book
+    - Exam: exam test paper
+    - Writing: person writing essay on laptop
+    - Study plan: calendar planner
+    - Dashboard: analytics charts
+  - Downloaded all to public/images/{learn,practice,ai,home}/
+  - Updated src/components/learn/learn-view.tsx:
+    - Hub cards now have image header (h-40) with gradient overlay + icon badge + title overlay
+    - 5 cards: Grammar, Vocab, Pronunciation, Strategies, Writing — each with contextual image
+    - Hover scale effect on images
+  - Updated src/components/practice/practice-list.tsx:
+    - Listening test card: image header (h-32) with teal gradient overlay + headphones icon badge + duration badge
+    - Reading test cards: image header with emerald gradient + FileText icon badge + duration badge
+  - Updated src/components/ai/tools-view.tsx:
+    - Header banner with gradient background + 96x96 study-plan image thumbnail
+    - Added Sparkles badge "AI Powered"
+  - Updated src/components/dashboard/dashboard-view.tsx:
+    - Header banner with gradient + 112x112 dashboard analytics image thumbnail
+    - CTA button moved into banner
+
+- Lint: clean.
+- Browser verification:
+  - Learn page: VLM confirmed 5 cards with image headers (Grammar=book, Vocab=flashcards, Pronunciation=lips, Strategies=guide, Writing=laptop). Design 8/10.
+  - Practice page: VLM confirmed Listening card + Reading cards all showing image headers.
+  - API /api/tests returns 11 test sets, /api/content/grammar returns 10 lessons — data fully restored.
+  - No console errors.
+
+Stage Summary:
+- DATA RESTORED: 742 vocab, 10 grammar, 200 exercises, 6 strategies, 461 questions, 11 test sets, 1 admin user.
+- IMAGES ADDED to 4 views: Learn (5 cards), Practice (Listening + Reading cards), AI Tools (header banner), Dashboard (header banner).
+- All images contextual (grammar book for grammar, flashcards for vocab, headphones for listening, etc.).
+- Lint clean, browser-verified, no errors.

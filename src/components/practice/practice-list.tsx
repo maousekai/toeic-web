@@ -19,6 +19,7 @@ import {
 import { motion } from 'framer-motion'
 import { ETS_EXAMS, type EtsResource } from '@/data/ets-exams'
 import { EtsExamModal } from './ets-exam-modal'
+import Image from 'next/image'
 
 type TestSet = {
   id: string
@@ -106,17 +107,27 @@ export function PracticeList() {
             {listeningTests.map((t, i) => (
               <motion.div key={t.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }}>
                 <Card className="group relative overflow-hidden border-teal-500/30 transition-all hover:-translate-y-1 hover:shadow-xl">
-                  <div className="absolute inset-0 -z-10 bg-gradient-to-br from-teal-500/8 to-transparent" />
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600">
-                        <Headphones className="h-6 w-6" />
+                  {/* Header image */}
+                  <div className="relative h-32 w-full overflow-hidden bg-teal-500/10">
+                    <Image
+                      src="/images/practice/exam.jpg"
+                      alt="Listening test"
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-teal-900/80 via-teal-900/30 to-transparent" />
+                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/90 text-white shadow-md backdrop-blur">
+                        <Headphones className="h-5 w-5" />
                       </div>
-                      <Badge variant="secondary" className="gap-1 bg-teal-500/10 text-teal-600">
+                      <Badge className="gap-1 bg-white/95 text-teal-700 shadow-md">
                         <Clock className="h-3 w-3" /> {t.durationMin}'
                       </Badge>
                     </div>
-                    <CardTitle className="mt-3 text-lg">{t.title}</CardTitle>
+                  </div>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{t.title}</CardTitle>
                     <CardDescription className="text-sm leading-relaxed line-clamp-3">{t.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -166,17 +177,27 @@ export function PracticeList() {
                 transition={{ duration: 0.4, delay: i * 0.05 }}
               >
                 <Card className="group relative overflow-hidden border-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl">
-                  <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/8 via-teal-500/5 to-transparent" />
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        <FileText className="h-6 w-6" />
+                  {/* Header image */}
+                  <div className="relative h-32 w-full overflow-hidden bg-primary/10">
+                    <Image
+                      src="/images/practice/reading.jpg"
+                      alt="Reading test"
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/80 via-emerald-900/30 to-transparent" />
+                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/90 text-primary-foreground shadow-md backdrop-blur">
+                        <FileText className="h-5 w-5" />
                       </div>
-                      <Badge variant="secondary" className="gap-1 bg-primary/10 text-primary">
+                      <Badge className="gap-1 bg-white/95 text-primary shadow-md">
                         <Clock className="h-3 w-3" /> {t.durationMin}'
                       </Badge>
                     </div>
-                    <CardTitle className="mt-3 text-lg">{t.title}</CardTitle>
+                  </div>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{t.title}</CardTitle>
                     <CardDescription className="text-sm leading-relaxed line-clamp-3">{t.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">

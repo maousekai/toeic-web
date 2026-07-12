@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import {
   Trophy, Target, Clock, TrendingUp, Award, BookOpen, ArrowRight,
   Headphones, FileText, BarChart3, Calendar,
@@ -77,14 +78,26 @@ export function DashboardView() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Your Dashboard</h1>
-          <p className="mt-2 text-muted-foreground">Track your progress, scores and study activity over time.</p>
+      {/* Header with banner image */}
+      <div className="mb-8 overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary/10 via-teal-500/5 to-amber-500/10">
+        <div className="grid items-center gap-4 p-6 sm:grid-cols-[1fr_auto] sm:p-8">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Your Dashboard</h1>
+            <p className="mt-2 text-muted-foreground">Track your progress, scores and study activity over time.</p>
+            <Button className="mt-4" onClick={() => navigate({ name: 'practice' })}>
+              <Trophy className="mr-2 h-4 w-4" /> Take a new test
+            </Button>
+          </div>
+          <div className="relative hidden h-28 w-28 overflow-hidden rounded-xl border border-border/60 shadow-md sm:block">
+            <Image
+              src="/images/home/dashboard.jpg"
+              alt="Dashboard analytics"
+              fill
+              sizes="112px"
+              className="object-cover"
+            />
+          </div>
         </div>
-        <Button onClick={() => navigate({ name: 'practice' })}>
-          <Trophy className="mr-2 h-4 w-4" /> Take a new test
-        </Button>
       </div>
 
       {/* Auth gate */}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import Image from 'next/image'
 import {
   Sparkles, Zap, PenLine, CalendarClock, Wand2, Loader2, CheckCircle2,
   Volume2, RefreshCw, ClipboardCopy, Send,
@@ -358,11 +359,26 @@ function StudyPlan() {
 export function ToolsView() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">AI Tools</h1>
-          <p className="mt-2 text-muted-foreground">Supercharge your TOEIC prep with on-demand AI — generate questions, check your writing, and get a study plan.</p>
+      {/* Header with banner image */}
+      <div className="mb-8 overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary/10 via-teal-500/5 to-amber-500/10">
+        <div className="grid items-center gap-4 p-6 sm:grid-cols-[1fr_auto] sm:p-8">
+          <div>
+            <Badge variant="secondary" className="mb-2 gap-1.5"><Sparkles className="h-3.5 w-3.5" /> AI Powered</Badge>
+            <h1 className="text-3xl font-bold tracking-tight">AI Tools</h1>
+            <p className="mt-2 text-muted-foreground">Supercharge your TOEIC prep with on-demand AI — generate questions, check your writing, and get a study plan.</p>
+          </div>
+          <div className="relative hidden h-24 w-24 overflow-hidden rounded-xl border border-border/60 shadow-md sm:block">
+            <Image
+              src="/images/ai/study-plan.jpg"
+              alt="AI Tools"
+              fill
+              sizes="96px"
+              className="object-cover"
+            />
+          </div>
         </div>
+      </div>
+      <div className="mb-6 flex justify-end">
         <LanguageToggle />
       </div>
       <Tabs defaultValue="generator">
