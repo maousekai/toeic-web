@@ -72,16 +72,16 @@ export function LearnView() {
               navigate({ name: c.view } as View)
             }
           }}>
-            {/* Image header */}
-            <div className="relative h-40 w-full overflow-hidden bg-secondary">
+            {/* Image header — object-contain để không bị crop */}
+            <div className="relative h-40 w-full overflow-hidden bg-gradient-to-br from-secondary to-secondary/50">
               <Image
                 src={c.image}
                 alt={c.title}
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                className="object-contain p-2 transition-transform duration-500 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
               {/* Icon badge */}
               <div className="absolute left-3 top-3 flex h-10 w-10 items-center justify-center rounded-xl bg-background/95 shadow-md backdrop-blur">
                 <c.icon className="h-5 w-5 text-primary" />

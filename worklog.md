@@ -1562,3 +1562,39 @@ Stage Summary:
 - 30 commits on remote (main branch).
 - Token removed from git config.
 - All latest features included: admin full CRUD (edit info, reset password, delete), teacher UI (no VIP/Wallet), VIP-gated full tests, AI limit (10q free/VIP unlimited), real-time chat, video call.
+
+---
+Task ID: 39
+Agent: main (Z.ai Code)
+Task: Fix images not fitting frames in Learning Center + Practice pages.
+
+Work Log:
+- User uploaded screenshot showing 5 Learning Center card images (Grammar, Vocab, Pronunciation, Strategies, Writing) all had sizing issues — images were cropped/overflowing their frames.
+- VLM confirmed: all 5 images had crop/overflow/distortion problems.
+- Root cause: using `object-cover` with fixed height `h-40` (160px) → images cropped to fill frame, losing content.
+
+=== FIX 1: Learning Center cards (learn-view.tsx) ===
+- Changed `className="object-cover ..."` → `className="object-contain p-2 ..."`
+- `object-contain` preserves aspect ratio, no cropping
+- `p-2` adds 8px padding so image doesn't touch frame edges
+- Changed background from `bg-secondary` → `bg-gradient-to-br from-secondary to-secondary/50` (nicer gradient)
+- Reduced overlay opacity: `from-black/60 via-black/20` → `from-black/40 via-transparent` (less dark)
+- Added `pointer-events-none` to overlay (so clicks pass through to card)
+
+=== FIX 2: Practice page cards (practice-list.tsx) ===
+- Listening test card: `object-cover` → `object-contain p-2`
+- Reading test cards: `object-cover` → `object-contain p-2`
+- Same fix applied to both — images now fit within frames without cropping
+
+=== LINT ===
+- Clean (0 errors)
+
+=== RESULT ===
+Before: Images cropped/cut off (book covers, flashcards, lip diagrams, etc. incomplete)
+After: Images fully visible, aspect ratio preserved, fit nicely within frames with padding
+
+Stage Summary:
+- Fixed 7 card images (5 Learning Center + 2 Practice page) — all now use object-contain instead of object-cover
+- Images no longer cropped/overflowing — fully visible within frames
+- Added padding + gradient background for better aesthetics
+- Lint clean.
