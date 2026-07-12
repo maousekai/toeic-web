@@ -19,6 +19,19 @@ const NAV: { label: string; view: View }[] = [
   { label: 'Dashboard', view: { name: 'dashboard' } },
 ]
 
+// Dynamic nav for teachers
+function getNavItems(user: any): { label: string; view: View }[] {
+  if (user?.role === 'TEACHER') {
+    return [
+      { label: 'Home', view: { name: 'home' } as View },
+      { label: 'Lớp của tôi', view: { name: 'teacher-dashboard' } as View },
+      { label: 'Teachers', view: { name: 'teachers' } as View },
+      { label: 'AI Tutor', view: { name: 'tutor' } as View },
+    ]
+  }
+  return NAV
+}
+
 export function Navbar() {
   const { view, navigate } = useRouter()
   const { user } = useAuth()
@@ -33,8 +46,8 @@ export function Navbar() {
     setOpen(false)
   }
 
-  // Build nav list — add Admin if user is admin (chỉ sau khi mounted)
-  const navItems = [...NAV]
+  // Build nav list — teacher sees "Lớp của tôi", admin sees "Admin"
+  const navItems = [...getNavItems(user)]
   if (mounted && user?.role === 'ADMIN') {
     navItems.push({ label: 'Admin', view: { name: 'admin' } as View })
   }

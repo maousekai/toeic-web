@@ -68,6 +68,11 @@ export function UserMenu() {
         <DropdownMenuItem onClick={() => { navigate({ name: 'dashboard' }); setOpen(false) }}>
           <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
         </DropdownMenuItem>
+        {user.role === 'TEACHER' && (
+          <DropdownMenuItem onClick={() => { navigate({ name: 'teacher-dashboard' }); setOpen(false) }}>
+            <GraduationCap className="mr-2 h-4 w-4" /> Lớp của tôi
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={() => { navigate({ name: 'teachers' }); setOpen(false) }}>
           <GraduationCap className="mr-2 h-4 w-4" /> Giáo viên
         </DropdownMenuItem>

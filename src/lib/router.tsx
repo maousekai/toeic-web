@@ -17,6 +17,7 @@ export type View =
   | { name: 'dashboard' }
   | { name: 'admin' }
   | { name: 'teachers' }
+  | { name: 'teacher-dashboard' }
   | { name: 'chat'; roomId?: string; teacherUserId?: string }
   | { name: 'class'; roomCode?: string }
   | { name: 'wallet' }

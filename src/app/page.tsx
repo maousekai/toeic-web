@@ -15,6 +15,7 @@ import { ToolsView } from '@/components/ai/tools-view'
 import { DashboardView } from '@/components/dashboard/dashboard-view'
 import { AdminPanel } from '@/components/admin/admin-panel'
 import { TeachersView } from '@/components/teachers/teachers-view'
+import { TeacherDashboardView } from '@/components/teacher/teacher-dashboard-view'
 import { ChatView } from '@/components/chat/chat-view'
 import { ClassRoomView } from '@/components/class-room/class-room-view'
 import { WalletView } from '@/components/wallet/wallet-view'
@@ -53,6 +54,8 @@ function CurrentView() {
       return <AdminPanel />
     case 'teachers':
       return <TeachersView />
+    case 'teacher-dashboard':
+      return <TeacherDashboardView />
     case 'chat':
       return <ChatView />
     case 'class':

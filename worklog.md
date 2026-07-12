@@ -1240,3 +1240,59 @@ Stage Summary:
 - 6 new API routes, 4 new UI components + 2 modals
 - Admin can: view user detail, gift money, reset AI counter, lock/unlock, manage teachers (edit/delete/promote), manage VIP packages (CRUD), view all payments
 - Lint clean, server running.
+
+---
+Task ID: 32
+Agent: main (Z.ai Code)
+Task: Build Teacher Dashboard — dedicated UI for teachers.
+
+Work Log:
+- User asked: "trong giao diện giáo viên thì có gì" — teachers had no dedicated UI before.
+
+=== NEW API ROUTES (3) ===
+1. GET/PUT /api/teacher/dashboard
+   - GET: teacher profile + stats (totalChats, totalClasses, completedClasses, activeStudents) + recentChats (5) + upcomingClasses (5)
+   - PUT: update own profile (bio, subjects, hourlyRate, isOnline)
+2. GET /api/teacher/students — list all students who chatted with this teacher (with messageCount, lastInteraction)
+3. GET /api/teacher/earnings — estimated earnings (completedClasses × hourlyRate), monthly stats (last 3 months), recent completed classes
+
+=== NEW UI: Teacher Dashboard ===
+- src/components/teacher/teacher-dashboard-view.tsx (~400 lines)
+- Header: avatar + online pulse + name + rating badge + totalLessons + online/offline badge + Edit profile button
+- Bio + subjects display
+- 4 stat cards: Học sinh, Phòng chat, Lớp học, Doanh thu ước tính
+- 4 tabs:
+  1. **Tổng quan**: recent chats (clickable → chat room) + upcoming classes (with "Vào lớp" button)
+  2. **Học sinh**: table with name/email, messageCount, lastInteraction, locked status, Chat button
+  3. **Lớp học**: list of WAITING/ACTIVE classes with room code + status + "Vào lớp" button
+  4. **Doanh thu**: 3 summary cards (estimated earnings, total classes, hourly rate) + monthly stats (3 months) + recent completed classes table
+- EditProfileModal: edit bio, subjects, hourlyRate, toggle online
+
+=== ROUTER + NAVBAR UPDATES ===
+- Added 'teacher-dashboard' to View type
+- page.tsx renders TeacherDashboardView for 'teacher-dashboard'
+- navbar.tsx: getNavItems() function — teacher sees "Lớp của tôi" instead of "Learn/Practice/Dashboard"
+- UserMenu: added "Lớp của tôi" dropdown item for TEACHER role
+
+=== TEACHER EXPERIENCE ===
+When a teacher logs in (sarah.teacher@toeic.com / teacher123):
+- Navbar shows: Home, Lớp của tôi, Teachers, AI Tutor
+- "Lớp của tôi" → Teacher Dashboard with:
+  - Profile (name, rating, online status, edit button)
+  - Stats (students, chats, classes, earnings)
+  - Recent chats (click to open chat room)
+  - Upcoming classes (click to join video call)
+  - Students tab (full list with message counts)
+  - Classes tab (waiting/active sessions)
+  - Earnings tab (monthly breakdown + recent classes)
+- UserMenu has "Lớp của tôi" shortcut
+
+=== LINT ===
+- Clean (0 errors)
+
+Stage Summary:
+- Teacher Dashboard COMPLETE with 4 tabs: Overview, Students, Classes, Earnings
+- 3 new API routes, 1 new UI component (400 lines), router + navbar + usermenu updated
+- Teachers now have dedicated UI when logged in
+- Can: view stats, manage profile, see students, see chat rooms, see class sessions, see earnings
+- Lint clean.
