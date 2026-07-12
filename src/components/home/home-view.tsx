@@ -166,19 +166,21 @@ export function HomeView() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="relative mx-auto w-full max-w-lg lg:max-w-none"
             >
-              {/* Main hero illustration */}
+              {/* Main hero photo — real people learning */}
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-border/60 shadow-2xl">
                 <Image
-                  src="/images/home/hero-illustration.png"
-                  alt="Students learning English with AI"
+                  src="/images/home/hero-people.jpg"
+                  alt="Students learning English together"
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover"
                   priority
                 />
+                {/* Gradient overlay for text legibility + brand color tint */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-emerald-600/30 via-transparent to-amber-500/20" />
               </div>
 
-              {/* Floating student photo card — top left */}
+              {/* Floating tutor portrait — top left */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -186,18 +188,25 @@ export function HomeView() {
                 className="absolute -left-4 -top-4 hidden w-32 overflow-hidden rounded-xl border-2 border-background shadow-xl sm:block lg:-left-8"
               >
                 <div className="relative aspect-square">
-                  <Image src="/images/home/student-1.jpg" alt="Student" fill sizes="128px" className="object-cover" />
+                  <Image src="/images/home/tutor-woman.jpg" alt="AI Tutor" fill sizes="128px" className="object-cover" />
                 </div>
+                {/* Online indicator */}
+                <span className="absolute bottom-1 right-1 flex h-3 w-3 items-center justify-center">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                </span>
               </motion.div>
 
-              {/* Floating AI mascot — bottom right */}
+              {/* Floating student office photo — bottom right */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.8 }}
-                className="absolute -bottom-6 -right-4 h-24 w-24 overflow-hidden rounded-2xl border-2 border-background bg-background shadow-xl lg:-right-8 lg:h-32 lg:w-32"
+                className="absolute -bottom-6 -right-4 hidden h-24 w-24 overflow-hidden rounded-2xl border-2 border-background shadow-xl sm:block lg:-right-8 lg:h-32 lg:w-32"
               >
-                <Image src="/images/home/ai-mascot.png" alt="AI mascot" fill sizes="128px" className="object-cover" />
+                <div className="relative h-full w-full">
+                  <Image src="/images/home/student-office.png" alt="Student studying" fill sizes="128px" className="object-cover" />
+                </div>
               </motion.div>
 
               {/* Floating score badge — bottom left */}
@@ -321,10 +330,10 @@ export function HomeView() {
         </div>
       </section>
 
-      {/* ===== AI SHOWCASE — with mascot image ===== */}
+      {/* ===== AI SHOWCASE — with real tutor photo ===== */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
         <div className="grid items-center gap-10 lg:grid-cols-2">
-          {/* LEFT — AI mascot */}
+          {/* LEFT — Real tutor photo */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -332,14 +341,16 @@ export function HomeView() {
             transition={{ duration: 0.5 }}
             className="relative order-2 lg:order-1"
           >
-            <div className="relative mx-auto aspect-square w-full max-w-md overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/5 to-teal-500/5 shadow-xl">
+            <div className="relative mx-auto aspect-square w-full max-w-md overflow-hidden rounded-3xl border border-border/60 shadow-xl">
               <Image
-                src="/images/home/ai-mascot.png"
-                alt="AI Tutor Mascot"
+                src="/images/home/tutor-woman.jpg"
+                alt="AI TOEIC Tutor"
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover"
               />
+              {/* Brand color tint overlay */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-600/20 via-transparent to-teal-500/10" />
             </div>
             {/* Floating chat bubble */}
             <motion.div
@@ -349,9 +360,17 @@ export function HomeView() {
               transition={{ delay: 0.3 }}
               className="absolute -right-4 top-8 max-w-[200px] rounded-2xl rounded-tl-sm bg-primary px-4 py-3 text-sm text-primary-foreground shadow-xl"
             >
-              <span className="font-medium">Hi! I'm your TOEIC Coach 🤖</span>
+              <span className="font-medium">Hi! I'm your TOEIC Coach 👋</span>
               <p className="mt-1 text-xs text-primary-foreground/80">Ask me anything, 24/7!</p>
             </motion.div>
+            {/* Online status badge */}
+            <div className="absolute -left-3 bottom-6 flex items-center gap-2 rounded-full border border-border/60 bg-background/95 px-3 py-1.5 shadow-lg backdrop-blur">
+              <span className="flex h-2.5 w-2.5 items-center justify-center">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              </span>
+              <span className="text-xs font-medium">Online now</span>
+            </div>
           </motion.div>
 
           {/* RIGHT — Text + features list */}
