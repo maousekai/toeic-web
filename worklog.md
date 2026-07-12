@@ -1543,3 +1543,22 @@ Stage Summary:
   - Payments: view all
 - Safety guards: cannot edit/delete ADMIN accounts
 - Lint clean.
+
+---
+Task ID: 38
+Agent: main (Z.ai Code)
+Task: Push updated code to GitHub main branch.
+
+Work Log:
+- 3 commits ahead of origin/main (all recent changes: admin CRUD enhancements, teacher UI fixes, VIP gate for tests, AI limit feature).
+- Set git remote with token (github_pat_11BO4O3WI01a3kEbjokB9J_...).
+- git push origin main → success (5718e04..43584ee).
+- Verified: remote has 30 commits, latest = 43584ee.
+- Removed token from git config (security).
+- User needs to REVOKE token at https://github.com/settings/personal-access-tokens.
+
+Stage Summary:
+- Code pushed to: https://github.com/vinhdong123/toeic-ace-ai-max
+- 30 commits on remote (main branch).
+- Token removed from git config.
+- All latest features included: admin full CRUD (edit info, reset password, delete), teacher UI (no VIP/Wallet), VIP-gated full tests, AI limit (10q free/VIP unlimited), real-time chat, video call.
