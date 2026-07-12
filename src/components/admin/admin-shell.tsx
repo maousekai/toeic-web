@@ -15,7 +15,15 @@ export function AdminShell({ children, activeTab, onTabChange }: { children: Rea
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
   if (!mounted) return <div className="flex min-h-screen items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>
-  const tabs = [{ id: 'dashboard', label: 'Dashboard' }, { id: 'vocab', label: 'Từ vựng' }, { id: 'grammar', label: 'Ngữ pháp' }, { id: 'users', label: 'Người dùng' }]
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'users', label: 'Học viên' },
+    { id: 'teachers', label: 'Giáo viên' },
+    { id: 'vip', label: 'Gói VIP' },
+    { id: 'payments', label: 'Giao dịch' },
+    { id: 'vocab', label: 'Từ vựng' },
+    { id: 'grammar', label: 'Ngữ pháp' },
+  ]
   return (
     <div className="flex min-h-screen bg-secondary/20">
       <aside className={cn('fixed inset-y-0 left-0 z-50 w-64 border-r border-border bg-card transition-transform lg:translate-x-0', sidebarOpen ? 'translate-x-0' : '-translate-x-full')}>

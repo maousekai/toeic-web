@@ -1171,3 +1171,72 @@ Stage Summary:
   - ADMIN/TEACHER auto-unlimited
 - 1 schema field added, 2 APIs updated, 1 UI rewritten.
 - Lint clean.
+
+---
+Task ID: 31
+Agent: main (Z.ai Code)
+Task: Expand admin panel with detailed student/teacher management + multiple functions.
+
+Work Log:
+- User requested: admin manage detailed student + teacher info, many functions.
+
+=== ADMIN SHELL ===
+- Updated sidebar tabs from 4 → 7: Dashboard, Học viên, Giáo viên, Gói VIP, Giao dịch, Từ vựng, Ngữ pháp
+- Updated AdminPanel component to render all 7 tabs
+
+=== NEW API ROUTES (6) ===
+1. GET/POST /api/admin/teachers — list teachers + create (promote user to TEACHER)
+2. PUT/DELETE /api/admin/teachers/[id] — update profile (bio, subjects, rate, rating, online) + delete (demote to STUDENT)
+3. GET /api/admin/users/[id] — user detail: wallet, active VIP, VIP history, payments, chat rooms, class sessions, test attempts + stats
+4. PUT /api/admin/users/[id] — update user: lock/unlock, role, reset AI counter, add balance (admin gift)
+5. GET/POST /api/admin/vip-packages — list + create VIP packages
+6. PUT/DELETE /api/admin/vip-packages/[id] — update + delete packages
+7. GET /api/admin/payments — list all transactions with user info + summary stats (total topup, VIP revenue, count)
+
+=== NEW UI COMPONENTS ===
+
+1. **UserDetailModal** — full user detail in modal:
+   - Status badges (role, locked, VIP)
+   - 4 stat cards: wallet balance, AI questions used, chat rooms count, class sessions count
+   - Action buttons: lock/unlock, reset AI counter, gift money (input amount + button)
+   - Revenue summary: total topup, total VIP spent
+   - VIP history (last 5 subscriptions with dates)
+   - Recent transactions (last 8)
+   - Test attempts (last 5 with scores)
+
+2. **TeachersTab** — teacher management table:
+   - Columns: name/email, subjects, hourly rate, rating (stars), total lessons, online status
+   - Actions: edit (modal), toggle online/offline, delete (demote to STUDENT)
+   - TeacherEditModal: edit bio, subjects, hourlyRate, rating
+
+3. **VipPackagesTab** — VIP package management:
+   - Card grid showing all packages (name, price, duration, features, popular badge)
+   - Add new package button
+   - Edit/delete per package
+   - VipPackageForm modal: name, price, durationDays, features (JSON), color, popular flag
+
+4. **PaymentsTab** — transaction management:
+   - 3 summary cards: total topup, VIP revenue, total transactions
+   - Filter buttons: All / Topup / VIP Purchase
+   - Transactions table: time, user (name+email), type badge, amount (colored), description
+
+=== UPDATED UsersTab ===
+- Added "View detail" button (Eye icon) → opens UserDetailModal
+- Safe JSON parsing (.json().catch(() => ({})))
+
+=== LINT ===
+- Fixed quote mismatch on line 372 (backtick vs quote)
+- Clean (0 errors)
+
+Stage Summary:
+- Admin panel expanded from 4 tabs → 7 tabs with full management:
+  1. Dashboard (existing + 4 new stat cards: teachers, VIP active, total topup, VIP revenue)
+  2. Học viên — list + detail modal (wallet, VIP, payments, AI usage, chat rooms, classes, test attempts)
+  3. Giáo viên — list + edit + toggle online + delete
+  4. Gói VIP — CRUD packages (add/edit/delete)
+  5. Giao dịch — all transactions + filter + summary
+  6. Từ vựng (existing)
+  7. Ngữ pháp (existing)
+- 6 new API routes, 4 new UI components + 2 modals
+- Admin can: view user detail, gift money, reset AI counter, lock/unlock, manage teachers (edit/delete/promote), manage VIP packages (CRUD), view all payments
+- Lint clean, server running.
