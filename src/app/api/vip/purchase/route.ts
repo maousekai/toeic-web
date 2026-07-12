@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   const expiresAt = new Date(baseDate)
   expiresAt.setDate(expiresAt.getDate() + pkg.durationDays)
 
-  const [updatedWallet, _newSub, _tx] = await db.$transaction([
+  const [updatedWallet, _newSub, _tx, _userReset] = await db.$transaction([
     db.wallet.update({
       where: { userId: user.id },
       data: { balance: { decrement: pkg.price } },
@@ -50,6 +50,11 @@ export async function POST(req: NextRequest) {
         status: 'SUCCESS',
         description: `Mua ${pkg.name} (${pkg.durationDays} ngày)`,
       },
+    }),
+    // Reset AI message counter khi mua VIP
+    db.user.update({
+      where: { id: user.id },
+      data: { aiMessageCount: 0 },
     }),
   ])
 

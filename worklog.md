@@ -1100,3 +1100,74 @@ Stage Summary:
 - All 4 affected components fixed: wallet-view, vip-view, teachers-view, chat-view
 - All 4 affected APIs fixed: wallet/balance, wallet/topup, vip/status, vip/purchase
 - Lint clean, servers running.
+
+---
+Task ID: 30
+Agent: main (Z.ai Code)
+Task: Add VIP-gated AI chat limits + image upload (10 questions free, unlimited VIP).
+
+Work Log:
+- User requested: VIP = unlimited AI chat + image upload; non-VIP = 10 questions only.
+
+=== DATABASE ===
+- Added `aiMessageCount Int @default(0)` field to User model (tracks free-tier usage).
+- Ran `bun run db:push` — schema synced.
+
+=== API: /api/ai/chat (rewritten) ===
+- POST: enforce limits:
+  - Get session user + check VIP status (hasActiveVip)
+  - ADMIN/TEACHER = unlimited (treated as VIP)
+  - Non-VIP: if aiMessageCount >= 10 → return 403 { error, needVip: true, used, limit: 10 }
+  - If image in request but not VIP → return 403 { error: "Tải ảnh lên chỉ dành cho VIP" }
+  - If VIP + image → call aiChatWithImage() (VLM via ZAI Vision API)
+  - Else → call aiChat() (text only)
+  - Increment aiMessageCount for non-VIP users after successful reply
+  - Return { reply, usage: { isVip, used, remaining, limit } }
+- GET: return current usage { isVip, used, remaining, limit, anonymous }
+- aiChatWithImage(): uses ZAI SDK createVision with image_url (base64) + text prompt
+
+=== API: /api/vip/purchase (updated) ===
+- Added 4th operation to $transaction: reset aiMessageCount to 0 when buying VIP
+- Fixed destructuring: `const [updatedWallet, _newSub, _tx, _userReset] = ...` (4 elements)
+
+=== UI: tutor-view.tsx (rewritten) ===
+- New Usage banner above chat:
+  - VIP: gold "👑 VIP Member · AI không giới hạn + tải ảnh"
+  - Free: "⚡ Free tier · Còn X/10 câu"
+  - Blocked: red "✕ Đã hết câu miễn phí · Nâng cấp VIP"
+  - "Nâng cấp VIP" button → navigate to /vip
+- Image upload button (ImagePlus icon):
+  - VIP only — non-VIP gets toast "Tính năng VIP" + redirect to /vip
+  - Accepts image/* (max 4MB)
+  - Preview thumbnail with X remove button
+  - Image sent with message via base64
+- Image displayed in chat bubble (user messages with image)
+- Input disabled + placeholder changes when blocked
+- Usage counter updates after each message (from API response)
+- Client-side pre-check: if remaining <= 0, show toast + redirect to VIP
+- Fetches usage on mount via GET /api/ai/chat
+
+=== FEATURES ===
+| User type | AI questions | Image upload |
+|---|---|---|
+| Anonymous | 10 (client-side) | ❌ |
+| Free (registered) | 10 (server-enforced) | ❌ |
+| VIP | ∞ unlimited | ✅ yes |
+| Teacher | ∞ unlimited | ✅ yes |
+| Admin | ∞ unlimited | ✅ yes |
+
+- Buying VIP resets aiMessageCount to 0.
+
+=== LINT ===
+- Clean (0 errors, 0 warnings) after removing 2 unused eslint-disable directives.
+
+Stage Summary:
+- VIP-gated AI chat feature COMPLETE:
+  - Non-VIP: 10 questions max (counter in DB, server-enforced)
+  - VIP: unlimited + image upload (VLM via ZAI Vision API)
+  - Usage banner in UI shows remaining count or VIP status
+  - Image upload button (VIP only) with preview + remove
+  - Buying VIP resets counter
+  - ADMIN/TEACHER auto-unlimited
+- 1 schema field added, 2 APIs updated, 1 UI rewritten.
+- Lint clean.

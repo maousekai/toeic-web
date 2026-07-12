@@ -26,6 +26,7 @@ model User {
   role            String              @default("STUDENT")
   image           String?
   locked          Boolean             @default(false)
+  aiMessageCount  Int                 @default(0) // Số câu hỏi AI đã dùng (reset khi mua VIP)
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
   learners        Learner[]
