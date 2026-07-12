@@ -1026,3 +1026,40 @@ Stage Summary:
   - Navbar + UserMenu: new links (Teachers, Ví, VIP) all present ✅
 - Both services running: Next.js (3000) + socket.io mini-service (3003).
 - Note for user: on local machine, run both services (see Task 26 worklog for commands).
+
+---
+Task ID: 28
+Agent: main (Z.ai Code)
+Task: Fix wallet topup + VIP purchase bugs.
+
+Work Log:
+- User reported "tính năng nạp tiền và mua VIP bị lỗi".
+- Diagnosed root cause: Prisma `$transaction` destructuring mismatch.
+  - In /api/wallet/topup/route.ts: transaction had 2 operations but destructured only 1 (`const [updatedWallet] = ...`)
+  - In /api/vip/purchase/route.ts: transaction had 3 operations but destructured only 2 (`const [updatedWallet, newSub] = ...`)
+  - This caused silent runtime errors when the transactions executed.
+- Fix:
+  - wallet/topup: `const [updatedWallet, _tx] = await db.$transaction([...])` (2 elements)
+  - vip/purchase: `const [updatedWallet, _newSub, _tx] = await db.$transaction([...])` (3 elements)
+- Lint: clean.
+- Verified ALL APIs work end-to-end via curl with auth:
+  1. ✅ Login: admin@toeic.com → 200
+  2. ✅ GET /api/wallet/balance → {balance: 200000}
+  3. ✅ POST /api/wallet/topup {amount:500000} → {success:true, balance:700000, message:"Đã nạp 500.000₫"}
+  4. ✅ GET /api/vip/packages → 3 packages (VIP Tháng/Quý/Năm)
+  5. ✅ POST /api/vip/purchase {packageId:pkg_vip_quý} → {success:true, balance:201000, expiresAt:2026-10-10, message:"Đã kích hoạt VIP Quý đến 10/10/2026"}
+  6. ✅ GET /api/vip/status → {isVip:true, package:"VIP Quý", daysLeft:90, balance:201000}
+  7. ✅ GET /api/wallet/transactions → 3 transactions (2 TOPUP + 1 VIP_PURCHASE)
+  8. ✅ POST /api/chat/rooms {teacherUserId:real_id} → room created (VIP gate passed)
+  9. ✅ POST /api/chat/rooms/{id}/messages {content:"..."} → message sent
+  10. ✅ GET /api/chat/rooms/{id}/messages → messages returned
+  11. ✅ POST /api/class/create {studentUserId:real_id} → {roomCode:"Y4M6K9", status:"WAITING"}
+
+Stage Summary:
+- FIXED: wallet topup + VIP purchase (Prisma transaction destructuring bug).
+- ALL 6 APIs verified working: wallet (balance/topup/transactions), vip (packages/purchase/status), chat (rooms/messages), class (create).
+- Full flow tested: login → topup 500k → buy VIP Quý (499k) → chat with teacher → create class session.
+- Balance: 200k → 700k (topup) → 201k (after VIP purchase).
+- VIP active: 90 days (until 10/10/2026).
+- Chat: room created, message sent + retrieved.
+- Class: session created with room code Y4M6K9.

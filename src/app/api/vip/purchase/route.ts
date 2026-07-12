@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   const expiresAt = new Date(baseDate)
   expiresAt.setDate(expiresAt.getDate() + pkg.durationDays)
 
-  const [updatedWallet, newSub] = await db.$transaction([
+  const [updatedWallet, _newSub, _tx] = await db.$transaction([
     db.wallet.update({
       where: { userId: user.id },
       data: { balance: { decrement: pkg.price } },

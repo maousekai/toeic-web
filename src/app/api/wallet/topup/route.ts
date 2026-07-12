@@ -14,8 +14,8 @@ export async function POST(req: NextRequest) {
   }
 
   // Mock payment (demo) — trong production sẽ gọi VNPay/MoMo/ZaloPay ở đây
-  const wallet = await ensureWallet(user.id)
-  const [updatedWallet] = await db.$transaction([
+  await ensureWallet(user.id)
+  const [updatedWallet, _tx] = await db.$transaction([
     db.wallet.update({
       where: { userId: user.id },
       data: { balance: { increment: amount } },
