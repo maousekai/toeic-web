@@ -1404,3 +1404,25 @@ Stage Summary:
 - UI clearly shows: VIP tests have 👑 badge, free tests have ✅ FREE badge
 - VIP packages updated to include "Đề Listening + 3 đề Reading đầy đủ" as first feature
 - Lint clean.
+
+---
+Task ID: 35
+Agent: main (Z.ai Code)
+Task: Push code to GitHub repo vinhdong123/toeic-ace-ai-max.
+
+Work Log:
+- User provided new token (github_pat_11BO4O3WI01a3kEbjokB9J_...).
+- Token đầu tiên (Task 22) không có quyền — repo thật là `toeic-ace-ai-max` (không phải `toeic-ace-ai-v2`).
+- Verified token via API: repo vinhdong123/toeic-ace-ai-max (push: true).
+- Set git remote with token.
+- 1 commit ahead of origin (all recent changes: VIP gate for tests, teacher dashboard, admin panel expansion, wallet/VIP fixes, AI limit feature).
+- git push origin main → success (5fce998..5718e04).
+- Verified: remote has 30 commits, latest = 5718e04.
+- Removed token from git config (security).
+- User needs to REVOKE token at https://github.com/settings/personal-access-tokens.
+
+Stage Summary:
+- Code pushed to: https://github.com/vinhdong123/toeic-ace-ai-max
+- 30 commits on remote (main branch).
+- Token removed from git config.
+- All features included: admin panel (7 tabs), teacher dashboard, wallet, VIP, AI limit (10q free/VIP unlimited), VIP-gated full tests, chat real-time, video call WebRTC.
