@@ -15,6 +15,6 @@ export async function GET() {
     package: vip?.package?.name || null,
     expiresAt: vip?.expiresAt || null,
     daysLeft: vip ? Math.ceil((vip.expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0,
-    balance: wallet.balance,
+    balance: wallet?.balance || 0,
   })
 }

@@ -47,7 +47,7 @@ export function ChatView() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ teacherUserId }),
     })
-    const data = await res.json()
+    const data = await res.json().catch(() => ({}))
     if (res.ok) setRoomId(data.room.id)
     else if (data.needVip) {
       toast({ title: 'Cần VIP', description: data.error, variant: 'destructive' })
@@ -61,8 +61,8 @@ export function ChatView() {
   useEffect(() => {
     if (!roomId || !user) return
     Promise.all([
-      fetch(`/api/chat/rooms/${roomId}/messages`).then((r) => r.json()),
-      fetch('/api/chat/rooms').then((r) => r.json()),
+      fetch(`/api/chat/rooms/${roomId}/messages`).then((r) => r.json().catch(() => ({}))),
+      fetch('/api/chat/rooms').then((r) => r.json().catch(() => ({}))),
     ]).then(([msgData, roomsData]) => {
       setMessages(msgData.messages || [])
       const r = (roomsData.rooms || []).find((x: any) => x.id === roomId)

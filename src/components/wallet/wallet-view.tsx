@@ -33,15 +33,23 @@ export function WalletView() {
 
   const fetchData = useCallback(async () => {
     if (!user) { setLoading(false); return }
-    const [balRes, txRes] = await Promise.all([
-      fetch('/api/wallet/balance'),
-      fetch('/api/wallet/transactions'),
-    ])
-    const bal = await balRes.json()
-    const tx = await txRes.json()
-    setBalance(bal.balance || 0)
-    setTransactions(tx.transactions || [])
-    setLoading(false)
+    try {
+      const [balRes, txRes] = await Promise.all([
+        fetch('/api/wallet/balance'),
+        fetch('/api/wallet/transactions'),
+      ])
+      // Parse JSON safely — API có thể trả rỗng khi lỗi
+      let bal = {}
+      let tx = {}
+      try { bal = await balRes.json() } catch {}
+      try { tx = await txRes.json() } catch {}
+      setBalance((bal as any).balance || 0)
+      setTransactions((tx as any).transactions || [])
+    } catch (e) {
+      console.error('fetchData error:', e)
+    } finally {
+      setLoading(false)
+    }
   }, [user])
 
   useEffect(() => { fetchData() }, [fetchData])
@@ -56,9 +64,11 @@ export function WalletView() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: selected, method: 'MoMo (demo)' }),
       })
-      const data = await res.json()
+      // Parse JSON safely
+      let data: any = {}
+      try { data = await res.json() } catch {}
       if (!res.ok) {
-        toast({ title: 'Nạp tiền thất bại', description: data.error, variant: 'destructive' })
+        toast({ title: 'Nạp tiền thất bại', description: data.error || `Lỗi ${res.status}`, variant: 'destructive' })
       } else {
         toast({ title: '✅ Nạp tiền thành công', description: data.message })
         setBalance(data.balance)
@@ -66,7 +76,7 @@ export function WalletView() {
         fetchData()
       }
     } catch (e: any) {
-      toast({ title: 'Lỗi', description: e.message, variant: 'destructive' })
+      toast({ title: 'Lỗi kết nối', description: e.message, variant: 'destructive' })
     } finally {
       setTopupLoading(false)
     }

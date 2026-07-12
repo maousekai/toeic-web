@@ -14,7 +14,10 @@ export async function POST(req: NextRequest) {
   }
 
   // Mock payment (demo) — trong production sẽ gọi VNPay/MoMo/ZaloPay ở đây
-  await ensureWallet(user.id)
+  const wallet = await ensureWallet(user.id)
+  if (!wallet) {
+    return NextResponse.json({ error: 'Tài khoản không hợp lệ. Vui lòng đăng nhập lại.' }, { status: 403 })
+  }
   const [updatedWallet, _tx] = await db.$transaction([
     db.wallet.update({
       where: { userId: user.id },

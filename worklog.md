@@ -1063,3 +1063,40 @@ Stage Summary:
 - VIP active: 90 days (until 10/10/2026).
 - Chat: room created, message sent + retrieved.
 - Class: session created with room code Y4M6K9.
+
+---
+Task ID: 29
+Agent: main (Z.ai Code)
+Task: Fix wallet topup "Runtime SyntaxError: Unexpected end of JSON input".
+
+Work Log:
+- User screenshot showed error: "Runtime SyntaxError: Failed to execute 'json' on 'Response': Unexpected end of JSON input" at wallet-view.tsx:40.
+- Root cause analysis (2 bugs):
+  1. CLIENT BUG: wallet-view.tsx fetchData() called `await balRes.json()` without try/catch. When API returns 401 (session expired) or 500 (server error), response body may be empty → `.json()` throws SyntaxError → crashed entire page.
+  2. SERVER BUG: ensureWallet() in auth-helpers.ts used `db.wallet.upsert()` which fails with foreign key constraint (P2003) when userId in session doesn't exist in DB (e.g., user was deleted, or stale session). This caused /api/vip/status to return 500.
+
+- FIX 1: Safe JSON parsing in all new UI components:
+  - wallet-view.tsx: fetchData + handleTopup now use try/catch around .json()
+  - vip-view.tsx: fetchData + handlePurchase now use try/catch around .json()
+  - teachers-view.tsx: useEffect + handleStartChat + Call button now use .json().catch(() => ({}))
+  - chat-view.tsx: ensureRoom + loadMessages now use .json().catch(() => ({}))
+
+- FIX 2: ensureWallet() now checks user exists first:
+  - Before: `db.wallet.upsert({ where: { userId }, ... })` → P2003 if user doesn't exist
+  - After: `const userExists = await db.user.findUnique(...); if (!userExists) return null;` then upsert
+  - Updated all callers to handle null return:
+    - /api/wallet/balance: `wallet?.balance || 0`
+    - /api/wallet/topup: return 403 if wallet is null
+    - /api/vip/status: `wallet?.balance || 0`
+    - /api/vip/purchase: return 403 if wallet is null
+
+- Lint: clean.
+- Verified servers still running (PID 14964 alive on :3000, socket.io on :3003).
+
+Stage Summary:
+- FIXED 2 root causes of "nạp tiền lỗi":
+  1. Client-side: unsafe `.json()` calls now wrapped in try/catch → no more crash on empty responses
+  2. Server-side: `ensureWallet()` now validates user exists before upsert → no more P2003 foreign key errors
+- All 4 affected components fixed: wallet-view, vip-view, teachers-view, chat-view
+- All 4 affected APIs fixed: wallet/balance, wallet/topup, vip/status, vip/purchase
+- Lint clean, servers running.

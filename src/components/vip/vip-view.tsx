@@ -29,17 +29,24 @@ export function VipView() {
   const [purchasing, setPurchasing] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
-    const [pkgRes, statusRes] = await Promise.all([
-      fetch('/api/vip/packages'),
-      user ? fetch('/api/vip/status') : Promise.resolve(null),
-    ])
-    const pkg = await pkgRes.json()
-    setPackages(pkg.packages || [])
-    if (statusRes) {
-      const st = await statusRes.json()
-      setStatus(st)
+    try {
+      const [pkgRes, statusRes] = await Promise.all([
+        fetch('/api/vip/packages'),
+        user ? fetch('/api/vip/status') : Promise.resolve(null),
+      ])
+      let pkg = {}
+      try { pkg = await pkgRes.json() } catch {}
+      setPackages((pkg as any).packages || [])
+      if (statusRes) {
+        let st = {}
+        try { st = await (statusRes as Response).json() } catch {}
+        setStatus(st)
+      }
+    } catch (e) {
+      console.error('fetchData error:', e)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [user])
 
   useEffect(() => { fetchData() }, [fetchData])
@@ -53,7 +60,8 @@ export function VipView() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ packageId: pkgId }),
       })
-      const data = await res.json()
+      let data: any = {}
+      try { data = await res.json() } catch {}
       if (!res.ok) {
         if (data.needVip || data.error?.includes('Số dư')) {
           toast({
@@ -63,14 +71,14 @@ export function VipView() {
           })
           setTimeout(() => navigate({ name: 'wallet' }), 1500)
         } else {
-          toast({ title: 'Lỗi', description: data.error, variant: 'destructive' })
+          toast({ title: 'Lỗi', description: data.error || `Lỗi ${res.status}`, variant: 'destructive' })
         }
       } else {
         toast({ title: '🎉 Kích hoạt VIP thành công!', description: data.message })
         fetchData()
       }
     } catch (e: any) {
-      toast({ title: 'Lỗi', description: e.message, variant: 'destructive' })
+      toast({ title: 'Lỗi kết nối', description: e.message, variant: 'destructive' })
     } finally {
       setPurchasing(null)
     }

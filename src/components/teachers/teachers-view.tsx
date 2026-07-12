@@ -23,7 +23,7 @@ export function TeachersView() {
 
   useEffect(() => {
     fetch('/api/teachers')
-      .then((r) => r.json())
+      .then((r) => r.json().catch(() => ({})))
       .then((d) => setTeachers(d.teachers || []))
       .finally(() => setLoading(false))
   }, [])
@@ -35,7 +35,7 @@ export function TeachersView() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ teacherUserId }),
     })
-    const data = await res.json()
+    const data = await res.json().catch(() => ({}))
     if (!res.ok) {
       if (data.needVip) {
         toast({
@@ -159,10 +159,10 @@ export function TeachersView() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ studentUserId: user.id }),
                       })
-                        .then((r) => r.json())
+                        .then((r) => r.json().catch(() => ({})))
                         .then((d) => {
                           if (d.session) navigate({ name: 'class', roomCode: d.session.roomCode })
-                          else toast({ title: 'Lỗi', description: d.error, variant: 'destructive' })
+                          else toast({ title: 'Lỗi', description: d.error || 'Không tạo được phòng', variant: 'destructive' })
                         })
                     }}
                   >

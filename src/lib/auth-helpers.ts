@@ -45,8 +45,12 @@ export async function getActiveVip(userId: string) {
 
 /**
  * Đảm bảo user có wallet, tạo nếu chưa có.
+ * Trả về null nếu user không tồn tại (tránh foreign key error).
  */
 export async function ensureWallet(userId: string) {
+  // Kiểm tra user tồn tại trước
+  const userExists = await db.user.findUnique({ where: { id: userId }, select: { id: true } })
+  if (!userExists) return null
   return db.wallet.upsert({
     where: { userId },
     update: {},

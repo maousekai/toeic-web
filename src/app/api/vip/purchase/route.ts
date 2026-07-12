@@ -13,6 +13,9 @@ export async function POST(req: NextRequest) {
   if (!pkg) return NextResponse.json({ error: 'Gói VIP không tồn tại' }, { status: 404 })
 
   const wallet = await ensureWallet(user.id)
+  if (!wallet) {
+    return NextResponse.json({ error: 'Tài khoản không hợp lệ. Vui lòng đăng nhập lại.' }, { status: 403 })
+  }
   if (wallet.balance < pkg.price) {
     return NextResponse.json({
       error: `Số dư không đủ. Cần ${pkg.price.toLocaleString('vi-VN')}₫, ví có ${wallet.balance.toLocaleString('vi-VN')}₫`,
