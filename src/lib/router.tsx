@@ -16,6 +16,11 @@ export type View =
   | { name: 'tools' }
   | { name: 'dashboard' }
   | { name: 'admin' }
+  | { name: 'teachers' }
+  | { name: 'chat'; roomId?: string; teacherUserId?: string }
+  | { name: 'class'; roomCode?: string }
+  | { name: 'wallet' }
+  | { name: 'vip' }
 
 type RouterCtx = {
   view: View
