@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   Clock, FileText, Headphones, Layers, Play, ArrowRight, Trophy, AlertTriangle,
   ShieldCheck, VolumeX, EyeOff, Timer, BookOpen, ExternalLink, CheckCircle2, Volume2,
+  Crown, Lock,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -11,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { useRouter } from '@/lib/router'
 import { useAuth } from '@/lib/auth/use-auth'
 import { useAuthUI } from '@/lib/auth/auth-ui-context'
+import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -44,21 +46,54 @@ export function PracticeList() {
   const { navigate } = useRouter()
   const { user } = useAuth()
   const { openAuth } = useAuthUI()
+  const { toast } = useToast()
   const [tests, setTests] = useState<TestSet[]>([])
   const [loading, setLoading] = useState(true)
   const [examDialog, setExamDialog] = useState<TestSet | null>(null)
   const [etsExam, setEtsExam] = useState<EtsResource | null>(null)
+  const [isVip, setIsVip] = useState(false)
+  const [vipChecked, setVipChecked] = useState(false)
+
+  // VIP test IDs — require VIP to access
+  const VIP_TEST_IDS = ['ts_rc1_full', 'ts_rc2_full', 'ts_rc3_full', 'ts_lc1_full']
+
+  // Check VIP status
+  const checkVip = useCallback(async () => {
+    if (!user) { setVipChecked(true); return }
+    try {
+      const res = await fetch('/api/vip/status')
+      const d = await res.json().catch(() => ({}))
+      setIsVip(!!d.isVip || user.role === 'ADMIN' || user.role === 'TEACHER')
+    } catch {
+      setIsVip(false)
+    } finally {
+      setVipChecked(true)
+    }
+  }, [user])
 
   useEffect(() => {
     fetch('/api/tests')
-      .then((r) => r.json())
+      .then((r) => r.json().catch(() => ({})))
       .then((d) => setTests(d.testSets || []))
       .finally(() => setLoading(false))
-  }, [])
+    checkVip()
+  }, [checkVip])
+
+  const isVipTest = (testId: string) => VIP_TEST_IDS.includes(testId)
 
   const startTest = (test: TestSet) => {
     if (!user) {
       openAuth('login', () => navigate({ name: 'test', testSetId: test.id, mode: test.type === 'exam' ? 'exam' : 'practice' }))
+      return
+    }
+    // VIP gate for full Reading/Listening tests
+    if (isVipTest(test.id) && !isVip) {
+      toast({
+        title: '🔒 Cần gói VIP',
+        description: 'Đề thi đầy đủ (100 câu Listening + 3 đề Reading) chỉ dành cho thành viên VIP. Các đề luyện tập bên dưới vẫn miễn phí.',
+        variant: 'destructive',
+      })
+      setTimeout(() => navigate({ name: 'vip' }), 1500)
       return
     }
     // Nếu là exam → mở dialog nội quy trước
@@ -99,8 +134,11 @@ export function PracticeList() {
               <Headphones className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-xl font-bold">🎧 Đề TOEIC Listening (Audio MP3 thật)</h2>
-              <p className="text-xs text-muted-foreground">Đề thi thật TOEIC Listening — Parts 1-4 với file audio MP3</p>
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                🎧 Đề TOEIC Listening (Audio MP3 thật)
+                <Badge className="gap-1 bg-amber-500/15 text-amber-600"><Crown className="h-3 w-3" /> VIP</Badge>
+              </h2>
+              <p className="text-xs text-muted-foreground">Đề thi thật TOEIC Listening — Parts 1-4 với file audio MP3 (cần VIP)</p>
             </div>
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -143,9 +181,15 @@ export function PracticeList() {
                         <span className="flex items-center gap-1"><Layers className="h-3.5 w-3.5" /> {t.questionCount} câu</span>
                         <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {t.durationMin} phút</span>
                       </div>
-                      <Button size="sm" className="bg-teal-600 hover:bg-teal-700" onClick={() => startTest(t)}>
-                        <Play className="mr-1 h-3.5 w-3.5" /> Bắt đầu
-                      </Button>
+                      {isVip ? (
+                        <Button size="sm" className="bg-teal-600 hover:bg-teal-700" onClick={() => startTest(t)}>
+                          <Play className="mr-1 h-3.5 w-3.5" /> Bắt đầu
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/15" onClick={() => startTest(t)}>
+                          <Lock className="h-3.5 w-3.5" /> VIP
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -163,8 +207,11 @@ export function PracticeList() {
               <FileText className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-xl font-bold">📖 Đề TOEIC Reading Đầy Đủ (100 câu)</h2>
-              <p className="text-xs text-muted-foreground">Đề thi thật TOEIC Reading — Part 5, 6, 7 với 100 câu hỏi + giải thích chi tiết tiếng Việt</p>
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                📖 Đề TOEIC Reading Đầy Đủ (100 câu)
+                <Badge className="gap-1 bg-amber-500/15 text-amber-600"><Crown className="h-3 w-3" /> VIP</Badge>
+              </h2>
+              <p className="text-xs text-muted-foreground">Đề thi thật TOEIC Reading — Part 5, 6, 7 với 100 câu hỏi + giải thích chi tiết (cần VIP)</p>
             </div>
           </div>
 
@@ -212,9 +259,15 @@ export function PracticeList() {
                         <span className="flex items-center gap-1"><Layers className="h-3.5 w-3.5" /> {t.questionCount} câu</span>
                         <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {t.durationMin} phút</span>
                       </div>
-                      <Button size="sm" onClick={() => startTest(t)}>
-                        <Play className="mr-1 h-3.5 w-3.5" /> Bắt đầu
-                      </Button>
+                      {isVip ? (
+                        <Button size="sm" onClick={() => startTest(t)}>
+                          <Play className="mr-1 h-3.5 w-3.5" /> Bắt đầu
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/15" onClick={() => startTest(t)}>
+                          <Lock className="h-3.5 w-3.5" /> VIP
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -386,8 +439,11 @@ export function PracticeList() {
           <Layers className="h-4 w-4" />
         </div>
         <div>
-          <h2 className="text-xl font-bold">📚 Chế độ Luyện Tập (Practice Mode)</h2>
-          <p className="text-xs text-muted-foreground">Tự do luyện từng part — có transcript, nghe lại, xem gợi ý</p>
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            📚 Chế độ Luyện Tập (Practice Mode)
+            <Badge variant="outline" className="gap-1 border-emerald-500/30 bg-emerald-500/10 text-emerald-600"><CheckCircle2 className="h-3 w-3" /> FREE</Badge>
+          </h2>
+          <p className="text-xs text-muted-foreground">Tự do luyện từng part — có transcript, nghe lại, xem gợi ý (miễn phí, không cần VIP)</p>
         </div>
       </div>
 

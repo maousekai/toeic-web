@@ -1351,3 +1351,56 @@ Stage Summary:
   - Teacher initiates (no VIP needed)
 - Teacher Dashboard "Classes" tab now has "Mở lớp mới cho học sinh" with student buttons
 - Lint clean.
+
+---
+Task ID: 34
+Agent: main (Z.ai Code)
+Task: VIP gate for full Listening (100q) + 3 Reading tests — practice tests remain free.
+
+Work Log:
+- User requested: "100 câu listening và 3 bài test reading vào chức năng nạp vip mới được sài, còn các bài test luyện tập ở dưới thì free"
+
+=== PRACTICE PAGE UPDATES ===
+- src/components/practice/practice-list.tsx:
+  - Added VIP_TEST_IDS = ['ts_rc1_full', 'ts_rc2_full', 'ts_rc3_full', 'ts_lc1_full']
+  - Added checkVip() — fetches /api/vip/status on mount, sets isVip state
+  - ADMIN/TEACHER auto-treated as VIP (no gate)
+  - Updated startTest(): if isVipTest(test.id) && !isVip → toast "🔒 Cần gói VIP" + redirect to /vip
+  - Listening section: added 👑 VIP badge to header + "(cần VIP)" subtitle
+  - Listening card button: shows "▶ Bắt đầu" (VIP) or "🔒 VIP" (non-VIP, amber)
+  - Reading section: added 👑 VIP badge to header + "(cần VIP)" subtitle
+  - Reading card button: same VIP/free toggle
+  - Practice Mode section: added ✅ FREE badge + "(miễn phí, không cần VIP)" subtitle
+  - Safe JSON parsing (.json().catch(() => ({})))
+
+=== VIP PACKAGE UPDATES ===
+- scripts/seed-vip-teachers.ts:
+  - All 3 packages now list "Đề Listening 100 câu + 3 đề Reading đầy đủ (VIP only)" as first feature
+  - Also updated: "AI Tutor không giới hạn + tải ảnh lên" (replaced "Truy cập toàn bộ đề thi + giải thích AI")
+- Re-ran seed → packages updated in DB
+
+=== VIP GATE LOGIC ===
+| Test type | VIP required? | Example |
+|---|---|---|
+| Full Listening (100q) | ✅ Yes | ts_lc1_full |
+| Full Reading Test 1 (100q) | ✅ Yes | ts_rc1_full |
+| Full Reading Test 2 (100q) | ✅ Yes | ts_rc2_full |
+| Full Reading Test 3 (100q) | ✅ Yes | ts_rc3_full |
+| Mini tests (Part 5, 6, 7) | ❌ Free | ts_part5_mini |
+| Part 2 Listening practice | ❌ Free | ts_part2_listening |
+| Exam mode | ❌ Free (existing) | ts_exam_* |
+
+=== UI INDICATORS ===
+- VIP tests: amber "👑 VIP" badge on section header + "🔒 VIP" button (non-VIP users)
+- Free tests: emerald "✅ FREE" badge on Practice Mode section header
+- Non-VIP clicking VIP test → toast "🔒 Cần gói VIP" → redirect to /vip after 1.5s
+
+=== LINT ===
+- Clean (0 errors)
+
+Stage Summary:
+- VIP gate added for 4 full tests (1 Listening + 3 Reading) — non-VIP users see lock icon + redirected to VIP page
+- 8 practice tests (Part 5/6/7/2 mini) remain FREE — no VIP needed
+- UI clearly shows: VIP tests have 👑 badge, free tests have ✅ FREE badge
+- VIP packages updated to include "Đề Listening + 3 đề Reading đầy đủ" as first feature
+- Lint clean.
