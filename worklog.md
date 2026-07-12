@@ -693,3 +693,25 @@ Stage Summary:
 - Nếu Ollama tắt / chưa pull model → tự fallback sang ZAI Cloud (không crash).
 - Provider badge trong UI AI Tutor tự cập nhật theo trạng thái thực tế.
 - Lint clean, browser-verified.
+
+---
+Task ID: 22
+Agent: main (Z.ai Code)
+Task: Push toàn bộ code + README chi tiết lên GitHub repo vinhdong123/toeic-ace-ai-v2.
+
+Work Log:
+- Viết README.md toàn diện (816 dòng) gồm 11 mục: tính năng chi tiết, công nghệ, cấu trúc dự án, 6 sơ đồ luồng sự kiện (Auth, Test Engine, AI Tutor, Lock/Unlock, Flashcards SRS, Pronunciation), hướng dẫn cài đặt VS Code 8 bước, AI provider config, tài khoản, 26 API endpoints, 9 DB models, scripts, troubleshooting.
+- Token đầu tiên (github_pat_11BO4O3WI0ufyc02...) chỉ có quyền Contents Read-only → không push được.
+- User gửi token mới (github_pat_11BO4O3WI0BjwwZ1...) cho repo toeic-ace-ai-v2.
+- Verify token qua GitHub API: repo vinhdong123/toeic-ace-ai-v2 (private), permissions: {admin:true, push:true, maintain:true, triage:true, pull:true} — OK.
+- Set git remote với token tạm thời.
+- Push thường bị reject (remote có commit "Initial commit" từ lúc tạo repo).
+- Force push (--force) để ghi đè commit initial → thành công.
+- Verify: remote có 30 commits, commit mới nhất `41120ec` = "docs: comprehensive README...".
+- Dọn dẹp bảo mật: git remote set-url origin về URL sạch (không token), verify no token trong git config.
+
+Stage Summary:
+- Repo đã push thành công: https://github.com/vinhdong123/toeic-ace-ai-v2 (PRIVATE, 30 commits, branch main).
+- README chi tiết 816 dòng kèm 6 sơ đồ luồng sự kiện và hướng dẫn VS Code setup.
+- Token đã được xoá khỏi git config (security).
+- User cần REVOKE token tại https://github.com/settings/personal-access-tokens sau khi xác nhận push OK.
