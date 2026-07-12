@@ -1426,3 +1426,52 @@ Stage Summary:
 - 30 commits on remote (main branch).
 - Token removed from git config.
 - All features included: admin panel (7 tabs), teacher dashboard, wallet, VIP, AI limit (10q free/VIP unlimited), VIP-gated full tests, chat real-time, video call WebRTC.
+
+---
+Task ID: 36
+Agent: main (Z.ai Code)
+Task: Hide VIP/Wallet from teachers + block teachers from Teachers page + exclude teachers from admin student list.
+
+Work Log:
+- User requested: "giao viên không cần nạp vip + không hiện giao diện teacher, admin phần quản lý học viên không hiện giáo viên"
+
+=== FIX 1: Navbar — hide Ví button for teachers ===
+- src/components/site/navbar.tsx: changed `{mounted && user && (` → `{mounted && user && user.role !== 'TEACHER' && (`
+- Teacher navbar now: Home, Lớp của tôi, Learn, AI Tutor (no Ví, no Teachers, no Practice)
+
+=== FIX 2: UserMenu — hide Wallet/VIP/Teachers for teachers ===
+- src/components/auth/user-menu.tsx:
+  - "Giáo viên" link: only show if user.role !== 'TEACHER'
+  - "Ví của tôi" + "VIP Membership": wrapped in `{user.role !== 'TEACHER' && (...)}` fragment
+  - Teacher sees: Dashboard, Lớp của tôi, AI Tutor (no Wallet/VIP/Teachers)
+
+=== FIX 3: TeachersView — redirect teachers away ===
+- src/components/teachers/teachers-view.tsx:
+  - Added useEffect: if user.role === 'TEACHER' → navigate to teacher-dashboard
+  - Fetch teachers: skip if teacher (return early)
+  - Teachers cannot access the Teachers list page anymore
+
+=== FIX 4: Admin users API — exclude TEACHER role ===
+- src/app/api/admin/users/route.ts GET:
+  - Before: `where: { role: { not: 'ADMIN' } }` (included TEACHER)
+  - After: `where: { role: { notIn: ['ADMIN', 'TEACHER'] } }` (only STUDENT + INSTRUCTOR)
+- Admin "Quản lý Học viên" tab now shows ONLY students, no teacher accounts
+
+=== TEACHER UI (final) ===
+- Navbar: Home, Lớp của tôi, Learn, AI Tutor
+- UserMenu: Dashboard, Lớp của tôi, AI Tutor
+- NO: Ví, VIP, Teachers list, Practice tests (VIP-gated ones)
+- Redirected away if tries to access /teachers
+
+=== ADMIN "Quản lý Học viên" (final) ===
+- Shows ONLY STUDENT + INSTRUCTOR accounts
+- TEACHER accounts excluded (managed in "Giáo viên" tab instead)
+- Role select: STUDENT / INSTRUCTOR only (no TEACHER option)
+
+=== LINT ===
+- Clean (0 errors)
+
+Stage Summary:
+- Teachers: no VIP/Wallet UI, no Teachers page access, redirected to teacher-dashboard
+- Admin student list: excludes both ADMIN and TEACHER accounts (only students)
+- Lint clean.

@@ -19,13 +19,13 @@ const NAV: { label: string; view: View }[] = [
   { label: 'Dashboard', view: { name: 'dashboard' } },
 ]
 
-// Dynamic nav for teachers
+// Dynamic nav for teachers — no VIP/Wallet/Teachers list
 function getNavItems(user: any): { label: string; view: View }[] {
   if (user?.role === 'TEACHER') {
     return [
       { label: 'Home', view: { name: 'home' } as View },
       { label: 'Lớp của tôi', view: { name: 'teacher-dashboard' } as View },
-      { label: 'Teachers', view: { name: 'teachers' } as View },
+      { label: 'Learn', view: { name: 'learn' } as View },
       { label: 'AI Tutor', view: { name: 'tutor' } as View },
     ]
   }
@@ -86,7 +86,7 @@ export function Navbar() {
         <div className="flex items-center gap-1.5">
           <LanguageToggle />
           <ThemeToggle />
-          {mounted && user && (
+          {mounted && user && user.role !== 'TEACHER' && (
             <Button
               variant="outline"
               size="sm"

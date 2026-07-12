@@ -73,18 +73,24 @@ export function UserMenu() {
             <GraduationCap className="mr-2 h-4 w-4" /> Lớp của tôi
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onClick={() => { navigate({ name: 'teachers' }); setOpen(false) }}>
-          <GraduationCap className="mr-2 h-4 w-4" /> Giáo viên
-        </DropdownMenuItem>
+        {user.role !== 'TEACHER' && (
+          <DropdownMenuItem onClick={() => { navigate({ name: 'teachers' }); setOpen(false) }}>
+            <GraduationCap className="mr-2 h-4 w-4" /> Giáo viên
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={() => { navigate({ name: 'tutor' }); setOpen(false) }}>
           <UserIcon className="mr-2 h-4 w-4" /> AI Tutor
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => { navigate({ name: 'wallet' }); setOpen(false) }}>
-          <Wallet className="mr-2 h-4 w-4" /> Ví của tôi
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => { navigate({ name: 'vip' }); setOpen(false) }}>
-          <Crown className="mr-2 h-4 w-4 text-amber-500" /> VIP Membership
-        </DropdownMenuItem>
+        {user.role !== 'TEACHER' && (
+          <>
+            <DropdownMenuItem onClick={() => { navigate({ name: 'wallet' }); setOpen(false) }}>
+              <Wallet className="mr-2 h-4 w-4" /> Ví của tôi
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { navigate({ name: 'vip' }); setOpen(false) }}>
+              <Crown className="mr-2 h-4 w-4 text-amber-500" /> VIP Membership
+            </DropdownMenuItem>
+          </>
+        )}
         {user.role === 'ADMIN' && (
           <DropdownMenuItem onClick={() => { navigate({ name: 'admin' }); setOpen(false) }}>
             <Shield className="mr-2 h-4 w-4" /> Admin Panel

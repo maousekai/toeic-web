@@ -21,12 +21,21 @@ export function TeachersView() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
 
+  // Giáo viên không được xem trang danh sách giáo viên → redirect
   useEffect(() => {
+    if (user?.role === 'TEACHER') {
+      navigate({ name: 'teacher-dashboard' })
+      return
+    }
+  }, [user, navigate])
+
+  useEffect(() => {
+    if (user?.role === 'TEACHER') return
     fetch('/api/teachers')
       .then((r) => r.json().catch(() => ({})))
       .then((d) => setTeachers(d.teachers || []))
       .finally(() => setLoading(false))
-  }, [])
+  }, [user])
 
   const handleStartChat = async (teacherUserId: string, teacherName: string) => {
     if (!user) { openAuth('login'); return }

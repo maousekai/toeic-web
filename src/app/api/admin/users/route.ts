@@ -12,8 +12,9 @@ async function checkAdmin() {
 export async function GET() {
   const session = await checkAdmin()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+  // Chỉ lấy STUDENT + INSTRUCTOR — KHÔNG lấy ADMIN và TEACHER
   const users = await db.user.findMany({
-    where: { role: { not: 'ADMIN' } },
+    where: { role: { notIn: ['ADMIN', 'TEACHER'] } },
     select: { id: true, name: true, email: true, role: true, locked: true, createdAt: true },
     orderBy: { createdAt: 'desc' },
   })
