@@ -2,7 +2,10 @@ import { createServer } from 'http'
 import { Server } from 'socket.io'
 
 const PORT = process.env.PORT || 3003
-const httpServer = createServer()
+const httpServer = createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' })
+  res.end('OK')
+})
 const io = new Server(httpServer, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
   path: '/socket.io/',
