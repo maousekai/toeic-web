@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Send, ArrowLeft, Crown, Loader2 } from 'lucide-react'
+import { Send, ArrowLeft, Crown, Loader2, Paperclip } from 'lucide-react'
 import { useRouter } from '@/lib/router'
 import { useAuth } from '@/lib/auth/use-auth'
 import { useAuthUI } from '@/lib/auth/auth-ui-context'
@@ -33,8 +33,24 @@ export function ChatView() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(true)
   const [typing, setTyping] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState<string | null>(null)
   const socketRef = useRef<Socket | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 4 * 1024 * 1024) {
+      toast({ title: 'Ảnh quá lớn', description: 'Kích thước tối đa 4MB', variant: 'destructive' })
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      setUploadingImage(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
 
   // Establish chat room if not provided
   const ensureRoom = useCallback(async () => {
@@ -74,7 +90,10 @@ export function ChatView() {
   // Socket.io connection
   useEffect(() => {
     if (!user || !roomId) return
-    const socket = io('/?XTransformPort=3003', { transports: ['websocket', 'polling'] })
+    const socketUrl = typeof window !== 'undefined' && window.location.port === '3000'
+      ? 'http://localhost:3003'
+      : '/?XTransformPort=3003'
+    const socket = io(socketUrl, { transports: ['websocket', 'polling'] })
     socketRef.current = socket
 
     socket.on('connect', () => {
@@ -106,9 +125,10 @@ export function ChatView() {
   }, [messages, typing])
 
   const handleSend = async () => {
-    if (!input.trim() || !roomId || !user) return
-    const content = input.trim()
+    if ((!input.trim() && !uploadingImage) || !roomId || !user) return
+    const content = uploadingImage ? `[image]:${uploadingImage}` : input.trim()
     setInput('')
+    setUploadingImage(null)
 
     // Optimistic: add message immediately
     const tempId = `temp_${Date.now()}`
@@ -124,11 +144,13 @@ export function ChatView() {
 
     // Emit via socket for real-time
     socketRef.current?.emit('chat:message', {
+      id: optimistic.id,
       roomId,
       senderId: user.id,
       senderName: user.name,
       content,
       createdAt: optimistic.createdAt,
+      sender: { id: user.id, name: user.name },
     })
 
     // Persist via API
@@ -203,7 +225,22 @@ export function ChatView() {
                     : 'rounded-tl-sm bg-secondary'
                 )}
               >
-                <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                {m.content.startsWith('[image]:') ? (
+                  <img
+                    src={m.content.substring(8)}
+                    alt="Ảnh gửi qua chat"
+                    className="max-h-60 rounded-lg object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => {
+                      const newTab = window.open()
+                      if (newTab) {
+                        newTab.document.write(`<img src="${m.content.substring(8)}" style="max-width:100%; max-height:100vh; display:block; margin:auto;" />`)
+                        newTab.document.title = "Xem ảnh"
+                      }
+                    }}
+                  />
+                ) : (
+                  <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                )}
                 <p className={cn('mt-1 text-[10px]', isMe ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
                   {new Date(m.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                 </p>
@@ -225,16 +262,49 @@ export function ChatView() {
       </div>
 
       {/* Input */}
-      <div className="border-t py-3">
-        <div className="flex gap-2">
+      <div className="border-t py-3 space-y-2">
+        {/* Image Preview */}
+        {uploadingImage && (
+          <div className="relative max-w-[120px] border rounded-lg p-1 bg-muted flex items-center justify-center group shadow-sm">
+            <img
+              src={uploadingImage}
+              alt="Preview"
+              className="h-16 w-auto object-contain rounded"
+            />
+            <button
+              type="button"
+              className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 text-[10px] font-bold shadow"
+              onClick={() => setUploadingImage(null)}
+            >
+              ×
+            </button>
+          </div>
+        )}
+        <div className="flex gap-2 items-center">
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleImageSelect}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            className="text-muted-foreground hover:text-foreground shrink-0"
+          >
+            <Paperclip className="h-5 w-5" />
+          </Button>
           <Input
-            placeholder="Nhập tin nhắn..."
+            placeholder={uploadingImage ? "Nhấn gửi để gửi ảnh..." : "Nhập tin nhắn..."}
             value={input}
             onChange={(e) => { setInput(e.target.value); handleTyping() }}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
             className="flex-1"
           />
-          <Button onClick={handleSend} disabled={!input.trim()} size="icon">
+          <Button onClick={handleSend} disabled={!input.trim() && !uploadingImage} size="icon" className="shrink-0">
             <Send className="h-4 w-4" />
           </Button>
         </div>

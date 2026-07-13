@@ -6,6 +6,7 @@ const httpServer = createServer()
 const io = new Server(httpServer, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
   path: '/socket.io/',
+  maxHttpBufferSize: 1e7, // 10MB (cho phép gửi ảnh lớn)
 })
 
 // In-memory state (resets on restart — messages are also persisted via REST API)

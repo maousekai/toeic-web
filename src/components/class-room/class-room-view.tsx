@@ -95,7 +95,10 @@ export function ClassRoomView() {
       }
 
       // 2. Connect socket
-      const socket = io('/?XTransformPort=3003', { transports: ['websocket', 'polling'] })
+      const socketUrl = typeof window !== 'undefined' && window.location.port === '3000'
+        ? 'http://localhost:3003'
+        : '/?XTransformPort=3003'
+      const socket = io(socketUrl, { transports: ['websocket', 'polling'] })
       socketRef.current = socket
       socket.on('connect', () => {
         socket.emit('auth', { userId: user.id, role: user.role, name: user.name })
