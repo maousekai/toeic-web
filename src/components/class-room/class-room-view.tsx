@@ -256,7 +256,9 @@ export function ClassRoomView() {
             {!remoteJoined && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/80">
                 <Users className="h-12 w-12" />
-                <p className="text-sm">Đang chờ giáo viên tham gia...</p>
+                <p className="text-sm">
+                  {user.id === session?.teacherId ? 'Đang chờ học viên tham gia...' : 'Đang chờ giáo viên tham gia...'}
+                </p>
                 <p className="text-xs text-white/60">Chia sẻ mã phòng: {session?.roomCode}</p>
               </div>
             )}
