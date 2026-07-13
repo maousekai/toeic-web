@@ -102,10 +102,13 @@ export function ClassRoomView() {
       socketRef.current = socket
       socket.on('connect', () => {
         socket.emit('auth', { userId: user.id, role: user.role, name: user.name })
-        socket.emit('call:create', { roomCode: session.roomCode, userId: user.id, name: user.name })
+        
         // Teacher (or creator) is the caller
         if (user.id === session.teacherId) {
           isCallerRef.current = true
+          socket.emit('call:create', { roomCode: session.roomCode, userId: user.id, name: user.name })
+        } else {
+          socket.emit('call:join', { roomCode: session.roomCode, userId: user.id, name: user.name })
         }
       })
 
