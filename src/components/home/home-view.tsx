@@ -110,14 +110,13 @@ export function HomeView() {
                 AI-Powered TOEIC Preparation
               </Badge>
               <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                Master the TOEIC test with your{' '}
+                Hãy chinh phục bài thi TOEIC cùng {' '}
                 <span className="bg-gradient-to-r from-primary to-teal-500 bg-clip-text text-transparent">
-                  personal AI coach
+                  trợ lý AI của bạn
                 </span>
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground lg:mx-0">
-                Everything you need to ace the TOEIC Listening &amp; Reading test — complete lessons,
-                realistic practice exams, instant grading, and AI tutoring that explains every answer.
+                Tất cả những gì bạn cần để đạt điểm cao trong bài thi TOEIC Nghe & Đọc với bài học đầy đủ, đề thi thực hành sát với thực tế, chấm điểm tức thì và trợ giảng AI giải thích từng câu trả lời.
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
                 <Button size="lg" className="h-12 px-8 text-base" onClick={primaryCta}>
@@ -423,14 +422,21 @@ export function HomeView() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
               >
-                <Card className="h-full overflow-hidden">
+                <Card className="h-full overflow-hidden"> {/* 1. CÁI NÀY GIỮ NGUYÊN */}
                   {/* Avatar header */}
-                  <div className="relative h-32 overflow-hidden bg-gradient-to-br from-primary/10 to-teal-500/10">
-                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2">
+                  {/* 2. CÁI NÀY PHẢI XÓA overflow-hidden ĐI */}
+                  <div className="relative h-32 bg-gradient-to-br from-primary/10 to-teal-500/10">
+
+                    {/* Thêm z-10 vào đây để ảnh luôn nổi lên trên */}
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 z-10">
+
+                      {/* 3. CÁI NÀY BẮT BUỘC PHẢI GIỮ overflow-hidden để ảnh có hình TRÒN */}
                       <div className="relative h-20 w-20 overflow-hidden rounded-full border-4 border-background shadow-lg">
                         <Image src={t.avatar} alt={t.name} fill sizes="80px" className="object-cover" />
                       </div>
+
                     </div>
+
                     {/* Score badge */}
                     <div className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-emerald-500/90 px-2.5 py-1 text-xs font-bold text-white shadow-md">
                       <Trophy className="h-3 w-3" />

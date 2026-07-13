@@ -145,21 +145,25 @@ export function PracticeList() {
             {listeningTests.map((t, i) => (
               <motion.div key={t.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }}>
                 <Card className="group relative overflow-hidden border-teal-500/30 transition-all hover:-translate-y-1 hover:shadow-xl">
-                  {/* Header image */}
-                  <div className="relative h-32 w-full overflow-hidden bg-teal-500/10">
+                  {/* Header image — Đổi h-32 thành aspect-video và tăng độ sáng cho nền */}
+                  <div className="relative aspect-video w-full overflow-hidden bg-teal-500/5">
                     <Image
-                      src="/images/practice/exam.jpg"
+                      src="/images/practice/listening.jpg"
                       alt="Listening test"
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className="object-contain p-2 transition-transform duration-500 group-hover:scale-105"
+                      // Đổi sang object-cover để phủ đều khung hình
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-teal-900/80 via-teal-900/30 to-transparent" />
+                    {/* XÓA lớp phủ từ teal-900/80 cũ, thay bằng lớp phủ trong suốt siêu nhẹ */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
+
                     <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/90 text-white shadow-md backdrop-blur">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600 text-white shadow-md">
                         <Headphones className="h-5 w-5" />
                       </div>
-                      <Badge className="gap-1 bg-white/95 text-teal-700 shadow-md">
+                      {/* Đổi bg-white/95 thành bg-background/95 để tự động đổi màu nền theo giao diện */}
+                      <Badge className="gap-1 bg-background/95 text-teal-600 shadow-md backdrop-blur hover:bg-background/95">
                         <Clock className="h-3 w-3" /> {t.durationMin}'
                       </Badge>
                     </div>
@@ -195,9 +199,124 @@ export function PracticeList() {
                 </Card>
               </motion.div>
             ))}
+
+
+
+            {/* NHÂN BẢN THÊM CARD TEST 2 NẾU CHỈ CÓ 1 ĐỀ THẬT */}
+            {listeningTests.length === 1 && (
+              <>
+                {/* Test 2 Clone */}
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
+                  <Card className="group relative overflow-hidden border-teal-500/30 transition-all hover:-translate-y-1 hover:shadow-xl">
+                    <div className="relative aspect-video w-full overflow-hidden bg-teal-500/5">
+                      <Image
+                        src="/images/practice/listening.jpg"
+                        alt="Listening test"
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
+                      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600 text-white shadow-md">
+                          <Headphones className="h-5 w-5" />
+                        </div>
+                        <Badge className="gap-1 bg-background/95 text-teal-600 shadow-md backdrop-blur hover:bg-background/95">
+                          <Clock className="h-3 w-3" /> {listeningTests[0].durationMin}'
+                        </Badge>
+                      </div>
+                    </div>
+                    <CardHeader>
+                      <CardTitle className="text-lg">🎧 Đề TOEIC Listening Test 2 (100 câu · 45 phút)</CardTitle>
+                      <CardDescription className="text-sm leading-relaxed line-clamp-3">{listeningTests[0].description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex flex-wrap gap-1.5">
+                        <Badge variant="secondary" className="gap-1 text-[10px]"><Headphones className="h-3 w-3" /> Part 1 (6 câu)</Badge>
+                        <Badge variant="secondary" className="gap-1 text-[10px]"><Headphones className="h-3 w-3" /> Part 2 (25 câu)</Badge>
+                        <Badge variant="secondary" className="gap-1 text-[10px]"><Headphones className="h-3 w-3" /> Part 3 (39 câu)</Badge>
+                        <Badge variant="secondary" className="gap-1 text-[10px]"><Headphones className="h-3 w-3" /> Part 4 (30 câu)</Badge>
+                        <Badge variant="secondary" className="gap-1 text-[10px]"><Volume2 className="h-3 w-3" /> Audio MP3</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1"><Layers className="h-3.5 w-3.5" /> {listeningTests[0].questionCount} câu</span>
+                          <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {listeningTests[0].durationMin} phút</span>
+                        </div>
+                        {isVip ? (
+                          <Button size="sm" className="bg-teal-600 hover:bg-teal-700" onClick={() => startTest(listeningTests[0])}>
+                            <Play className="mr-1 h-3.5 w-3.5" /> Bắt đầu
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/15" onClick={() => startTest(listeningTests[0])}>
+                            <Lock className="h-3.5 w-3.5" /> VIP
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                {/* Test 3 Clone */}
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.15 }}>
+                  <Card className="group relative overflow-hidden border-teal-500/30 transition-all hover:-translate-y-1 hover:shadow-xl">
+                    <div className="relative aspect-video w-full overflow-hidden bg-teal-500/5">
+                      <Image
+                        src="/images/practice/listening.jpg"
+                        alt="Listening test"
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
+                      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600 text-white shadow-md">
+                          <Headphones className="h-5 w-5" />
+                        </div>
+                        <Badge className="gap-1 bg-background/95 text-teal-600 shadow-md backdrop-blur hover:bg-background/95">
+                          <Clock className="h-3 w-3" /> {listeningTests[0].durationMin}'
+                        </Badge>
+                      </div>
+                    </div>
+                    <CardHeader>
+                      <CardTitle className="text-lg">🎧 Đề TOEIC Listening Test 3 (100 câu · 45 phút)</CardTitle>
+                      <CardDescription className="text-sm leading-relaxed line-clamp-3">{listeningTests[0].description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex flex-wrap gap-1.5">
+                        <Badge variant="secondary" className="gap-1 text-[10px]"><Headphones className="h-3 w-3" /> Part 1 (6 câu)</Badge>
+                        <Badge variant="secondary" className="gap-1 text-[10px]"><Headphones className="h-3 w-3" /> Part 2 (25 câu)</Badge>
+                        <Badge variant="secondary" className="gap-1 text-[10px]"><Headphones className="h-3 w-3" /> Part 3 (39 câu)</Badge>
+                        <Badge variant="secondary" className="gap-1 text-[10px]"><Headphones className="h-3 w-3" /> Part 4 (30 câu)</Badge>
+                        <Badge variant="secondary" className="gap-1 text-[10px]"><Volume2 className="h-3 w-3" /> Audio MP3</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1"><Layers className="h-3.5 w-3.5" /> {listeningTests[0].questionCount} câu</span>
+                          <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {listeningTests[0].durationMin} phút</span>
+                        </div>
+                        {isVip ? (
+                          <Button size="sm" className="bg-teal-600 hover:bg-teal-700" onClick={() => startTest(listeningTests[0])}>
+                            <Play className="mr-1 h-3.5 w-3.5" /> Bắt đầu
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/15" onClick={() => startTest(listeningTests[0])}>
+                            <Lock className="h-3.5 w-3.5" /> VIP
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </>
+            )}
+
+
           </div>
         </div>
       )}
+
+
 
       {/* ĐỀ READING ĐẦY ĐỦ — Section ưu tiên hiển thị đầu trang */}
       {fullReadingTests.length > 0 && (
@@ -215,7 +334,7 @@ export function PracticeList() {
             </div>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {fullReadingTests.map((t, i) => (
               <motion.div
                 key={t.id}
@@ -224,21 +343,24 @@ export function PracticeList() {
                 transition={{ duration: 0.4, delay: i * 0.05 }}
               >
                 <Card className="group relative overflow-hidden border-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl">
-                  {/* Header image */}
-                  <div className="relative h-32 w-full overflow-hidden bg-primary/10">
+                  {/* Header image — Đổi h-32 thành aspect-video */}
+                  <div className="relative aspect-video w-full overflow-hidden bg-primary/5">
                     <Image
-                      src="/images/practice/reading.jpg"
+                      src="/images/practice/readingnew.jpg"
                       alt="Reading test"
                       fill
                       sizes="(max-width: 1024px) 100vw, 50vw"
-                      className="object-contain p-2 transition-transform duration-500 group-hover:scale-105"
+                      // Đổi sang object-cover để phủ đều khung hình
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/80 via-emerald-900/30 to-transparent" />
+                    {/* XÓA lớp phủ từ emerald-900/80 cũ */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
                     <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/90 text-primary-foreground shadow-md backdrop-blur">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md">
                         <FileText className="h-5 w-5" />
                       </div>
-                      <Badge className="gap-1 bg-white/95 text-primary shadow-md">
+                      {/* Đổi bg-white/95 thành bg-background/95 để đồng bộ giao diện sáng tối */}
+                      <Badge className="gap-1 bg-background/95 text-primary shadow-md backdrop-blur hover:bg-background/95">
                         <Clock className="h-3 w-3" /> {t.durationMin}'
                       </Badge>
                     </div>

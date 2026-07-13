@@ -44,9 +44,9 @@ export function LearnView() {
   }
 
   const hubCards = [
-    { icon: BookOpen, title: 'Grammar Lessons', desc: 'Clear explanations of the grammar points tested on the TOEIC, with examples and audio.', cta: 'Browse lessons', view: 'grammar' as const, needAuth: true, image: '/images/learn/grammar.jpg' },
+    { icon: BookOpen, title: 'Grammar Lessons', desc: 'Clear explanations of the grammar points tested on the TOEIC, with examples and audio.', cta: 'Browse lessons', view: 'grammar' as const, needAuth: true, image: '/images/learn/grammarnew.jpg' },
     { icon: Brain, title: 'Vocabulary Flashcards', desc: 'Flip, listen and review high-frequency business English words with spaced repetition.', cta: 'Start flashcards', view: 'vocab' as const, needAuth: true, image: '/images/learn/vocab.jpg' },
-    { icon: Mic, title: 'Luyện phát âm', desc: 'Nghe câu mẫu, ghi âm giọng nói, nhận feedback AI chi tiết về phát âm, trọng âm, ngữ điệu.', cta: 'Luyện ngay', view: 'pronunciation' as const, needAuth: true, image: '/images/learn/pronunciation.jpg' },
+    { icon: Mic, title: 'Luyện phát âm', desc: 'Nghe câu mẫu, ghi âm giọng nói, nhận feedback AI chi tiết về phát âm, trọng âm, ngữ điệu.', cta: 'Luyện ngay', view: 'pronunciation' as const, needAuth: true, image: '/images/learn/pronunciationnew.jpg' },
     { icon: Lightbulb, title: 'Test Strategies', desc: 'Section-by-section tactics for Listening and Reading — plus test-day tips.', cta: 'See strategies', view: 'strategies' as const, needAuth: false, image: '/images/learn/strategies.jpg' },
     { icon: PenLine, title: 'AI Writing Check', desc: 'Get your sentences corrected instantly by AI and learn from the feedback.', cta: 'Try AI tools', view: 'tools' as const, needAuth: true, image: '/images/ai/writing.jpg' },
   ]
@@ -72,28 +72,32 @@ export function LearnView() {
               navigate({ name: c.view } as View)
             }
           }}>
-            {/* Image header — object-contain để không bị crop */}
-            <div className="relative h-40 w-full overflow-hidden bg-gradient-to-br from-secondary to-secondary/50">
+            {/* PHẦN 1: Khung ảnh - Sáng sủa, sạch sẽ, không dùng lớp phủ đen nữa */}
+            <div className="relative aspect-video w-full overflow-hidden bg-secondary/10">
               <Image
                 src={c.image}
                 alt={c.title}
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                className="object-contain p-2 transition-transform duration-500 group-hover:scale-105"
+                className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
-              {/* Icon badge */}
+
+              {/* Icon badge giữ nguyên ở góc trên */}
               <div className="absolute left-3 top-3 flex h-10 w-10 items-center justify-center rounded-xl bg-background/95 shadow-md backdrop-blur">
                 <c.icon className="h-5 w-5 text-primary" />
               </div>
-              {/* Title overlay */}
-              <div className="absolute bottom-3 left-3 right-3">
-                <CardTitle className="text-base font-semibold text-white drop-shadow-md">{c.title}</CardTitle>
-              </div>
             </div>
+
+            {/* PHẦN 2: Nội dung bên dưới - Tự động đổi màu chữ theo giao diện Sáng/Tối */}
             <CardContent className="p-5">
+              {/* Đưa tiêu đề xuống đây, thêm hiệu ứng đổi màu khi hover vào card */}
+              <CardTitle className="text-base font-bold text-foreground mb-2 transition-colors group-hover:text-primary">
+                {c.title}
+              </CardTitle>
+
               <CardDescription className="text-sm leading-relaxed">{c.desc}</CardDescription>
-              <div className="mt-3 flex items-center text-xs font-medium text-primary">
+
+              <div className="mt-4 flex items-center text-sm font-medium text-primary">
                 {c.cta} <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-1" />
               </div>
             </CardContent>
