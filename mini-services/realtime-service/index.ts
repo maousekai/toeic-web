@@ -1,7 +1,7 @@
 import { createServer } from 'http'
 import { Server } from 'socket.io'
 
-const PORT = 3003
+const PORT = process.env.PORT || 3003
 const httpServer = createServer()
 const io = new Server(httpServer, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
