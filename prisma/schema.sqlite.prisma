@@ -1,0 +1,229 @@
+generator client_sqlite {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/client-sqlite"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./db/custom.db"
+}
+
+model Learner {
+  id          String        @id @default(cuid())
+  name        String?
+  targetScore Int?
+  userId      String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        User?         @relation(fields: [userId], references: [id])
+  attempts    TestAttempt[]
+}
+
+model User {
+  id              String              @id @default(cuid())
+  email           String              @unique
+  name            String
+  passwordHash    String
+  role            String              @default("STUDENT")
+  image           String?
+  locked          Boolean             @default(false)
+  aiMessageCount  Int                 @default(0) // Số câu hỏi AI đã dùng (reset khi mua VIP)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  learners        Learner[]
+  wallet          Wallet?
+  teacher         Teacher?
+  vipSubs         VipSubscription[]
+  payments        PaymentTransaction[]
+  chatRoomsA      ChatRoom[]          @relation("ChatStudent")
+  chatRoomsB      ChatRoom[]          @relation("ChatTeacher")
+  messages        ChatMessage[]
+  classAsTeacher  ClassSession[]      @relation("ClassTeacher")
+  classAsStudent  ClassSession[]      @relation("ClassStudent")
+}
+
+model Teacher {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  bio         String   @default("")
+  subjects    String   @default("TOEIC Listening, TOEIC Reading, Grammar")
+  hourlyRate  Int      @default(100000) // VND per hour
+  rating      Float    @default(5.0)
+  totalLessons Int     @default(0)
+  isOnline    Boolean  @default(false)
+  avatar      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Int      @default(0) // VND
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model VipPackage {
+  id           String   @id @default(cuid())
+  name         String
+  price        Int      // VND
+  durationDays Int      // e.g. 30, 90, 365
+  features     String   // JSON array of feature strings
+  color        String   @default("emerald")
+  popular      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  subscriptions VipSubscription[]
+}
+
+model VipSubscription {
+  id         String   @id @default(cuid())
+  userId     String
+  packageId  String
+  startedAt  DateTime @default(now())
+  expiresAt  DateTime
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+  package    VipPackage @relation(fields: [packageId], references: [id])
+}
+
+model PaymentTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Int      // VND
+  type        String   // TOPUP | VIP_PURCHASE
+  status      String   @default("SUCCESS") // SUCCESS | PENDING | FAILED
+  description String   @default("")
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model ChatRoom {
+  id            String       @id @default(cuid())
+  studentId     String
+  teacherId     String
+  createdAt     DateTime     @default(now())
+  lastMessageAt DateTime?    
+  student       User         @relation("ChatStudent", fields: [studentId], references: [id])
+  teacher       User         @relation("ChatTeacher", fields: [teacherId], references: [id])
+  messages      ChatMessage[]
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  roomId    String
+  senderId  String
+  content   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  room      ChatRoom @relation(fields: [roomId], references: [id])
+  sender    User     @relation(fields: [senderId], references: [id])
+}
+
+model ClassSession {
+  id         String   @id @default(cuid())
+  teacherId  String
+  studentId  String
+  roomCode   String   @unique // short code for joining
+  status     String   @default("WAITING") // WAITING | ACTIVE | ENDED
+  startedAt  DateTime?
+  endedAt    DateTime?
+  createdAt  DateTime @default(now())
+  teacher    User     @relation("ClassTeacher", fields: [teacherId], references: [id])
+  student    User     @relation("ClassStudent", fields: [studentId], references: [id])
+}
+
+model Vocab {
+  id           String   @id @default(cuid())
+  word         String
+  phonetic     String?
+  partOfSpeech String
+  definition   String
+  example      String
+  translation  String?
+  category     String
+  level        String   @default("A1")
+  difficulty   Int      @default(1)
+  createdAt    DateTime @default(now())
+}
+
+model GrammarLesson {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  category  String
+  level     String   @default("intermediate")
+  summary   String
+  content   String
+  example   String
+  createdAt DateTime @default(now())
+}
+
+model GrammarExercise {
+  id          String   @id @default(cuid())
+  lessonId    String
+  question    String
+  options     String
+  answer      Int
+  explanation String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+model Strategy {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  section   String
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model Question {
+  id          String   @id @default(cuid())
+  part        Int
+  passage     String?
+  groupId     String?
+  audioScript String?
+  imagePrompt String?
+  question    String
+  options     String
+  answer      Int
+  explanation String?
+  difficulty  Int      @default(2)
+  category    String?
+  createdAt   DateTime @default(now())
+}
+
+model TestSet {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  durationMin Int      @default(40)
+  type        String   @default("mini")
+  questionIds String
+  createdAt   DateTime @default(now())
+}
+
+model TestAttempt {
+  id               String    @id @default(cuid())
+  learnerId        String
+  testSetId        String?
+  testSetTitle     String?
+  type             String
+  startedAt        DateTime  @default(now())
+  finishedAt       DateTime?
+  durationSec      Int?
+  answers          String
+  totalQuestions   Int       @default(0)
+  correctCount     Int       @default(0)
+  listeningCorrect Int?
+  readingCorrect   Int?
+  score            Int?
+  listeningScore   Int?
+  readingScore     Int?
+  learner          Learner   @relation(fields: [learnerId], references: [id])
+}

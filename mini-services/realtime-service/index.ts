@@ -72,15 +72,16 @@ io.on('connection', (socket) => {
   // Student joins a class room
   socket.on('call:join', (payload: { roomCode: string; userId: string; name: string }) => {
     if (!payload?.roomCode) return
-    const members = roomMembers.get(payload.roomCode)
-    if (!members || members.size === 0) {
-      socket.emit('call:error', { message: 'Phòng học không tồn tại hoặc giáo viên chưa vào.' })
-      return
+    if (!roomMembers.has(payload.roomCode)) {
+      roomMembers.set(payload.roomCode, new Set())
     }
+    const members = roomMembers.get(payload.roomCode)!
+    
     socket.join(`call:${payload.roomCode}`)
     members.add(payload.userId)
     console.log(`[call] ${payload.name} joined room ${payload.roomCode}`)
-    // Notify teacher that student joined
+    
+    // Notify teacher that student joined (if teacher is already there, they will receive this and send offer)
     socket.to(`call:${payload.roomCode}`).emit('call:student-joined', {
       userId: payload.userId,
       name: payload.name,

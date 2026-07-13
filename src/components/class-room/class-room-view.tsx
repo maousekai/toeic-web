@@ -137,6 +137,8 @@ export function ClassRoomView() {
       }
 
       // 4. Signaling handlers
+      const pendingCandidates: RTCIceCandidateInit[] = []
+
       socket.on('call:student-joined', async () => {
         // Teacher creates offer when student joins
         if (isCallerRef.current) {
@@ -151,17 +153,25 @@ export function ClassRoomView() {
         const answer = await peer.createAnswer()
         await peer.setLocalDescription(answer)
         socket.emit('call:answer', { roomCode: session.roomCode, sdp: answer })
+        
+        pendingCandidates.forEach(c => peer.addIceCandidate(c).catch(() => {}))
+        pendingCandidates.length = 0
       })
 
       socket.on('call:answer', async (data: { sdp: any }) => {
         await peer.setRemoteDescription(data.sdp)
+        
+        pendingCandidates.forEach(c => peer.addIceCandidate(c).catch(() => {}))
+        pendingCandidates.length = 0
       })
 
       socket.on('call:ice', async (data: { candidate: any }) => {
-        try {
-          await peer.addIceCandidate(data.candidate)
-        } catch (e) {
-          // ignore — might arrive before remote description
+        if (peer.remoteDescription && peer.remoteDescription.type) {
+          try {
+            await peer.addIceCandidate(data.candidate)
+          } catch (e) {}
+        } else {
+          pendingCandidates.push(data.candidate)
         }
       })
 
