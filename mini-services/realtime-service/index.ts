@@ -65,8 +65,24 @@ io.on('connection', (socket) => {
     if (!payload?.roomCode) return
     socket.join(`call:${payload.roomCode}`)
     if (!roomMembers.has(payload.roomCode)) roomMembers.set(payload.roomCode, new Set())
-    roomMembers.get(payload.roomCode)!.add(payload.userId)
+    const members = roomMembers.get(payload.roomCode)!
+    
+    // Check if students are already waiting in the room BEFORE adding teacher
+    const studentsAlreadyWaiting = members.size > 0
+    members.add(payload.userId)
     console.log(`[call] ${payload.name} created room ${payload.roomCode}`)
+    
+    if (studentsAlreadyWaiting) {
+      // Students joined before teacher — tell teacher to start the offer
+      console.log(`[call] Students already waiting in ${payload.roomCode}, triggering offer`)
+      socket.emit('call:student-joined', { userId: 'waiting', name: 'student' })
+    }
+    
+    // Also notify any waiting students that teacher has arrived
+    socket.to(`call:${payload.roomCode}`).emit('call:teacher-joined', {
+      userId: payload.userId,
+      name: payload.name,
+    })
   })
 
   // Student joins a class room

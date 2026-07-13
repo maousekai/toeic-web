@@ -181,6 +181,15 @@ export function ClassRoomView() {
         }
       })
 
+      // Teacher joined after student — student re-announces so teacher creates offer
+      socket.on('call:teacher-joined', () => {
+        setPartnerJoined(true)
+        if (!isCallerRef.current) {
+          console.log('[call] Teacher arrived, re-announcing presence')
+          socket.emit('call:join', { roomCode: session.roomCode, userId: user.id, name: user.name })
+        }
+      })
+
       socket.on('call:ended', () => {
         toast({ title: 'Cuộc gọi đã kết thúc' })
         cleanup()

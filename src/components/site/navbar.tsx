@@ -27,14 +27,8 @@ function getNavItems(user: any): { label: string; view: View }[] {
       { label: 'Phòng học', view: { name: 'class' } as View },
       { label: 'Lớp của tôi', view: { name: 'teacher-dashboard' } as View },
     ]
-  } else {
-    // Student
-    return [
-      { label: 'Lớp của tôi', view: { name: 'home' } as View },
-      { label: 'Phòng học', view: { name: 'class' } as View },
-      { label: 'Learn', view: { name: 'learn' } as View },
-    ]
   }
+  return NAV
 }
 
 export function Navbar() {
