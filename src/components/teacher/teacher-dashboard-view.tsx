@@ -213,10 +213,21 @@ export function TeacherDashboardView() {
 
           {/* Upcoming classes */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Video className="h-4 w-4 text-violet-600" /> Lớp học đang chờ/đang diễn ra
               </CardTitle>
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={async () => {
+                const res = await fetch('/api/class/create', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ studentUserId: user.id }) // Quick room self assign
+                })
+                const d = await res.json().catch(() => ({}))
+                if (d.session) navigate({ name: 'class', roomCode: d.session.roomCode })
+              }}>
+                + Tạo phòng nhanh
+              </Button>
             </CardHeader>
             <CardContent className="space-y-2">
               {upcomingClasses.length === 0 ? (
@@ -364,10 +375,21 @@ export function TeacherDashboardView() {
 
           {/* Upcoming/active classes */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Video className="h-4 w-4 text-violet-600" /> Lớp học đang chờ/đang diễn ra
               </CardTitle>
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={async () => {
+                const res = await fetch('/api/class/create', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ studentUserId: user.id })
+                })
+                const d = await res.json().catch(() => ({}))
+                if (d.session) navigate({ name: 'class', roomCode: d.session.roomCode })
+              }}>
+                + Tạo phòng nhanh
+              </Button>
             </CardHeader>
             <CardContent>
               {upcomingClasses.length === 0 ? (

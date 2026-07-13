@@ -24,12 +24,17 @@ function getNavItems(user: any): { label: string; view: View }[] {
   if (user?.role === 'TEACHER') {
     return [
       { label: 'Home', view: { name: 'home' } as View },
+      { label: 'Phòng học', view: { name: 'class' } as View },
       { label: 'Lớp của tôi', view: { name: 'teacher-dashboard' } as View },
+    ]
+  } else {
+    // Student
+    return [
+      { label: 'Lớp của tôi', view: { name: 'home' } as View },
+      { label: 'Phòng học', view: { name: 'class' } as View },
       { label: 'Learn', view: { name: 'learn' } as View },
-      { label: 'AI Tutor', view: { name: 'tutor' } as View },
     ]
   }
-  return NAV
 }
 
 export function Navbar() {
