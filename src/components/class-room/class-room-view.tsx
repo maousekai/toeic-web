@@ -244,6 +244,67 @@ export function ClassRoomView() {
     )
   }
 
+  if (!session) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-20 text-center">
+        <div className="mb-8">
+          <Video className="mx-auto h-16 w-16 text-primary mb-4" />
+          <h1 className="text-2xl font-bold">Phòng học trực tuyến</h1>
+          <p className="mt-2 text-muted-foreground">Nhập mã phòng để tham gia lớp học đang diễn ra.</p>
+        </div>
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <input
+              id="roomCodeInput"
+              type="text"
+              placeholder="Ví dụ: XYZ123"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 uppercase"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const val = (e.target as HTMLInputElement).value.trim().toUpperCase()
+                  if (val) navigate({ name: 'class', roomCode: val })
+                }
+              }}
+            />
+            <Button onClick={() => {
+              const val = (document.getElementById('roomCodeInput') as HTMLInputElement).value.trim().toUpperCase()
+              if (val) navigate({ name: 'class', roomCode: val })
+            }}>Tham gia</Button>
+          </div>
+          
+          {user.role === 'TEACHER' && (
+            <>
+              <div className="relative py-4">
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">Hoặc</span></div>
+              </div>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={async () => {
+                  // Tạo phòng nhanh
+                  const res = await fetch('/api/class/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentUserId: user.id }) // Self assign to bypass student check for quick room
+                  })
+                  const d = await res.json().catch(() => ({}))
+                  if (d.session) {
+                    navigate({ name: 'class', roomCode: d.session.roomCode })
+                  } else {
+                    toast({ title: 'Lỗi', description: 'Không thể tạo phòng', variant: 'destructive' })
+                  }
+                }}
+              >
+                Tạo phòng nhanh
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
       {/* Header */}
