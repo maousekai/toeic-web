@@ -95,9 +95,9 @@ export function ClassRoomView() {
       }
 
       // 2. Connect socket
-      const socketUrl = typeof window !== 'undefined' && window.location.port === '3000'
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || (typeof window !== 'undefined' && window.location.port === '3000'
         ? 'http://localhost:3003'
-        : '/?XTransformPort=3003'
+        : '/?XTransformPort=3003')
       const socket = io(socketUrl, { transports: ['websocket', 'polling'] })
       socketRef.current = socket
       socket.on('connect', () => {

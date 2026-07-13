@@ -7,8 +7,8 @@ export async function POST(req: NextRequest) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // VIP gate
-  const isVip = await hasActiveVip(user.id)
+  // VIP gate (Giáo viên và Admin không cần VIP)
+  const isVip = user.role === 'ADMIN' || user.role === 'TEACHER' || (await hasActiveVip(user.id))
   if (!isVip) {
     return NextResponse.json({
       error: 'Cần gói VIP để tham gia lớp học video call.',

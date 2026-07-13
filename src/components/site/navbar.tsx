@@ -56,9 +56,7 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <button onClick={() => go({ name: 'home' })} className="flex items-center gap-2.5 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-transform group-hover:scale-105">
-            <GraduationCap className="h-5 w-5" />
-          </div>
+          <img src="/logo.svg" className="h-9 w-9 transition-transform group-hover:scale-105" alt="Logo" />
           <div className="flex flex-col leading-none">
             <span className="text-base font-bold tracking-tight" suppressHydrationWarning>TOEIC Ace AI</span>
             <span className="text-[10px] text-muted-foreground" suppressHydrationWarning>Smart English Test Prep</span>
