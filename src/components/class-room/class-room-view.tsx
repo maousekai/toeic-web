@@ -45,15 +45,8 @@ export function ClassRoomView() {
   useEffect(() => {
     if (!user) { setLoading(false); return }
     if (!roomCode) {
-      // No room code — try to fetch active sessions
-      fetch('/api/class/active')
-        .then((r) => r.json())
-        .then((d) => {
-          if (d.sessions && d.sessions.length > 0) {
-            setSession(d.sessions[0])
-          }
-          setLoading(false)
-        })
+      // No room code — show the join/create room UI
+      setLoading(false)
       return
     }
     fetch('/api/class/join', {
