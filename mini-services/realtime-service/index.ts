@@ -139,7 +139,7 @@ io.on('connection', (socket) => {
   })
 })
 
-httpServer.listen(PORT, () => {
-  console.log(`🔌 Realtime service running on http://localhost:${PORT}`)
+httpServer.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`🔌 Realtime service running on http://0.0.0.0:${PORT}`)
   console.log(`   Socket.IO path: /socket.io/`)
 })
