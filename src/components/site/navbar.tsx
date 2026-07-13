@@ -16,6 +16,7 @@ const NAV: { label: string; view: View }[] = [
   { label: 'Practice', view: { name: 'practice' } },
   { label: 'Teachers', view: { name: 'teachers' } },
   { label: 'AI Tutor', view: { name: 'tutor' } },
+  { label: 'Phòng học', view: { name: 'class' } },
   { label: 'Dashboard', view: { name: 'dashboard' } },
 ]
 
