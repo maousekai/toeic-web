@@ -23,6 +23,9 @@ export function ClassRoomView() {
   const [micOn, setMicOn] = useState(true)
   const [camOn, setCamOn] = useState(true)
   const [remoteJoined, setRemoteJoined] = useState(false)
+  
+  const [socketConnected, setSocketConnected] = useState(false)
+  const [partnerJoined, setPartnerJoined] = useState(false)
 
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const remoteVideoRef = useRef<HTMLVideoElement>(null)
@@ -101,6 +104,7 @@ export function ClassRoomView() {
       const socket = io(socketUrl, { transports: ['websocket', 'polling'] })
       socketRef.current = socket
       socket.on('connect', () => {
+        setSocketConnected(true)
         socket.emit('auth', { userId: user.id, role: user.role, name: user.name })
         
         // Teacher (or creator) is the caller
@@ -140,6 +144,7 @@ export function ClassRoomView() {
       const pendingCandidates: RTCIceCandidateInit[] = []
 
       socket.on('call:student-joined', async () => {
+        setPartnerJoined(true)
         // Teacher creates offer when student joins
         if (isCallerRef.current) {
           const offer = await peer.createOffer()
@@ -149,6 +154,7 @@ export function ClassRoomView() {
       })
 
       socket.on('call:offer', async (data: { sdp: any }) => {
+        setPartnerJoined(true)
         await peer.setRemoteDescription(data.sdp)
         const answer = await peer.createAnswer()
         await peer.setLocalDescription(answer)
@@ -266,8 +272,10 @@ export function ClassRoomView() {
             {!remoteJoined && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/80">
                 <Users className="h-12 w-12" />
-                <p className="text-sm">
-                  {user.id === session?.teacherId ? 'Đang chờ học viên tham gia...' : 'Đang chờ giáo viên tham gia...'}
+                <p className="text-sm font-medium text-center px-4">
+                  {!socketConnected ? 'Đang kết nối tới máy chủ trung gian...' :
+                    !partnerJoined ? (user.id === session?.teacherId ? 'Đang chờ học viên tham gia...' : 'Đang chờ giáo viên tham gia...') :
+                    'Đối tác đã vào phòng, đang thiết lập luồng Video P2P...'}
                 </p>
                 <p className="text-xs text-white/60">Chia sẻ mã phòng: {session?.roomCode}</p>
               </div>
