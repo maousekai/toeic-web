@@ -656,6 +656,7 @@ function TeachersTab() {
   const [teachers, setTeachers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<any | null>(null)
+  const [showForm, setShowForm] = useState(false)
 
   const fetchTeachers = useCallback(async () => {
     setLoading(true)
@@ -690,6 +691,7 @@ function TeachersTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <Badge variant="secondary" className="gap-1.5"><GraduationCap className="h-3.5 w-3.5" /> {teachers.length} giáo viên</Badge>
+        <Button onClick={() => { setEditing(null); setShowForm(true) }} className="gap-1.5"><Plus className="h-4 w-4" /> Thêm giáo viên</Button>
       </div>
       <div className="rounded-lg border max-h-[60vh] overflow-y-auto">
         <Table>
@@ -727,7 +729,7 @@ function TeachersTab() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="inline-flex items-center gap-1">
-                    <Button variant="ghost" size="icon" title="Sửa" onClick={() => setEditing(t)}><Pencil className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" title="Sửa" onClick={() => { setEditing(t); setShowForm(true) }}><Pencil className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" title={t.isOnline ? 'Đặt offline' : 'Đặt online'} onClick={() => handleToggleOnline(t)}>
                       {t.isOnline ? <LockOpen className="h-4 w-4 text-emerald-600" /> : <Lock className="h-4 w-4 text-amber-600" />}
                     </Button>
@@ -739,52 +741,60 @@ function TeachersTab() {
           </TableBody>
         </Table>
       </div>
-      {editing && <TeacherEditModal teacher={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); fetchTeachers() }} />}
+      {showForm && <TeacherForm teacher={editing} onClose={() => { setEditing(null); setShowForm(false) }} onSaved={() => { setEditing(null); setShowForm(false); fetchTeachers() }} />}
     </div>
   )
 }
 
-function TeacherEditModal({ teacher, onClose, onSaved }: { teacher: any; onClose: () => void; onSaved: () => void }) {
+function TeacherForm({ teacher, onClose, onSaved }: any) {
   const { toast } = useToast()
-  const [form, setForm] = useState({
-    bio: teacher.bio || '',
-    subjects: teacher.subjects || '',
-    hourlyRate: teacher.hourlyRate || 100000,
-    rating: teacher.rating || 5.0,
+  const [form, setForm] = useState({ 
+    name: teacher?.user?.name || '', 
+    email: teacher?.user?.email || '', 
+    password: '',
+    subjects: teacher?.subjects || 'TOEIC Listening, TOEIC Reading, Grammar',
+    hourlyRate: teacher?.hourlyRate || 100000,
+    bio: teacher?.bio || ''
   })
   const [saving, setSaving] = useState(false)
 
   const save = async () => {
     setSaving(true)
     try {
-      const res = await fetch(`/api/admin/teachers/${teacher.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      })
-      if (res.ok) {
-        toast({ title: '✅ Đã cập nhật' })
-        onSaved()
+      if (teacher) {
+        const res = await fetch(`/api/admin/teachers/${teacher.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+        if (!res.ok) throw new Error('Cập nhật thất bại')
       } else {
-        toast({ title: 'Lỗi', variant: 'destructive' })
+        const res = await fetch('/api/admin/teachers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+        const data = await res.json()
+        if (data.error) throw new Error(data.error)
       }
-    } finally { setSaving(false) }
+      toast({ title: teacher ? 'Đã cập nhật' : 'Đã thêm giáo viên' })
+      onSaved()
+    } catch (e: any) { 
+      toast({ title: 'Lỗi', description: e.message, variant: 'destructive' }) 
+    } finally { 
+      setSaving(false) 
+    }
   }
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>Sửa thông tin giáo viên</DialogTitle></DialogHeader>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>{teacher ? 'Sửa thông tin' : 'Thêm giáo viên'}</DialogTitle></DialogHeader>
         <div className="space-y-3 mt-4">
-          <div><Label className="text-xs">Giáo viên</Label><Input value={teacher.user.name} disabled /></div>
-          <div><Label className="text-xs">Môn học (phẩy phân cách)</Label><Input value={form.subjects} onChange={(e) => setForm({ ...form, subjects: e.target.value })} /></div>
-          <div><Label className="text-xs">Bio</Label><Textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows={3} /></div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label className="text-xs">Giá/giờ (VND)</Label><Input type="number" value={form.hourlyRate} onChange={(e) => setForm({ ...form, hourlyRate: parseInt(e.target.value) || 0 })} /></div>
-            <div><Label className="text-xs">Đánh giá (0-5)</Label><Input type="number" step="0.1" min="0" max="5" value={form.rating} onChange={(e) => setForm({ ...form, rating: parseFloat(e.target.value) || 0 })} /></div>
-          </div>
+          {!teacher && (
+            <>
+              <div><Label className="text-xs">Họ tên *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
+              <div><Label className="text-xs">Email *</Label><Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
+              <div><Label className="text-xs">Mật khẩu *</Label><Input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /></div>
+            </>
+          )}
+          {teacher && <div><Label className="text-xs">Giáo viên</Label><Input value={teacher.user.name} disabled /></div>}
+          <div><Label className="text-xs">Môn học</Label><Input value={form.subjects} onChange={e => setForm({ ...form, subjects: e.target.value })} /></div>
+          <div><Label className="text-xs">Mức giá / giờ (VNĐ)</Label><Input type="number" value={form.hourlyRate} onChange={e => setForm({ ...form, hourlyRate: Number(e.target.value) })} /></div>
         </div>
-        <DialogFooter className="mt-4"><Button variant="outline" onClick={onClose}>Hủy</Button><Button onClick={save} disabled={saving}>{saving ? 'Đang lưu...' : 'Lưu'}</Button></DialogFooter>
+        <DialogFooter className="mt-4"><Button variant="outline" onClick={onClose}>Huỷ</Button><Button onClick={save} disabled={saving || (!teacher && (!form.name || !form.email))}>{saving ? 'Đang lưu...' : 'Lưu'}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   )

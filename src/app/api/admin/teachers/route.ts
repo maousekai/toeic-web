@@ -20,28 +20,53 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ teachers })
 }
 
-// POST: create teacher profile for existing user (promote user to TEACHER + create Teacher row)
+// POST: create new user (as STUDENT) and teacher profile, or attach to existing
 export async function POST(req: NextRequest) {
   if (!(await checkAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-  const { userId, bio, subjects, hourlyRate } = (await req.json()) as {
-    userId?: string; bio?: string; subjects?: string; hourlyRate?: number
-  }
-  if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
+  const { name, email, password, bio, subjects, hourlyRate } = await req.json()
+  
+  if (!email || !name) return NextResponse.json({ error: 'Name and email required' }, { status: 400 })
 
-  const existing = await db.teacher.findUnique({ where: { userId } })
-  if (existing) return NextResponse.json({ error: 'User đã là giáo viên' }, { status: 400 })
-
-  // Promote user role + create teacher profile
-  const [_, teacher] = await db.$transaction([
-    db.user.update({ where: { id: userId }, data: { role: 'TEACHER' } }),
-    db.teacher.create({
+  let user = await db.user.findUnique({ where: { email } })
+  if (user) {
+    const existing = await db.teacher.findUnique({ where: { userId: user.id } })
+    if (existing) return NextResponse.json({ error: 'User đã là giáo viên' }, { status: 400 })
+    
+    // Attach teacher profile without changing role
+    const teacher = await db.teacher.create({
       data: {
-        userId,
+        userId: user.id,
         bio: bio || '',
         subjects: subjects || 'TOEIC Listening, TOEIC Reading, Grammar',
-        hourlyRate: hourlyRate || 100000,
+        hourlyRate: Number(hourlyRate) || 100000,
       },
-    }),
-  ])
-  return NextResponse.json({ teacher })
+    })
+    return NextResponse.json({ teacher })
+  }
+
+  if (!password) return NextResponse.json({ error: 'Password required for new user' }, { status: 400 })
+  
+  // Use bcryptjs, assuming it's available. We can use dynamic import or standard import.
+  const bcrypt = require('bcryptjs')
+  const passwordHash = await bcrypt.hash(password, 10)
+
+  // Create new user (STUDENT) and nested teacher profile
+  const newUser = await db.user.create({
+    data: {
+      name,
+      email,
+      passwordHash,
+      role: 'STUDENT',
+      teacher: {
+        create: {
+          bio: bio || '',
+          subjects: subjects || 'TOEIC Listening, TOEIC Reading, Grammar',
+          hourlyRate: Number(hourlyRate) || 100000,
+        }
+      }
+    },
+    include: { teacher: true }
+  })
+  
+  return NextResponse.json({ teacher: newUser.teacher })
 }
