@@ -14,7 +14,7 @@ type Provider = 'openrouter' | 'ollama' | 'zai'
 
 // OpenRouter config
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || ''
-const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'tencent/hy3:free'
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'tencent/hy3:free,google/gemini-2.0-flash-lite-preview-02-05:free,meta-llama/llama-3.1-8b-instruct:free'
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1'
 
 // Ollama config
@@ -114,25 +114,35 @@ export async function aiChat(messages: { role: 'user' | 'assistant'; content: st
   // --- OpenRouter (cloud) ---
   if (provider === 'openrouter') {
     const client = await getOpenRouterClient()
-    try {
-      const completion = await client.chat.completions.create({
-        model: OPENROUTER_MODEL,
-        messages,
-        temperature: 0.5,
-        max_tokens: 2048,
-        stream: false,
-      })
-      return completion.choices[0]?.message?.content ?? ''
-    } catch (err: any) {
-      const msg = err?.message || String(err)
-      if (msg.includes('401') || msg.includes('Unauthorized')) {
-        throw new Error('OpenRouter API Key không hợp lệ. Kiểm tra lại OPENROUTER_API_KEY trong file .env')
+    const models = OPENROUTER_MODEL.split(',').map((m) => m.trim()).filter(Boolean)
+    let lastError: any = null
+
+    for (const model of models) {
+      try {
+        const completion = await client.chat.completions.create({
+          model,
+          messages,
+          temperature: 0.5,
+          max_tokens: 2048,
+          stream: false,
+        })
+        return completion.choices[0]?.message?.content ?? ''
+      } catch (err: any) {
+        lastError = err
+        const msg = err?.message || String(err)
+        if (msg.includes('401') || msg.includes('Unauthorized')) {
+          throw new Error('OpenRouter API Key không hợp lệ. Kiểm tra lại OPENROUTER_API_KEY trong file .env')
+        }
+        console.warn(`[OpenRouter] Lỗi model ${model}: ${msg}. Đang thử model tiếp theo...`)
+        // Tiếp tục vòng lặp để thử model khác
       }
-      if (msg.includes('429') || msg.includes('rate')) {
-        throw new Error('Đã vượt giới hạn request của OpenRouter. Vui lòng thử lại sau vài giây.')
-      }
-      throw new Error(`Lỗi OpenRouter: ${msg}`)
     }
+
+    const msg = lastError?.message || String(lastError)
+    if (msg.includes('429') || msg.includes('rate')) {
+      throw new Error('Đã vượt giới hạn request của tất cả model OpenRouter. Vui lòng thử lại sau vài giây.')
+    }
+    throw new Error(`Lỗi OpenRouter (đã thử tất cả model): ${msg}`)
   }
 
   // --- ZAI (legacy fallback) ---
