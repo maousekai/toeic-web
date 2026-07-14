@@ -12,6 +12,7 @@ import { useAuthUI } from '@/lib/auth/auth-ui-context'
 import { useRouter, View } from '@/lib/router'
 import { useToast } from '@/hooks/use-toast'
 import { LogOut, User as UserIcon, LayoutDashboard, LogIn, UserPlus, ChevronDown, Shield, Wallet, Crown, GraduationCap } from 'lucide-react'
+import { useLanguage } from '@/lib/use-language'
 
 function initials(name: string) {
   return name
@@ -27,6 +28,7 @@ export function UserMenu() {
   const { openAuth } = useAuthUI()
   const { navigate } = useRouter()
   const { toast } = useToast()
+  const { t } = useLanguage()
   const [open, setOpen] = useState(false)
 
   if (isLoading) {
@@ -37,10 +39,10 @@ export function UserMenu() {
     return (
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" onClick={() => openAuth('login')} className="hidden sm:inline-flex">
-          <LogIn className="mr-1.5 h-4 w-4" /> Sign In
+          <LogIn className="mr-1.5 h-4 w-4" /> {t('menu.sign_in')}
         </Button>
         <Button size="sm" onClick={() => openAuth('register')} className="gap-1.5">
-          <UserPlus className="h-4 w-4" /> Get Started
+          <UserPlus className="h-4 w-4" /> {t('menu.get_started')}
         </Button>
       </div>
     )
@@ -66,34 +68,34 @@ export function UserMenu() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => { navigate({ name: 'dashboard' }); setOpen(false) }}>
-          <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+          <LayoutDashboard className="mr-2 h-4 w-4" /> {t('menu.dashboard')}
         </DropdownMenuItem>
         {user.role === 'TEACHER' && (
           <DropdownMenuItem onClick={() => { navigate({ name: 'teacher-dashboard' }); setOpen(false) }}>
-            <GraduationCap className="mr-2 h-4 w-4" /> Lớp của tôi
+            <GraduationCap className="mr-2 h-4 w-4" /> {t('menu.my_class')}
           </DropdownMenuItem>
         )}
         {user.role !== 'TEACHER' && (
           <DropdownMenuItem onClick={() => { navigate({ name: 'teachers' }); setOpen(false) }}>
-            <GraduationCap className="mr-2 h-4 w-4" /> Giáo viên
+            <GraduationCap className="mr-2 h-4 w-4" /> {t('menu.teachers')}
           </DropdownMenuItem>
         )}
         <DropdownMenuItem onClick={() => { navigate({ name: 'tutor' }); setOpen(false) }}>
-          <UserIcon className="mr-2 h-4 w-4" /> AI Tutor
+          <UserIcon className="mr-2 h-4 w-4" /> {t('menu.ai_tutor')}
         </DropdownMenuItem>
         {user.role !== 'TEACHER' && (
           <>
             <DropdownMenuItem onClick={() => { navigate({ name: 'wallet' }); setOpen(false) }}>
-              <Wallet className="mr-2 h-4 w-4" /> Ví của tôi
+              <Wallet className="mr-2 h-4 w-4" /> {t('menu.wallet')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => { navigate({ name: 'vip' }); setOpen(false) }}>
-              <Crown className="mr-2 h-4 w-4 text-amber-500" /> VIP Membership
+              <Crown className="mr-2 h-4 w-4 text-amber-500" /> {t('menu.vip')}
             </DropdownMenuItem>
           </>
         )}
         {user.role === 'ADMIN' && (
           <DropdownMenuItem onClick={() => { navigate({ name: 'admin' }); setOpen(false) }}>
-            <Shield className="mr-2 h-4 w-4" /> Admin Panel
+            <Shield className="mr-2 h-4 w-4" /> {t('menu.admin')}
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
@@ -106,7 +108,7 @@ export function UserMenu() {
             navigate({ name: 'home' })
           }}
         >
-          <LogOut className="mr-2 h-4 w-4" /> Sign Out
+          <LogOut className="mr-2 h-4 w-4" /> {t('menu.sign_out')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

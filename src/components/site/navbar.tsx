@@ -8,33 +8,36 @@ import { useAuth } from '@/lib/auth/use-auth'
 import { ThemeToggle } from './theme-toggle'
 import { LanguageToggle } from './language-toggle'
 import { UserMenu } from '@/components/auth/user-menu'
+import { useLanguage } from '@/lib/use-language'
 import { cn } from '@/lib/utils'
 
-const NAV: { label: string; view: View }[] = [
-  { label: 'Home', view: { name: 'home' } },
-  { label: 'Learn', view: { name: 'learn' } },
-  { label: 'Practice', view: { name: 'practice' } },
-  { label: 'Teachers', view: { name: 'teachers' } },
-  { label: 'AI Tutor', view: { name: 'tutor' } },
-  { label: 'Phòng học', view: { name: 'class' } },
-  { label: 'Dashboard', view: { name: 'dashboard' } },
+// Nav items use translation keys instead of hardcoded labels
+const NAV_KEYS: { key: string; view: View }[] = [
+  { key: 'nav.home', view: { name: 'home' } },
+  { key: 'nav.learn', view: { name: 'learn' } },
+  { key: 'nav.practice', view: { name: 'practice' } },
+  { key: 'nav.teachers', view: { name: 'teachers' } },
+  { key: 'nav.ai_tutor', view: { name: 'tutor' } },
+  { key: 'nav.classroom', view: { name: 'class' } },
+  { key: 'nav.dashboard', view: { name: 'dashboard' } },
 ]
 
-// Dynamic nav for teachers — no VIP/Wallet/Teachers list
-function getNavItems(user: any): { label: string; view: View }[] {
+// Dynamic nav for teachers
+function getNavKeys(user: any): { key: string; view: View }[] {
   if (user?.role === 'TEACHER') {
     return [
-      { label: 'Home', view: { name: 'home' } as View },
-      { label: 'Phòng học', view: { name: 'class' } as View },
-      { label: 'Lớp của tôi', view: { name: 'teacher-dashboard' } as View },
+      { key: 'nav.home', view: { name: 'home' } as View },
+      { key: 'nav.classroom', view: { name: 'class' } as View },
+      { key: 'nav.my_class', view: { name: 'teacher-dashboard' } as View },
     ]
   }
-  return NAV
+  return NAV_KEYS
 }
 
 export function Navbar() {
   const { view, navigate } = useRouter()
   const { user } = useAuth()
+  const { t } = useLanguage()
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
@@ -47,9 +50,9 @@ export function Navbar() {
   }
 
   // Build nav list — teacher sees "Lớp của tôi", admin sees "Admin"
-  const navItems = [...getNavItems(user)]
+  const navItems = [...getNavKeys(user)].map(n => ({ label: t(n.key), view: n.view }))
   if (mounted && user?.role === 'ADMIN') {
-    navItems.push({ label: 'Admin', view: { name: 'admin' } as View })
+    navItems.push({ label: t('nav.admin'), view: { name: 'admin' } as View })
   }
 
   return (
@@ -91,7 +94,7 @@ export function Navbar() {
               className="hidden gap-1.5 border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/15 hover:text-amber-600 sm:inline-flex"
               onClick={() => navigate({ name: 'wallet' })}
             >
-              <Crown className="h-3.5 w-3.5" /> Ví
+              <Crown className="h-3.5 w-3.5" /> {t('btn.wallet')}
             </Button>
           )}
           <div className="hidden sm:block">

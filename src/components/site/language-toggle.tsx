@@ -7,7 +7,7 @@ import { useLanguage, type Language } from '@/lib/use-language'
 import { cn } from '@/lib/utils'
 
 export function LanguageToggle({ compact = false }: { compact?: boolean }) {
-  const { language, changeLanguage, loaded, labels, allLabels } = useLanguage()
+  const { language, changeLanguage, loaded, labels, allLabels, t } = useLanguage()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -43,7 +43,7 @@ export function LanguageToggle({ compact = false }: { compact?: boolean }) {
       {open && (
         <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-lg">
           <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            Ngôn ngữ AI trả lời
+            {t('lang.title')}
           </div>
           {options.map((lang) => {
             const l = allLabels[lang]
@@ -64,9 +64,9 @@ export function LanguageToggle({ compact = false }: { compact?: boolean }) {
                 <div className="flex-1">
                   <div className="font-medium">{l.long}</div>
                   <div className="text-[10px] text-muted-foreground">
-                    {lang === 'vi' && 'Giải thích thuần Việt, dễ hiểu'}
-                    {lang === 'bi' && 'Việt + thuật ngữ Anh trong ngoặc'}
-                    {lang === 'en' && 'Toàn bộ tiếng Anh (immersion)'}
+                    {lang === 'vi' && t('lang.vi_desc')}
+                    {lang === 'bi' && t('lang.bi_desc')}
+                    {lang === 'en' && t('lang.en_desc')}
                   </div>
                 </div>
                 {active && <Check className="h-4 w-4" />}
