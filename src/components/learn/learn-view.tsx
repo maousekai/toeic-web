@@ -71,6 +71,11 @@ export function LearnView() {
             } else {
               navigate({ name: c.view } as View)
             }
+            if (c.view === 'grammar' || c.view === 'strategies') {
+              setTimeout(() => {
+                document.getElementById('learning-content')?.scrollIntoView({ behavior: 'smooth' })
+              }, 50)
+            }
           }}>
             {/* PHẦN 1: Khung ảnh - Sáng sủa, sạch sẽ, không dùng lớp phủ đen nữa */}
             <div className="relative aspect-video w-full overflow-hidden bg-secondary/10">
@@ -106,14 +111,16 @@ export function LearnView() {
       </div>
 
       {/* Default tabs: Grammar + Strategies combined */}
-      <Tabs defaultValue="grammar">
-        <TabsList>
-          <TabsTrigger value="grammar" className="gap-1.5"><BookOpen className="h-4 w-4" /> Grammar</TabsTrigger>
-          <TabsTrigger value="strategies" className="gap-1.5"><Lightbulb className="h-4 w-4" /> Strategies</TabsTrigger>
-        </TabsList>
-        <TabsContent value="grammar" className="mt-6"><GrammarList /></TabsContent>
-        <TabsContent value="strategies" className="mt-6"><StrategiesView /></TabsContent>
-      </Tabs>
+      <div id="learning-content" className="scroll-mt-6">
+        <Tabs value={['grammar', 'strategies'].includes(view.name) ? view.name : 'grammar'} onValueChange={(val) => navigate({ name: val as View['name'] })}>
+          <TabsList>
+            <TabsTrigger value="grammar" className="gap-1.5"><BookOpen className="h-4 w-4" /> Grammar</TabsTrigger>
+            <TabsTrigger value="strategies" className="gap-1.5"><Lightbulb className="h-4 w-4" /> Strategies</TabsTrigger>
+          </TabsList>
+          <TabsContent value="grammar" className="mt-6"><GrammarList /></TabsContent>
+          <TabsContent value="strategies" className="mt-6"><StrategiesView /></TabsContent>
+        </Tabs>
+      </div>
 
       {/* TOEIC overview band */}
       <Card className="mt-10 border-primary/20 bg-secondary/30">
