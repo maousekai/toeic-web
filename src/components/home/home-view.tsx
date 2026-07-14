@@ -168,7 +168,7 @@ export function HomeView() {
               {/* Main hero photo — real people learning */}
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-border/60 shadow-2xl">
                 <Image
-                  src="/images/home/hero-people.jpg"
+                  src="/images/home/hero-english.jpg"
                   alt="Students learning English together"
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
