@@ -81,11 +81,11 @@ function QuestionGenerator() {
           <CardDescription>Generate fresh TOEIC practice questions on demand, for any part and topic.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-1.5">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-4">
+            <div className="space-y-1.5 flex-1 min-w-[220px]">
               <Label className="text-xs">TOEIC Part</Label>
               <Select value={part} onValueChange={setPart}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="2">Part 2 — Question-Response</SelectItem>
                   <SelectItem value="5">Part 5 — Incomplete Sentences</SelectItem>
@@ -94,14 +94,14 @@ function QuestionGenerator() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 flex-1 min-w-[200px]">
               <Label className="text-xs">Topic (optional)</Label>
-              <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. prepositions, tenses" />
+              <Input className="w-full" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. prepositions, tenses" />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 flex-1 min-w-[150px]">
               <Label className="text-xs">Difficulty</Label>
               <Select value={difficulty} onValueChange={setDifficulty}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="beginner">Beginner</SelectItem>
                   <SelectItem value="intermediate">Intermediate</SelectItem>
@@ -109,10 +109,10 @@ function QuestionGenerator() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 flex-1 min-w-[150px]">
               <Label className="text-xs">Number of questions</Label>
               <Select value={count} onValueChange={setCount}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">1</SelectItem>
                   <SelectItem value="2">2</SelectItem>
