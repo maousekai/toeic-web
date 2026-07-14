@@ -98,15 +98,17 @@ export function PronunciationPractice() {
     const word = selectedSound.exampleWords[wordIdx]
     setPhase('analyzing')
     try {
+      const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' })
+      const formData = new FormData()
+      formData.append('audio', audioBlob, 'recording.webm')
+      formData.append('text', word.word)
+      formData.append('phonetic', word.phonetic || '')
+      formData.append('tip', `Âm ${selectedSound.ipa} (${selectedSound.name}). ${selectedSound.description} Khẩu hình: ${selectedSound.mouthShape}`)
+      formData.append('language', 'vi')
+
       const res = await fetch('/api/pronunciation/analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: word.word,
-          phonetic: word.phonetic,
-          tip: `Âm ${selectedSound.ipa} (${selectedSound.name}). ${selectedSound.description} Khẩu hình: ${selectedSound.mouthShape}`,
-          language: 'vi',
-        }),
+        body: formData,
       })
       const data = await res.json()
       if (data.feedback) { setFeedback(data.feedback); setPhase('analyzed') }
