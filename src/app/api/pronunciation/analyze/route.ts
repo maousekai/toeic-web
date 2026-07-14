@@ -27,6 +27,8 @@ export async function POST(req: NextRequest) {
     groqFormData.append('model', 'whisper-large-v3')
     groqFormData.append('response_format', 'json')
     groqFormData.append('language', 'en')
+    // Cung cấp từ gốc làm ngữ cảnh cho Whisper để tránh nhận diện sai các từ đơn lẻ
+    groqFormData.append('prompt', text)
 
     const whisperRes = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
       method: 'POST',
@@ -43,23 +45,21 @@ export async function POST(req: NextRequest) {
     }
 
     const whisperData = await whisperRes.json()
-    const transcribedText = whisperData.text || ''
+    // Whisper thường tự thêm dấu câu hoặc in hoa, nên chuyển về chữ thường để AI dễ so sánh hơn
+    const transcribedText = whisperData.text?.trim() || ''
 
     // 2. Dùng AI phân tích sự khác biệt
-    const systemPrompt = `You are an expert English pronunciation coach for Vietnamese learners.
-Analyze the user's pronunciation attempt. You are given the "Target Word" they were supposed to say, and the "Transcribed Text" of what they actually said.
-If the transcribed text matches or is very close to the target word, congratulate them and briefly note the correct mouth shape or stress.
-If the transcribed text is different, point out exactly which sounds they probably mispronounced and how to fix it based on Vietnamese speaker habits.
-Focus on: (1) differences between target and transcription, (2) difficult sounds, (3) word stress.
-Be specific, practical and encouraging. Keep it under 200 words.
-${lang === 'vi' ? 'Trả lời bằng tiếng Việt.' : 'Reply in English.'}`
+    const systemPrompt = `You are a friendly, encouraging English pronunciation coach for Vietnamese learners.
+The user tried to pronounce the Target Word. The Transcribed Text is what the system heard.
+If Transcribed Text matches Target Word: Congratulate them shortly (1-2 sentences).
+If it's different: Explain simply what sound they might have missed or mispronounced (e.g. "It sounded like you said X instead of Y"). Give ONE brief tip on how to fix it.
+CRITICAL: Keep the response extremely concise, natural, and friendly. Do NOT use bullet points, numbered lists, or section headers like "1. Tổng quan". Maximum 3-4 short sentences total.
+${lang === 'vi' ? 'Trả lời hoàn toàn bằng tiếng Việt.' : 'Reply in English.'}`
 
     const userMsg = `Target Word: "${text}"
-Transcribed Text (what they actually said): "${transcribedText}"
-${phonetic ? `Phonetic: ${phonetic}` : ''}
-${tip ? `Tip: ${tip}` : ''}
+Transcribed Text: "${transcribedText}"
 
-Hãy so sánh những gì họ thực sự nói (Transcribed Text) với từ gốc (Target Word), và đưa ra đánh giá phát âm chi tiết.`
+Evaluate my pronunciation briefly and kindly.`
 
     const feedback = await aiChat([
       { role: 'assistant', content: systemPrompt },
