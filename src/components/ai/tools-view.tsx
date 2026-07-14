@@ -379,14 +379,11 @@ export function ToolsView() {
         </div>
       </div>
       <Tabs defaultValue="generator">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <TabsList className="flex flex-wrap h-auto shrink-0">
-            <TabsTrigger value="generator" className="gap-1.5"><Zap className="h-4 w-4" /> Question Generator</TabsTrigger>
-            <TabsTrigger value="writing" className="gap-1.5"><PenLine className="h-4 w-4" /> Writing Check</TabsTrigger>
-            <TabsTrigger value="plan" className="gap-1.5"><CalendarClock className="h-4 w-4" /> Study Plan</TabsTrigger>
-          </TabsList>
-          <LanguageToggle />
-        </div>
+        <TabsList className="mb-6 flex flex-wrap h-auto w-fit">
+          <TabsTrigger value="generator" className="gap-1.5"><Zap className="h-4 w-4" /> Question Generator</TabsTrigger>
+          <TabsTrigger value="writing" className="gap-1.5"><PenLine className="h-4 w-4" /> Writing Check</TabsTrigger>
+          <TabsTrigger value="plan" className="gap-1.5"><CalendarClock className="h-4 w-4" /> Study Plan</TabsTrigger>
+        </TabsList>
         <TabsContent value="generator" className="mt-0"><QuestionGenerator /></TabsContent>
         <TabsContent value="writing" className="mt-0"><WritingChecker /></TabsContent>
         <TabsContent value="plan" className="mt-0"><StudyPlan /></TabsContent>
