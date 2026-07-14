@@ -4,33 +4,45 @@ export type Language = 'vi' | 'en' | 'bi'
 
 // ===================================================================
 //  AI PROVIDER ADAPTER
-//  - Tự nhận diện Ollama + qwen2.5:3b đang chạy trên máy (không cần env)
-//  - Nếu Ollama không chạy → fallback qua ZAI cloud (sandbox)
+//  Thứ tự ưu tiên:
+//  1. OpenRouter (cloud) — nếu có OPENROUTER_API_KEY trong .env
+//  2. Ollama (local)     — nếu Ollama đang chạy trên máy
+//  3. ZAI (legacy)       — fallback cuối cùng
 // ===================================================================
 
-type Provider = 'ollama' | 'zai'
+type Provider = 'openrouter' | 'ollama' | 'zai'
 
-// Cấu hình Ollama mặc định (qwen2.5:3b)
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434/v1'
+// OpenRouter config
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || ''
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'tencent/hy3:free'
+const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1'
+
+// Ollama config
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434/v1'
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'qwen2.5:3b'
 const OLLAMA_HOST = OLLAMA_BASE_URL.replace(/\/v1\/?$/, '')
 
-// Cache kết quả probe để không gọi lại mỗi request
+// Cache kết quả probe
 let probed: { provider: Provider; at: number } | null = null
 const PROBE_TTL = 30_000 // 30s
 
 /**
  * Tự nhận diện provider:
- *  1. Gọi `GET http://localhost:11434/api/tags` — nếu Ollama phản hồi
- *     và có qwen2.5:3b trong danh sách model → dùng Ollama.
- *  2. Nếu Ollama không chạy / không có qwen2.5:3b → fallback ZAI cloud.
- *
- * Kết quả được cache 30s để tránh probe mỗi request.
+ *  1. Nếu có OPENROUTER_API_KEY → dùng OpenRouter (cloud).
+ *  2. Nếu Ollama đang chạy và có model → dùng Ollama (local).
+ *  3. Fallback → ZAI cloud (sandbox).
  */
 async function detectProvider(): Promise<Provider> {
   const now = Date.now()
   if (probed && now - probed.at < PROBE_TTL) return probed.provider
 
+  // Ưu tiên 1: OpenRouter (nếu có API key)
+  if (OPENROUTER_API_KEY) {
+    probed = { provider: 'openrouter', at: now }
+    return 'openrouter'
+  }
+
+  // Ưu tiên 2: Ollama local
   try {
     const res = await fetch(`${OLLAMA_HOST}/api/tags`, {
       method: 'GET',
@@ -39,30 +51,51 @@ async function detectProvider(): Promise<Provider> {
     if (res.ok) {
       const data = (await res.json()) as { models?: { name: string }[] }
       const models = (data.models || []).map((m) => m.name)
-      const hasQwen = models.some(
+      const hasModel = models.some(
         (m) => m === OLLAMA_MODEL || m === `${OLLAMA_MODEL}:latest` || m.startsWith(`${OLLAMA_MODEL}:`),
       )
-      probed = { provider: hasQwen ? 'ollama' : 'zai', at: now }
-      return probed.provider
+      if (hasModel) {
+        probed = { provider: 'ollama', at: now }
+        return 'ollama'
+      }
     }
   } catch {
-    // Ollama không chạy → fallback
+    // Ollama không chạy
   }
+
+  // Ưu tiên 3: ZAI fallback
   probed = { provider: 'zai', at: now }
   return 'zai'
 }
 
-// Singleton instances
+// Singleton clients
 let zaiInstance: Awaited<ReturnType<typeof ZAI.create>> | null = null
 let ollamaClient: any = null
+let openrouterClient: any = null
+
+async function getOpenRouterClient() {
+  if (openrouterClient) return openrouterClient
+  const { default: OpenAI } = await import('openai')
+  openrouterClient = new OpenAI({
+    apiKey: OPENROUTER_API_KEY,
+    baseURL: OPENROUTER_BASE_URL,
+    defaultHeaders: {
+      'HTTP-Referer': process.env.NEXTAUTH_URL || 'http://localhost:3000',
+      'X-Title': 'TOEIC Ace AI',
+    },
+    timeout: 2 * 60 * 1000, // 2 phút
+    maxRetries: 2,
+  })
+  return openrouterClient
+}
 
 async function getOllamaClient() {
   if (ollamaClient) return ollamaClient
   const { default: OpenAI } = await import('openai')
   ollamaClient = new OpenAI({
-    apiKey: 'ollama', // Ollama không cần key
+    apiKey: 'ollama',
     baseURL: OLLAMA_BASE_URL,
-    timeout: 5 * 60 * 1000, // 5 phút (CPU inference chậm)
+    timeout: 5 * 60 * 1000,
     maxRetries: 1,
   })
   return ollamaClient
@@ -78,6 +111,31 @@ async function getZAI() {
 export async function aiChat(messages: { role: 'user' | 'assistant'; content: string }[]): Promise<string> {
   const provider = await detectProvider()
 
+  // --- OpenRouter (cloud) ---
+  if (provider === 'openrouter') {
+    const client = await getOpenRouterClient()
+    try {
+      const completion = await client.chat.completions.create({
+        model: OPENROUTER_MODEL,
+        messages,
+        temperature: 0.5,
+        max_tokens: 2048,
+        stream: false,
+      })
+      return completion.choices[0]?.message?.content ?? ''
+    } catch (err: any) {
+      const msg = err?.message || String(err)
+      if (msg.includes('401') || msg.includes('Unauthorized')) {
+        throw new Error('OpenRouter API Key không hợp lệ. Kiểm tra lại OPENROUTER_API_KEY trong file .env')
+      }
+      if (msg.includes('429') || msg.includes('rate')) {
+        throw new Error('Đã vượt giới hạn request của OpenRouter. Vui lòng thử lại sau vài giây.')
+      }
+      throw new Error(`Lỗi OpenRouter: ${msg}`)
+    }
+  }
+
+  // --- ZAI (legacy fallback) ---
   if (provider === 'zai') {
     const zai = await getZAI()
     const completion = await zai.chat.completions.create({
@@ -87,13 +145,13 @@ export async function aiChat(messages: { role: 'user' | 'assistant'; content: st
     return completion.choices[0]?.message?.content ?? ''
   }
 
-  // Ollama + qwen2.5:3b
+  // --- Ollama (local) ---
   const client = await getOllamaClient()
   try {
     const completion = await client.chat.completions.create({
       model: OLLAMA_MODEL,
       messages,
-      temperature: 0.5, // model 3B nhỏ → nhiệt độ thấp để giảm "lan man"
+      temperature: 0.5,
       max_tokens: 1024,
       stream: false,
     })
@@ -112,12 +170,12 @@ export async function aiChat(messages: { role: 'user' | 'assistant'; content: st
   }
 }
 
-// Cho UI hiển thị provider hiện tại (gọi detect để probe)
+// Cho UI hiển thị provider hiện tại
 export async function getCurrentProvider(): Promise<{ provider: Provider; model: string }> {
   const provider = await detectProvider()
   return {
     provider,
-    model: provider === 'ollama' ? OLLAMA_MODEL : 'zai-default',
+    model: provider === 'openrouter' ? OPENROUTER_MODEL : provider === 'ollama' ? OLLAMA_MODEL : 'zai-default',
   }
 }
 

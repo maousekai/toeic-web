@@ -92,12 +92,47 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * Chat với ảnh (VLM) — dùng ZAI Vision API.
+ * Chat với ảnh (VLM) — thử OpenRouter → ZAI → Ollama llava.
  */
 async function aiChatWithImage(messages: { role: string; content: string }[], imageBase64: string): Promise<string> {
-  // Lấy câu hỏi cuối cùng của user
   const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user')?.content || 'Describe this image.'
+  const imageUrl = imageBase64.startsWith('data:') ? imageBase64 : `data:image/jpeg;base64,${imageBase64}`
+  const systemText = messages[0]?.content || ''
 
+  // --- Ưu tiên 1: OpenRouter (nếu có API key) ---
+  if (process.env.OPENROUTER_API_KEY) {
+    try {
+      const { default: OpenAI } = await import('openai')
+      const client = new OpenAI({
+        apiKey: process.env.OPENROUTER_API_KEY,
+        baseURL: 'https://openrouter.ai/api/v1',
+        defaultHeaders: {
+          'HTTP-Referer': process.env.NEXTAUTH_URL || 'http://localhost:3000',
+          'X-Title': 'TOEIC Ace AI',
+        },
+      })
+      // Dùng model vision-capable trên OpenRouter
+      const visionModel = process.env.OPENROUTER_VISION_MODEL || 'qwen/qwen-2.5-vl-72b-instruct:free'
+      const response = await client.chat.completions.create({
+        model: visionModel,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: `${systemText}\n\nUser question: ${lastUserMsg}` },
+              { type: 'image_url', image_url: { url: imageUrl } },
+            ],
+          },
+        ],
+      })
+      return response.choices[0]?.message?.content ?? ''
+    } catch (orErr: any) {
+      console.error('OpenRouter vision error, falling back:', orErr?.message)
+      // Fall through to next provider
+    }
+  }
+
+  // --- Ưu tiên 2: ZAI Vision ---
   try {
     const ZAI = (await import('z-ai-web-dev-sdk')).default
     const zai = await ZAI.create()
@@ -106,41 +141,43 @@ async function aiChatWithImage(messages: { role: string; content: string }[], im
         {
           role: 'user',
           content: [
-            { type: 'text', text: `${messages[0]?.content || ''}\n\nUser question: ${lastUserMsg}` },
-            { type: 'image_url', image_url: { url: imageBase64.startsWith('data:') ? imageBase64 : `data:image/jpeg;base64,${imageBase64}` } },
+            { type: 'text', text: `${systemText}\n\nUser question: ${lastUserMsg}` },
+            { type: 'image_url', image_url: { url: imageUrl } },
           ],
         },
       ],
       thinking: { type: 'disabled' },
     })
     return response.choices[0]?.message?.content ?? ''
-  } catch (zaiError: any) {
-    // Nếu chạy local không có .z-ai-config, fallback qua Ollama Vision (llava)
-    const { default: OpenAI } = await import('openai')
-    const client = new OpenAI({
-      apiKey: 'ollama',
-      baseURL: process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434/v1',
+  } catch {
+    // Fall through to Ollama
+  }
+
+  // --- Ưu tiên 3: Ollama llava (local) ---
+  const { default: OpenAI } = await import('openai')
+  const client = new OpenAI({
+    apiKey: 'ollama',
+    baseURL: process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434/v1',
+  })
+  try {
+    const response = await client.chat.completions.create({
+      model: 'llava',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: lastUserMsg },
+            { type: 'image_url', image_url: { url: imageUrl } },
+          ],
+        },
+      ],
     })
-    try {
-      const response = await client.chat.completions.create({
-        model: 'llava',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: lastUserMsg },
-              { type: 'image_url', image_url: { url: imageBase64.startsWith('data:') ? imageBase64 : `data:image/jpeg;base64,${imageBase64}` } },
-            ],
-          },
-        ],
-      })
-      return response.choices[0]?.message?.content ?? ''
-    } catch (ollamaErr: any) {
-      if (ollamaErr?.message?.includes('not found') || ollamaErr?.message?.includes('model')) {
-        throw new Error('Tính năng gửi ảnh khi chạy offline yêu cầu model AI Vision. Bạn hãy mở Terminal và chạy lệnh: `ollama pull llava` (khoảng 4GB) để cài đặt nhé!')
-      }
-      throw new Error(`Lỗi nhận diện ảnh (Offline): ${ollamaErr?.message || String(ollamaErr)}`)
+    return response.choices[0]?.message?.content ?? ''
+  } catch (ollamaErr: any) {
+    if (ollamaErr?.message?.includes('not found') || ollamaErr?.message?.includes('model')) {
+      throw new Error('Tính năng gửi ảnh yêu cầu model AI Vision. Chạy: `ollama pull llava` để cài đặt.')
     }
+    throw new Error(`Lỗi nhận diện ảnh: ${ollamaErr?.message || String(ollamaErr)}`)
   }
 }
 
