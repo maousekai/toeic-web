@@ -39,6 +39,7 @@ model User {
   messages        ChatMessage[]
   classAsTeacher  ClassSession[]      @relation("ClassTeacher")
   classAsStudent  ClassSession[]      @relation("ClassStudent")
+  vocabProgress   VocabProgress[]
 }
 
 model Teacher {
@@ -147,6 +148,7 @@ model Vocab {
   level        String   @default("A1")
   difficulty   Int      @default(1)
   createdAt    DateTime @default(now())
+  progress     VocabProgress[]
 }
 
 model GrammarLesson {
@@ -225,4 +227,19 @@ model TestAttempt {
   listeningScore   Int?
   readingScore     Int?
   learner          Learner   @relation(fields: [learnerId], references: [id])
+}
+
+model VocabProgress {
+  id        String   @id @default(cuid())
+  userId    String
+  vocabId   String
+  box       Int      @default(0)
+  dueAt     DateTime @default(now())
+  learnedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  vocab     Vocab    @relation(fields: [vocabId], references: [id])
+
+  @@unique([userId, vocabId])
 }

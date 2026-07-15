@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import {
   Volume2, RotateCcw, ChevronLeft, ChevronRight, Check, X, Layers, Brain,
-  Sparkles, TrendingUp,
+  Sparkles, TrendingUp, PartyPopper,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { BackButton } from '@/components/site/back-button'
+import { useAuth } from '@/lib/auth/use-auth'
 
 type Vocab = {
   id: string
@@ -37,9 +38,9 @@ const LEVELS = [
   { code: 'C2', name: 'Mastery', vn: 'Thành thạo', color: 'from-rose-400 to-rose-500', badge: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300', desc: 'TOEIC 900+ · Từ vựng chuyên sâu, trang trọng' },
 ] as const
 
-// SR state per vocab (spaced repetition)
+// SR state per vocab (spaced repetition) — localStorage fallback for anonymous users
 type SRState = Record<string, { box: number; due: number }>
-const BOX_INTERVALS = [0, 1, 2, 4, 7, 14] // days
+const BOX_INTERVALS = [0, 1, 2, 5, 5, 5] // days
 const STORAGE_KEY = 'toeic_sr_v2'
 
 function loadSR(): SRState {
@@ -52,13 +53,18 @@ function saveSR(s: SRState) {
 
 export function VocabFlashcards() {
   const { toast } = useToast()
-  const [selectedLevel, setSelectedLevel] = useState<string>('A1')
-  const [vocabs, setVocabs] = useState<Vocab[]>([])
+  const { user, isAuthenticated } = useAuth()
+  const [selectedLevel, setSelectedLevel] = useState<string>('A0')
+  const [allVocabs, setAllVocabs] = useState<Vocab[]>([]) // all vocabs for this level
+  const [dueVocabs, setDueVocabs] = useState<Vocab[]>([]) // filtered: only due vocabs
   const [counts, setCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [idx, setIdx] = useState(0)
   const [flipped, setFlipped] = useState(false)
-  const [sr, setSr] = useState<SRState>({})
+  const [sr, setSr] = useState<SRState>({}) // localStorage SR (anonymous only)
+  const [knownCount, setKnownCount] = useState(0) // number of mastered words for current level
+  const [grading, setGrading] = useState(false) // prevent double-click
+  const masteredIdsRef = useRef<Set<string>>(new Set())
 
   const fetchCounts = useCallback(async () => {
     try {
@@ -68,21 +74,61 @@ export function VocabFlashcards() {
     } catch {}
   }, [])
 
+  // Fetch progress from server (authenticated) or localStorage (anonymous)
+  const fetchProgress = useCallback(async (level: string): Promise<Set<string>> => {
+    if (isAuthenticated && user) {
+      try {
+        const res = await fetch(`/api/content/vocab/progress?level=${level}`)
+        const data = await res.json()
+        setKnownCount(data.knownCount || 0)
+        return new Set(data.masteredIds || [])
+      } catch {
+        return new Set()
+      }
+    } else {
+      // Anonymous: use localStorage
+      const srData = loadSR()
+      const now = Date.now()
+      const mastered = new Set<string>()
+      let known = 0
+      for (const [vocabId, state] of Object.entries(srData)) {
+        if (state.box > 0) known++
+        if (state.box > 0 && state.due > now) {
+          mastered.add(vocabId)
+        }
+      }
+      setKnownCount(known)
+      return mastered
+    }
+  }, [isAuthenticated, user])
+
   const fetchVocab = useCallback(async (level: string) => {
     setLoading(true)
-    const res = await fetch(`/api/content/vocab?level=${level}`)
-    const data = await res.json()
-    setVocabs(data.vocabs || [])
-    setIdx(0)
-    setFlipped(false)
+    try {
+      const res = await fetch(`/api/content/vocab?level=${level}`)
+      const data = await res.json()
+      const vocabs: Vocab[] = data.vocabs || []
+      setAllVocabs(vocabs)
+
+      // Fetch progress and filter
+      const mastered = await fetchProgress(level)
+      masteredIdsRef.current = mastered
+      const due = vocabs.filter((v) => !mastered.has(v.id))
+      setDueVocabs(due)
+      setIdx(0)
+      setFlipped(false)
+    } catch {
+      setAllVocabs([])
+      setDueVocabs([])
+    }
     setLoading(false)
-  }, [])
+  }, [fetchProgress])
 
   useEffect(() => { setSr(loadSR()) }, [])
   useEffect(() => { fetchCounts() }, [fetchCounts])
   useEffect(() => { fetchVocab(selectedLevel) }, [selectedLevel, fetchVocab])
 
-  const current = vocabs[idx]
+  const current = dueVocabs[idx]
 
   const speak = (text: string) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return
@@ -93,29 +139,86 @@ export function VocabFlashcards() {
     window.speechSynthesis.speak(u)
   }
 
-  const grade = (known: boolean) => {
-    if (!current) return
-    const newSr = { ...sr }
-    const cur = newSr[current.id] || { box: 0, due: 0 }
-    let box = cur.box
-    if (known) box = Math.min(box + 1, BOX_INTERVALS.length - 1)
-    else box = Math.max(box - 1, 0)
-    const intervalDays = BOX_INTERVALS[box]
-    newSr[current.id] = { box, due: Date.now() + intervalDays * 86400000 }
-    setSr(newSr)
-    saveSR(newSr)
-    toast({
-      title: known ? '✅ Đã ghi nhớ' : '🔄 Sẽ ôn lại sớm',
-      description: known ? `Box ${box + 1}/${BOX_INTERVALS.length}` : `Lùi về box ${box + 1}`,
-    })
-    setFlipped(false)
-    setTimeout(() => setIdx((i) => (i + 1) % Math.max(vocabs.length, 1)), 200)
+  const grade = async (known: boolean) => {
+    if (!current || grading) return
+    setGrading(true)
+
+    try {
+      if (isAuthenticated && user) {
+        // Save to database via API
+        const res = await fetch('/api/content/vocab/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ vocabId: current.id, known }),
+        })
+        const data = await res.json()
+        const box = data.progress?.box ?? 0
+        const intervalDays = data.progress?.intervalDays ?? 0
+
+        toast({
+          title: known ? '✅ Đã ghi nhớ' : '🔄 Sẽ ôn lại sớm',
+          description: known
+            ? `Ôn lại sau ${intervalDays} ngày`
+            : 'Từ này sẽ hiện lại ngay để bạn ôn tập',
+        })
+
+        if (known) {
+          // Update known count
+          setKnownCount((c) => c + 1)
+          // Remove this vocab from dueVocabs (it's now mastered)
+          setDueVocabs((prev) => {
+            const next = prev.filter((v) => v.id !== current.id)
+            // Adjust idx if needed
+            if (idx >= next.length && next.length > 0) {
+              setIdx(0)
+            }
+            return next
+          })
+        } else {
+          // Move to next card
+          setIdx((i) => (i + 1) % Math.max(dueVocabs.length, 1))
+        }
+      } else {
+        // Anonymous: save to localStorage
+        const newSr = { ...sr }
+        const cur = newSr[current.id] || { box: 0, due: 0 }
+        let box = cur.box
+        if (known) box = Math.min(box + 1, BOX_INTERVALS.length - 1)
+        else box = 0
+        const intervalDays = BOX_INTERVALS[box]
+        newSr[current.id] = { box, due: Date.now() + intervalDays * 86400000 }
+        setSr(newSr)
+        saveSR(newSr)
+
+        toast({
+          title: known ? '✅ Đã ghi nhớ' : '🔄 Sẽ ôn lại sớm',
+          description: known
+            ? `Ôn lại sau ${intervalDays} ngày`
+            : 'Từ này sẽ hiện lại ngay để bạn ôn tập',
+        })
+
+        if (known) {
+          setKnownCount((c) => c + 1)
+          setDueVocabs((prev) => {
+            const next = prev.filter((v) => v.id !== current.id)
+            if (idx >= next.length && next.length > 0) {
+              setIdx(0)
+            }
+            return next
+          })
+        } else {
+          setIdx((i) => (i + 1) % Math.max(dueVocabs.length, 1))
+        }
+      }
+    } finally {
+      setFlipped(false)
+      setGrading(false)
+    }
   }
 
-  const next = () => { setFlipped(false); setIdx((i) => (i + 1) % Math.max(vocabs.length, 1)) }
-  const prev = () => { setFlipped(false); setIdx((i) => (i - 1 + vocabs.length) % Math.max(vocabs.length, 1)) }
+  const next = () => { setFlipped(false); setIdx((i) => (i + 1) % Math.max(dueVocabs.length, 1)) }
+  const prev = () => { setFlipped(false); setIdx((i) => (i - 1 + dueVocabs.length) % Math.max(dueVocabs.length, 1)) }
 
-  const knownCount = Object.values(sr).filter((s) => s.box >= 4).length
   const levelConfig = LEVELS.find((l) => l.code === selectedLevel)!
 
   return (
@@ -179,7 +282,7 @@ export function VocabFlashcards() {
             </div>
             <div className="flex items-center gap-3 text-xs">
               <span className="flex items-center gap-1 text-muted-foreground">
-                <Layers className="h-3.5 w-3.5" /> {vocabs.length} từ
+                <Layers className="h-3.5 w-3.5" /> {allVocabs.length} từ
               </span>
               <span className="flex items-center gap-1 text-muted-foreground">
                 <Brain className="h-3.5 w-3.5" /> {knownCount} đã thuộc
@@ -192,25 +295,48 @@ export function VocabFlashcards() {
       {/* Flashcard */}
       {loading ? (
         <Card><CardContent className="flex h-72 items-center justify-center text-muted-foreground">Đang tải từ vựng...</CardContent></Card>
-      ) : vocabs.length === 0 ? (
+      ) : allVocabs.length === 0 ? (
         <Card><CardContent className="flex h-72 items-center justify-center text-muted-foreground">Chưa có từ vựng cho cấp độ này.</CardContent></Card>
+      ) : dueVocabs.length === 0 ? (
+        /* All words mastered for this level */
+        <Card>
+          <CardContent className="flex flex-col h-72 items-center justify-center gap-4 text-center">
+            <PartyPopper className="h-12 w-12 text-emerald-500" />
+            <div>
+              <h3 className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                🎉 Chúc mừng! Bạn đã thuộc tất cả từ vựng!
+              </h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {knownCount}/{allVocabs.length} từ đã thuộc ở level {selectedLevel}.
+                <br />Các từ sẽ tự động hiện lại khi đến hạn ôn tập.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchVocab(selectedLevel)}
+            >
+              <RotateCcw className="mr-1.5 h-3.5 w-3.5" /> Kiểm tra lại
+            </Button>
+          </CardContent>
+        </Card>
       ) : current ? (
         <>
           {/* Progress + counter */}
           <div className="flex items-center justify-between">
             <Badge variant="outline" className="gap-1">
-              <Sparkles className="h-3 w-3" /> Câu {idx + 1} / {vocabs.length}
+              <Sparkles className="h-3 w-3" /> Câu {idx + 1} / {dueVocabs.length}
             </Badge>
             <div className="flex-1 mx-4">
               <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
                 <div
                   className="h-full bg-primary transition-all"
-                  style={{ width: `${((idx + 1) / vocabs.length) * 100}%` }}
+                  style={{ width: `${((idx + 1) / dueVocabs.length) * 100}%` }}
                 />
               </div>
             </div>
             <Badge variant="secondary" className="gap-1">
-              <TrendingUp className="h-3 w-3" /> {Math.round(((idx + 1) / vocabs.length) * 100)}%
+              <TrendingUp className="h-3 w-3" /> {Math.round(((idx + 1) / dueVocabs.length) * 100)}%
             </Badge>
           </div>
 
@@ -278,6 +404,7 @@ export function VocabFlashcards() {
                 variant="outline"
                 className="flex-1 border-rose-300 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-900/20"
                 onClick={() => grade(false)}
+                disabled={grading}
               >
                 <X className="mr-1.5 h-4 w-4" /> Chưa thuộc
               </Button>
@@ -285,6 +412,7 @@ export function VocabFlashcards() {
                 variant="outline"
                 className="flex-1 border-emerald-300 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/20"
                 onClick={() => grade(true)}
+                disabled={grading}
               >
                 <Check className="mr-1.5 h-4 w-4" /> Đã thuộc
               </Button>
