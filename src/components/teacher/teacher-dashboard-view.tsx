@@ -20,6 +20,9 @@ import { BackButton } from '@/components/site/back-button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
+// ==========================================
+// GHI CHÚ: Component hiển thị bảng điều khiển (Dashboard) dành cho Giáo viên
+// ==========================================
 export function TeacherDashboardView() {
   const { navigate } = useRouter()
   const { user } = useAuth()
@@ -31,6 +34,7 @@ export function TeacherDashboardView() {
   const [earnings, setEarnings] = useState<any>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'earnings' | 'classes'>('overview')
 
+  // Hàm gọi API để lấy thông tin tổng quan, học viên và doanh thu của giáo viên
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
