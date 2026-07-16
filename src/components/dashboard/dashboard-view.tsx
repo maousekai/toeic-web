@@ -19,6 +19,7 @@ import {
   BarChart, Bar, Cell,
 } from 'recharts'
 
+// Định nghĩa kiểu dữ liệu cho mỗi lượt làm bài (Attempt) của người học
 type Attempt = {
   id: string
   testSetTitle: string | null
@@ -32,11 +33,15 @@ type Attempt = {
   startedAt: string
 }
 
+// Hàm hỗ trợ định dạng chuỗi ISO Date thành dạng chuỗi hiển thị ngắn (VD: "Jul 16")
 function fmtDate(iso: string) {
   const d = new Date(iso)
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+// ==========================================
+// GHI CHÚ: Component hiển thị trang Tổng quan (Dashboard) cho học viên học TOEIC
+// ==========================================
 export function DashboardView() {
   const { navigate } = useRouter()
   const { user, isLoading: authLoading } = useAuth()
@@ -45,6 +50,7 @@ export function DashboardView() {
   const [loading, setLoading] = useState(true)
   const [learnerId, setLearnerId] = useState('')
 
+  // Hiệu ứng gọi API để lấy danh sách lịch sử làm bài dựa trên ID người học
   useEffect(() => {
     if (authLoading) return
     const id = getLearnerId(user?.id)
@@ -55,6 +61,7 @@ export function DashboardView() {
       .finally(() => setLoading(false))
   }, [user?.id, authLoading])
 
+  // Lọc và tính toán các chỉ số thống kê (Điểm cao nhất, Điểm trung bình, Tỷ lệ chính xác)
   const scored = attempts.filter((a) => a.score !== null)
   const bestScore = scored.length ? Math.max(...scored.map((a) => a.score!)) : 0
   const avgScore = scored.length ? Math.round(scored.reduce((s, a) => s + (a.score || 0), 0) / scored.length) : 0
@@ -62,12 +69,12 @@ export function DashboardView() {
   const totalCorrect = attempts.reduce((s, a) => s + a.correctCount, 0)
   const accuracy = totalQuestions ? Math.round((totalCorrect / totalQuestions) * 100) : 0
 
+  // Chuẩn bị dữ liệu hiển thị lên biểu đồ Recharts (đảo ngược lịch sử để hiển thị theo thứ tự thời gian tăng dần)
   const chartData = [...scored].reverse().map((a, i) => ({
     name: `#${i + 1}`,
     score: a.score,
     date: fmtDate(a.startedAt),
   }))
-
   // Skill breakdown (listening vs reading correct where available)
   const lAttempts = attempts.filter((a) => a.listeningScore !== null)
   const rAttempts = attempts.filter((a) => a.readingScore !== null)
