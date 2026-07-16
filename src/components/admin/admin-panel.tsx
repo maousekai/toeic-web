@@ -24,7 +24,10 @@ const TAB_TITLES: Record<string, string> = {
   vocab: 'Quản lý Từ vựng',
   grammar: 'Quản lý Ngữ pháp',
 }
-
+/**
+ * Component chính: AdminPanel
+ * Vai trò: Quản lý trạng thái tab hiện tại và render giao diện tab tương ứng.
+ */
 export function AdminPanel() {
   const [activeTab, setActiveTab] = useState('dashboard')
   return (
