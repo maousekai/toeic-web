@@ -31,9 +31,9 @@ type Usage = {
   limit: number | null
   anonymous?: boolean
 }
-
+// Giới hạn số lượt chat miễn phí cho phép đối với tài khoản thường
 const FREE_LIMIT = 10
-
+// Danh sách các câu hỏi gợi ý nhanh (Suggestions) hiển thị cho người học TOEIC
 const SUGGESTIONS = [
   'Explain the difference between "since" and "for".',
   'Give me a tip for Part 2 listening questions.',
