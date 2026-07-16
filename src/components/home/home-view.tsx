@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { useRouter } from '@/lib/router'
 import { useAuth } from '@/lib/auth/use-auth'
 import { useAuthUI } from '@/lib/auth/auth-ui-context'
+import { useLanguage } from '@/lib/use-language'
 import Image from 'next/image'
 
 const features = [
@@ -36,10 +37,10 @@ const parts = [
 ]
 
 const stats = [
-  { value: '7', label: 'TOEIC parts covered' },
-  { value: '742+', label: 'Vocabulary words' },
-  { value: '10–990', label: 'Score estimate range' },
-  { value: '6', label: 'AI-powered tools' },
+  { value: '7', label: 'home.stats.parts' },
+  { value: '742+', label: 'home.stats.vocab' },
+  { value: '10–990', label: 'home.stats.score' },
+  { value: '6', label: 'home.stats.tools' },
 ]
 
 const testimonials = [
@@ -81,6 +82,7 @@ export function HomeView() {
   const { navigate } = useRouter()
   const { user } = useAuth()
   const { openAuth } = useAuthUI()
+  const { t } = useLanguage()
 
   const primaryCta = () => {
     if (user) navigate({ name: 'practice' })
@@ -107,29 +109,29 @@ export function HomeView() {
             >
               <Badge variant="secondary" className="mb-4 gap-1.5 rounded-full px-3 py-1 text-xs">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
-                AI-Powered TOEIC Preparation
+                {t('home.hero.badge')}
               </Badge>
               <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                Hãy chinh phục bài thi TOEIC cùng {' '}
+                {t('home.hero.title1')}
                 <span className="bg-gradient-to-r from-primary to-teal-500 bg-clip-text text-transparent">
-                  trợ lý AI của bạn
+                  {t('home.hero.title2')}
                 </span>
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground lg:mx-0">
-                Tất cả những gì bạn cần để đạt điểm cao trong bài thi TOEIC Nghe & Đọc với bài học đầy đủ, đề thi thực hành sát với thực tế, chấm điểm tức thì và trợ giảng AI giải thích từng câu trả lời.
+                {t('home.hero.desc')}
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
                 <Button size="lg" className="h-12 px-8 text-base" onClick={primaryCta}>
-                  {user ? 'Start a Free Practice Test' : 'Get Started — It\'s Free'}
+                  {user ? t('home.hero.btn_start') : t('home.hero.btn_started')}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <Button size="lg" variant="outline" className="h-12 px-8 text-base" onClick={() => navigate({ name: 'learn' })}>
                   <BookOpen className="mr-2 h-4 w-4" />
-                  Explore Lessons
+                  {t('home.hero.btn_explore')}
                 </Button>
               </div>
               <p className="mt-4 text-xs text-muted-foreground">
-                {user ? 'Welcome back — your progress is saved.' : 'No credit card required · Save progress across devices'}
+                {user ? t('home.hero.sub_welcome') : t('home.hero.sub_free')}
               </p>
 
               {/* Trust indicators */}
@@ -153,7 +155,7 @@ export function HomeView() {
                       <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                     ))}
                   </div>
-                  <p className="text-xs text-muted-foreground">Trusted by 1,000+ Vietnamese learners</p>
+                  <p className="text-xs text-muted-foreground">{t('home.hero.trusted')}</p>
                 </div>
               </div>
             </motion.div>
@@ -220,7 +222,7 @@ export function HomeView() {
                 </div>
                 <div>
                   <div className="text-sm font-bold leading-none">+295 pts</div>
-                  <div className="text-[10px] text-muted-foreground">Average improvement</div>
+                  <div className="text-[10px] text-muted-foreground">{t('home.hero.avg_improvement')}</div>
                 </div>
               </motion.div>
             </motion.div>
@@ -237,7 +239,7 @@ export function HomeView() {
               <Card key={s.label} className="border-border/60 text-center">
                 <CardContent className="pt-6">
                   <div className="text-3xl font-bold text-primary">{s.value}</div>
-                  <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">{t(s.label)}</div>
                 </CardContent>
               </Card>
             ))}
@@ -248,10 +250,10 @@ export function HomeView() {
       {/* ===== FEATURES ===== */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
-          <Badge variant="outline" className="mb-3">Features</Badge>
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">One platform, every TOEIC skill</h2>
+          <Badge variant="outline" className="mb-3">{t('home.features.badge')}</Badge>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{t('home.features.title')}</h2>
           <p className="mt-4 text-muted-foreground">
-            From grammar fundamentals to exam-day strategy, backed by AI at every step.
+            {t('home.features.desc')}
           </p>
         </div>
 
@@ -282,10 +284,10 @@ export function HomeView() {
       <section className="border-y border-border/60 bg-secondary/20">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
           <div className="mx-auto max-w-2xl text-center">
-            <Badge variant="outline" className="mb-3">Test Structure</Badge>
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">The 7 parts of the TOEIC test</h2>
+            <Badge variant="outline" className="mb-3">{t('home.structure.badge')}</Badge>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{t('home.structure.title')}</h2>
             <p className="mt-4 text-muted-foreground">
-              200 questions in 2 hours — 100 Listening (45 min) + 100 Reading (75 min).
+              {t('home.structure.desc')}
             </p>
           </div>
 
@@ -319,9 +321,9 @@ export function HomeView() {
             <Card className="flex h-full items-center justify-center border-dashed bg-background/50">
               <CardContent className="flex flex-col items-center gap-2 p-6 text-center">
                 <Brain className="h-8 w-8 text-primary" />
-                <p className="text-sm font-medium">Practice all parts with AI feedback</p>
+                <p className="text-sm font-medium">{t('home.structure.practice_all')}</p>
                 <Button size="sm" variant="ghost" onClick={() => navigate({ name: 'practice' })}>
-                  Try now <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                  {t('home.structure.try_now')} <ArrowRight className="ml-1 h-3.5 w-3.5" />
                 </Button>
               </CardContent>
             </Card>
@@ -374,29 +376,28 @@ export function HomeView() {
 
           {/* RIGHT — Text + features list */}
           <div className="order-1 lg:order-2">
-            <Badge variant="secondary" className="mb-3 gap-1.5"><Sparkles className="h-3.5 w-3.5" /> AI Tutoring</Badge>
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Your AI tutor never sleeps</h2>
+            <Badge variant="secondary" className="mb-3 gap-1.5"><Sparkles className="h-3.5 w-3.5" /> {t('home.ai.badge')}</Badge>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{t('home.ai.title')}</h2>
             <p className="mt-4 text-muted-foreground">
-              Stuck on a grammar rule at midnight? Need someone to explain why an answer is wrong?
-              Our AI tutor gives you instant, exam-focused guidance — in plain English.
+              {t('home.ai.desc')}
             </p>
             <ul className="mt-6 space-y-3">
               {[
-                'Ask any TOEIC question and get a clear explanation',
-                'AI explains why each option is right or wrong',
-                'Generate fresh practice questions on any topic',
-                'Get your writing corrected with friendly feedback',
-                'Receive a personalized week-by-week study plan',
-              ].map((t) => (
-                <li key={t} className="flex items-start gap-2.5">
+                'home.ai.feature1',
+                'home.ai.feature2',
+                'home.ai.feature3',
+                'home.ai.feature4',
+                'home.ai.feature5',
+              ].map((key) => (
+                <li key={key} className="flex items-start gap-2.5">
                   <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                  <span className="text-sm">{t}</span>
+                  <span className="text-sm">{t(key)}</span>
                 </li>
               ))}
             </ul>
             <Button className="mt-6" onClick={() => navigate({ name: 'tutor' })}>
               <MessageSquareText className="mr-2 h-4 w-4" />
-              Chat with the AI Tutor
+              {t('home.ai.btn')}
             </Button>
           </div>
         </div>
@@ -406,10 +407,10 @@ export function HomeView() {
       <section className="border-y border-border/60 bg-secondary/20">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
           <div className="mx-auto max-w-2xl text-center">
-            <Badge variant="outline" className="mb-3">Success Stories</Badge>
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Học viên nói gì về TOEIC Ace AI?</h2>
+            <Badge variant="outline" className="mb-3">{t('home.testimonials.badge')}</Badge>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{t('home.testimonials.title')}</h2>
             <p className="mt-4 text-muted-foreground">
-              Hàng ngàn học viên đã cải thiện điểm TOEIC chỉ trong vài tháng.
+              {t('home.testimonials.desc')}
             </p>
           </div>
 
@@ -480,22 +481,21 @@ export function HomeView() {
             </div>
             {/* Content side */}
             <CardContent className="flex flex-col justify-center gap-4 p-8 sm:p-12">
-              <Badge variant="secondary" className="w-fit gap-1.5"><Headphones className="h-3.5 w-3.5" /> Listening Practice</Badge>
-              <h3 className="text-2xl font-bold sm:text-3xl">Luyện Listening với audio MP3 thật</h3>
+              <Badge variant="secondary" className="w-fit gap-1.5"><Headphones className="h-3.5 w-3.5" /> {t('home.listening.badge')}</Badge>
+              <h3 className="text-2xl font-bold sm:text-3xl">{t('home.listening.title')}</h3>
               <p className="text-muted-foreground">
-                Đề thi có audio MP3 chuẩn ETS, giọng đọc y hệt phong độ thi thật. Part 1 có ảnh minh hoạ,
-                Part 2-4 có transcript để kiểm tra đáp án sau khi nộp bài.
+                {t('home.listening.desc')}
               </p>
               <ul className="space-y-2">
-                {['100 câu Listening đầy đủ (Part 1-4)', 'Audio MP3 chuẩn như thi thật', 'Exam Mode giả lập phòng thi', 'Transcript + giải thích từng câu'].map((t) => (
-                  <li key={t} className="flex items-center gap-2 text-sm">
+                {['home.listening.f1', 'home.listening.f2', 'home.listening.f3', 'home.listening.f4'].map((key) => (
+                  <li key={key} className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
-                    <span>{t}</span>
+                    <span>{t(key)}</span>
                   </li>
                 ))}
               </ul>
               <Button className="mt-2 w-fit" onClick={() => navigate({ name: 'practice' })}>
-                Luyện Listening ngay <ArrowRight className="ml-2 h-4 w-4" />
+                {t('home.listening.btn')} <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardContent>
           </div>
@@ -509,18 +509,18 @@ export function HomeView() {
           <CardContent className="relative flex flex-col items-center gap-6 p-10 text-center sm:p-16">
             <Trophy className="h-12 w-12" />
             <h2 className="max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
-              Ready to reach your target TOEIC score?
+              {t('home.cta.title')}
             </h2>
             <p className="max-w-xl text-primary-foreground/80">
-              Take a mock test, review every answer with AI, and build the skills that move your score up.
+              {t('home.cta.desc')}
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button size="lg" variant="secondary" className="h-12 px-8 text-base" onClick={() => navigate({ name: 'practice' })}>
-                Take a Mock Test
+                {t('home.cta.btn_test')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <Button size="lg" variant="outline" className="h-12 border-primary-foreground/30 bg-transparent px-8 text-base text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" onClick={() => navigate({ name: 'learn' })}>
-                Browse Lessons
+                {t('home.cta.btn_lessons')}
               </Button>
             </div>
           </CardContent>

@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { useRouter } from '@/lib/router'
 import { useAuth } from '@/lib/auth/use-auth'
 import { useAuthUI } from '@/lib/auth/auth-ui-context'
+import { useLanguage } from '@/lib/use-language'
 import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -46,6 +47,7 @@ export function PracticeList() {
   const { navigate } = useRouter()
   const { user } = useAuth()
   const { openAuth } = useAuthUI()
+  const { t } = useLanguage()
   const { toast } = useToast()
   const [tests, setTests] = useState<TestSet[]>([])
   const [loading, setLoading] = useState(true)
@@ -119,10 +121,9 @@ export function PracticeList() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Luyện Thi TOEIC</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('practice.header.title')}</h1>
         <p className="mt-2 text-muted-foreground">
-          Chọn bộ đề phù hợp với mục tiêu của bạn. Có 2 chế độ: <strong>luyện tập</strong> (xem transcript, nghe lại)
-          và <strong>thi thật</strong> (mô phỏng phòng thi, nghiêm ngặt).
+          {t('practice.header.desc')}
         </p>
       </div>
 
@@ -135,10 +136,10 @@ export function PracticeList() {
             </div>
             <div>
               <h2 className="text-xl font-bold flex items-center gap-2">
-                🎧 Đề TOEIC Listening (Audio MP3 thật)
+                🎧 {t('practice.listening.title')}
                 <Badge className="gap-1 bg-amber-500/15 text-amber-600"><Crown className="h-3 w-3" /> VIP</Badge>
               </h2>
-              <p className="text-xs text-muted-foreground">Đề thi thật TOEIC Listening — Parts 1-4 với file audio MP3 (cần VIP)</p>
+              <p className="text-xs text-muted-foreground">{t('practice.listening.desc')}</p>
             </div>
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -327,10 +328,10 @@ export function PracticeList() {
             </div>
             <div>
               <h2 className="text-xl font-bold flex items-center gap-2">
-                📖 Đề TOEIC Reading Đầy Đủ (100 câu)
+                📖 {t('practice.reading.title')}
                 <Badge className="gap-1 bg-amber-500/15 text-amber-600"><Crown className="h-3 w-3" /> VIP</Badge>
               </h2>
-              <p className="text-xs text-muted-foreground">Đề thi thật TOEIC Reading — Part 5, 6, 7 với 100 câu hỏi + giải thích chi tiết (cần VIP)</p>
+              <p className="text-xs text-muted-foreground">{t('practice.reading.desc')}</p>
             </div>
           </div>
 
@@ -407,8 +408,8 @@ export function PracticeList() {
               <Trophy className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-xl font-bold">🎯 Chế độ Thi Thật (Exam Simulation)</h2>
-              <p className="text-xs text-muted-foreground">Mô phỏng phòng thi TOEIC thật — làm nghiêm túc để đánh giá chính xác năng lực</p>
+              <h2 className="text-xl font-bold">🎯 {t('practice.exam.title')}</h2>
+              <p className="text-xs text-muted-foreground">{t('practice.exam.desc')}</p>
             </div>
           </div>
 
@@ -474,8 +475,8 @@ export function PracticeList() {
               <BookOpen className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-xl font-bold">📚 Đề ETS TOEIC (từ Google Drive)</h2>
-              <p className="text-xs text-muted-foreground">Bộ đề ETS chính thức — xem đề + nghe audio + tải đáp án ngay trên web</p>
+              <h2 className="text-xl font-bold">📚 {t('practice.ets.title')}</h2>
+              <p className="text-xs text-muted-foreground">{t('practice.ets.desc')}</p>
             </div>
           </div>
 
@@ -562,10 +563,10 @@ export function PracticeList() {
         </div>
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2">
-            📚 Chế độ Luyện Tập (Practice Mode)
-            <Badge variant="outline" className="gap-1 border-emerald-500/30 bg-emerald-500/10 text-emerald-600"><CheckCircle2 className="h-3 w-3" /> FREE</Badge>
+            📚 {t('practice.practice.title')}
+            <Badge variant="outline" className="gap-1 border-emerald-500/30 bg-emerald-500/10 text-emerald-600"><CheckCircle2 className="h-3 w-3" /> {t('practice.labels.free')}</Badge>
           </h2>
-          <p className="text-xs text-muted-foreground">Tự do luyện từng part — có transcript, nghe lại, xem gợi ý (miễn phí, không cần VIP)</p>
+          <p className="text-xs text-muted-foreground">{t('practice.practice.desc')}</p>
         </div>
       </div>
 
@@ -610,10 +611,10 @@ export function PracticeList() {
             <ArrowRight className="h-6 w-6" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold">Muốn luyện thêm câu hỏi mới?</h3>
-            <p className="text-sm text-muted-foreground">Dùng AI Question Generator để tạo câu hỏi theo chủ đề bạn muốn.</p>
+            <h3 className="font-semibold">{t('practice.ai.title')}</h3>
+            <p className="text-sm text-muted-foreground">{t('practice.ai.desc')}</p>
           </div>
-          <Button variant="outline" onClick={() => navigate({ name: 'tools' })}>Mở AI Tools</Button>
+          <Button variant="outline" onClick={() => navigate({ name: 'tools' })}>{t('practice.ai.btn')}</Button>
         </CardContent>
       </Card>
 

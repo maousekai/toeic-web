@@ -8,6 +8,7 @@ import { useRouter, type View } from '@/lib/router'
 import { useAuth } from '@/lib/auth/use-auth'
 import { useAuthUI } from '@/lib/auth/auth-ui-context'
 import { BackButton } from '@/components/site/back-button'
+import { useLanguage } from '@/lib/use-language'
 import { GrammarList } from './grammar-list'
 import { GrammarDetail } from './grammar-detail'
 import { VocabFlashcards } from './vocab-flashcards'
@@ -18,6 +19,7 @@ export function LearnView() {
   const { view, navigate } = useRouter()
   const { user } = useAuth()
   const { openAuth } = useAuthUI()
+  const { t } = useLanguage()
 
   // Helper: yêu cầu login trước khi navigate
   const requireAuth = (targetView: View, featureName: string) => {
@@ -44,21 +46,21 @@ export function LearnView() {
   }
 
   const hubCards = [
-    { icon: BookOpen, title: 'Grammar Lessons', desc: 'Clear explanations of the grammar points tested on the TOEIC, with examples and audio.', cta: 'Browse lessons', view: 'grammar' as const, needAuth: true, image: '/images/learn/grammarnew.jpg' },
-    { icon: Brain, title: 'Vocabulary Flashcards', desc: 'Flip, listen and review high-frequency business English words with spaced repetition.', cta: 'Start flashcards', view: 'vocab' as const, needAuth: true, image: '/images/learn/vocab.jpg' },
-    { icon: Mic, title: 'Luyện phát âm', desc: 'Nghe câu mẫu, ghi âm giọng nói, nhận feedback AI chi tiết về phát âm, trọng âm, ngữ điệu.', cta: 'Luyện ngay', view: 'pronunciation' as const, needAuth: true, image: '/images/learn/pronunciationnew.jpg' },
-    { icon: Lightbulb, title: 'Test Strategies', desc: 'Section-by-section tactics for Listening and Reading — plus test-day tips.', cta: 'See strategies', view: 'strategies' as const, needAuth: false, image: '/images/learn/strategies.jpg' },
-    { icon: PenLine, title: 'AI Writing Check', desc: 'Get your sentences corrected instantly by AI and learn from the feedback.', cta: 'Try AI tools', view: 'tools' as const, needAuth: true, image: '/images/ai/writing.jpg' },
+    { icon: BookOpen, title: 'learn.hub.grammar.title', desc: 'learn.hub.grammar.desc', cta: 'learn.hub.grammar.cta', view: 'grammar' as const, needAuth: true, image: '/images/learn/grammarnew.jpg' },
+    { icon: Brain, title: 'learn.hub.vocab.title', desc: 'learn.hub.vocab.desc', cta: 'learn.hub.vocab.cta', view: 'vocab' as const, needAuth: true, image: '/images/learn/vocab.jpg' },
+    { icon: Mic, title: 'learn.hub.pronun.title', desc: 'learn.hub.pronun.desc', cta: 'learn.hub.pronun.cta', view: 'pronunciation' as const, needAuth: true, image: '/images/learn/pronunciationnew.jpg' },
+    { icon: Lightbulb, title: 'learn.hub.strat.title', desc: 'learn.hub.strat.desc', cta: 'learn.hub.strat.cta', view: 'strategies' as const, needAuth: false, image: '/images/learn/strategies.jpg' },
+    { icon: PenLine, title: 'learn.hub.writing.title', desc: 'learn.hub.writing.desc', cta: 'learn.hub.writing.cta', view: 'tools' as const, needAuth: true, image: '/images/ai/writing.jpg' },
   ]
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <BackButton targetView={{ name: 'home' }} label="Trang chủ" />
+      <BackButton targetView={{ name: 'home' }} label={t('learn.back_home')} />
       {/* Hub header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Learning Center</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('learn.header.title')}</h1>
         <p className="mt-2 text-muted-foreground">
-          Build the skills behind a high TOEIC score — grammar, vocabulary and exam strategy.
+          {t('learn.header.desc')}
         </p>
       </div>
 
@@ -97,13 +99,13 @@ export function LearnView() {
             <CardContent className="p-5">
               {/* Đưa tiêu đề xuống đây, thêm hiệu ứng đổi màu khi hover vào card */}
               <CardTitle className="text-base font-bold text-foreground mb-2 transition-colors group-hover:text-primary">
-                {c.title}
+                {t(c.title)}
               </CardTitle>
 
-              <CardDescription className="text-sm leading-relaxed">{c.desc}</CardDescription>
+              <CardDescription className="text-sm leading-relaxed">{t(c.desc)}</CardDescription>
 
               <div className="mt-4 flex items-center text-sm font-medium text-primary">
-                {c.cta} <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-1" />
+                {t(c.cta)} <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-1" />
               </div>
             </CardContent>
           </Card>
@@ -114,8 +116,8 @@ export function LearnView() {
       <div id="learning-content" className="scroll-mt-6">
         <Tabs value={['grammar', 'strategies'].includes(view.name) ? view.name : 'grammar'} onValueChange={(val) => navigate({ name: val as View['name'] })}>
           <TabsList>
-            <TabsTrigger value="grammar" className="gap-1.5"><BookOpen className="h-4 w-4" /> Grammar</TabsTrigger>
-            <TabsTrigger value="strategies" className="gap-1.5"><Lightbulb className="h-4 w-4" /> Strategies</TabsTrigger>
+            <TabsTrigger value="grammar" className="gap-1.5"><BookOpen className="h-4 w-4" /> {t('learn.tabs.grammar')}</TabsTrigger>
+            <TabsTrigger value="strategies" className="gap-1.5"><Lightbulb className="h-4 w-4" /> {t('learn.tabs.strategies')}</TabsTrigger>
           </TabsList>
           <TabsContent value="grammar" className="mt-6"><GrammarList /></TabsContent>
           <TabsContent value="strategies" className="mt-6"><StrategiesView /></TabsContent>
@@ -126,25 +128,23 @@ export function LearnView() {
       <Card className="mt-10 border-primary/20 bg-secondary/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <GraduationCap className="h-5 w-5 text-primary" /> What is the TOEIC test?
+            <GraduationCap className="h-5 w-5 text-primary" /> {t('learn.overview.title')}
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div>
             <p className="text-sm text-muted-foreground">
-              The <strong>TOEIC</strong> (Test of English for International Communication) measures everyday English
-              skills used in the workplace. The Listening &amp; Reading test lasts 2 hours and contains 200
-              multiple-choice questions.
+              {t('learn.overview.desc')}
             </p>
             <ul className="mt-3 space-y-1.5 text-sm">
-              <li className="flex items-center gap-2"><Headphones className="h-4 w-4 text-teal-500" /> Listening: 100 questions · 45 min</li>
-              <li className="flex items-center gap-2"><FileText className="h-4 w-4 text-amber-500" /> Reading: 100 questions · 75 min</li>
-              <li className="flex items-center gap-2"><GraduationCap className="h-4 w-4 text-primary" /> Score range: 10 – 990</li>
+              <li className="flex items-center gap-2"><Headphones className="h-4 w-4 text-teal-500" /> {t('learn.overview.listening')}</li>
+              <li className="flex items-center gap-2"><FileText className="h-4 w-4 text-amber-500" /> {t('learn.overview.reading')}</li>
+              <li className="flex items-center gap-2"><GraduationCap className="h-4 w-4 text-primary" /> {t('learn.overview.score')}</li>
             </ul>
           </div>
           <div className="flex flex-col justify-center gap-3">
-            <Button onClick={() => navigate({ name: 'practice' })}>Take a practice test <ArrowRight className="ml-1.5 h-4 w-4" /></Button>
-            <Button variant="outline" onClick={() => navigate({ name: 'tutor' })}>Ask the AI tutor</Button>
+            <Button onClick={() => navigate({ name: 'practice' })}>{t('learn.overview.btn_test')} <ArrowRight className="ml-1.5 h-4 w-4" /></Button>
+            <Button variant="outline" onClick={() => navigate({ name: 'tutor' })}>{t('learn.overview.btn_ai')}</Button>
           </div>
         </CardContent>
       </Card>
