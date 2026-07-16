@@ -17,24 +17,30 @@ import {
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
+// Định nghĩa kiểu dữ liệu cho một câu hỏi bài tập ngữ pháp
 type Exercise = {
   id: string
   question: string
   options: string[]
-  answer: number
-  explanation: string
+  answer: number // Chỉ mục (index) của đáp án đúng (0 = A, 1 = B, 2 = C,...)
+  explanation: string // Lời giải thích chi tiết đáp án
   order: number
 }
 
+// Phân định 2 trạng thái của bài tập: 'doing' (đang làm) và 'submitted' (đã nộp bài)
 type Phase = 'doing' | 'submitted'
 
+// ==========================================
+// GHI CHÚ: Component chính thực hiện hiển thị bài tập ngữ pháp theo từng slug bài viết
+// ==========================================
 export function GrammarExercise({ slug }: { slug: string }) {
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [loading, setLoading] = useState(true)
-  const [answers, setAnswers] = useState<Record<string, number | null>>({})
+  const [answers, setAnswers] = useState<Record<string, number | null>>({}) // Lưu các đáp án người dùng đã chọn (key: exercise.id, value: index đáp án)
   const [phase, setPhase] = useState<Phase>('doing')
-  const [current, setCurrent] = useState(0)
+  const [current, setCurrent] = useState(0) // Câu hỏi hiện tại đang hiển thị trong giao diện 'doing'
 
+  // Tải danh sách câu hỏi dựa theo slug của bài học
   useEffect(() => {
     setLoading(true)
     setPhase('doing')
@@ -51,16 +57,19 @@ export function GrammarExercise({ slug }: { slug: string }) {
       .finally(() => setLoading(false))
   }, [slug])
 
+  // Tính toán số câu đã làm, số câu làm đúng và quy đổi ra điểm số hệ 100
   const answeredCount = Object.values(answers).filter((v) => v !== null).length
   const correctCount = exercises.filter((e) => answers[e.id] === e.answer).length
   const score = exercises.length > 0 ? Math.round((correctCount / exercises.length) * 100) : 0
 
+  // Xử lý nộp bài tập, chuyển trạng thái và cuộn mượt (smooth scroll) lên đầu vùng làm bài
   const handleSubmit = useCallback(() => {
     setPhase('submitted')
     setCurrent(0)
     window.scrollTo({ top: document.getElementById('exercise-section')?.offsetTop || 0, behavior: 'smooth' })
   }, [])
 
+  // Đặt lại bài tập về trạng thái ban đầu để làm lại từ đầu
   const reset = () => {
     setPhase('doing')
     const init: Record<string, number | null> = {}
@@ -69,6 +78,7 @@ export function GrammarExercise({ slug }: { slug: string }) {
     setCurrent(0)
   }
 
+  // Hiển thị trạng thái chờ tải (Skeleton) trong lúc lấy dữ liệu từ API
   if (loading) {
     return (
       <Card>
@@ -80,11 +90,15 @@ export function GrammarExercise({ slug }: { slug: string }) {
     )
   }
 
+  // Nếu bài học hiện tại không có câu hỏi nào thì không render component
   if (exercises.length === 0) {
     return null
   }
 
-  // ===== SUBMITTED PHASE: Results =====
+  // ==========================================
+  // PHẦN 1: Giao diện kết quả (SUBMITTED PHASE)
+  // Hiển thị tổng số câu đúng, tỷ lệ phần trăm và đáp án chi tiết kèm lời giải từng câu
+  // ==========================================
   if (phase === 'submitted') {
     return (
       <motion.div id="exercise-section" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
@@ -118,7 +132,7 @@ export function GrammarExercise({ slug }: { slug: string }) {
           </CardContent>
         </Card>
 
-        {/* Review all answers */}
+        {/* Danh sách hiển thị lời giải chi tiết cho tất cả các câu đã nộp */}
         <div className="mt-4 space-y-4">
           {exercises.map((ex, i) => {
             const userAns = answers[ex.id]
@@ -162,7 +176,7 @@ export function GrammarExercise({ slug }: { slug: string }) {
                       </div>
                     )
                   })}
-                  {/* Explanation */}
+                  {/* Hộp hiển thị phần giải thích (Explanation) sau khi đã làm bài */}
                   <div className="mt-2 rounded-lg bg-primary/5 border border-primary/20 p-3">
                     <p className="text-xs"><span className="font-semibold text-primary">💡 Giải thích: </span>{ex.explanation}</p>
                   </div>
@@ -179,7 +193,10 @@ export function GrammarExercise({ slug }: { slug: string }) {
     )
   }
 
-  // ===== DOING PHASE: One question at a time =====
+  // ==========================================
+  // PHẦN 2: Giao diện làm bài (DOING PHASE)
+  // Cho phép người dùng trả lời từng câu một bằng cơ chế chuyển câu linh hoạt
+  // ==========================================
   const ex = exercises[current]
   const isLast = current === exercises.length - 1
 
@@ -210,7 +227,7 @@ export function GrammarExercise({ slug }: { slug: string }) {
         </Card>
       </motion.div>
 
-      {/* Progress bar */}
+      {/* Thanh tiến trình dạng đốt (Progress segment bar) giúp nhảy nhanh đến câu tùy ý */}
       <div className="mt-3 flex gap-1">
         {exercises.map((q, i) => {
           const ans = answers[q.id]
@@ -228,7 +245,7 @@ export function GrammarExercise({ slug }: { slug: string }) {
         })}
       </div>
 
-      {/* Question card */}
+      {/* Thẻ hiển thị nội dung câu hỏi hiện tại */}
       <Card className="mt-4">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -269,7 +286,7 @@ export function GrammarExercise({ slug }: { slug: string }) {
         </CardContent>
       </Card>
 
-      {/* Navigation */}
+      {/* Điều hướng và Nút nộp bài tập */}
       <div className="mt-4 flex items-center justify-between gap-3">
         <Button
           variant="outline"
@@ -291,6 +308,7 @@ export function GrammarExercise({ slug }: { slug: string }) {
           )}
         </div>
 
+        {/* Nếu ở câu cuối cùng, hiển thị nút "Nộp bài" đi kèm một hộp thoại cảnh báo (AlertDialog) phòng ngừa nộp thiếu câu */}
         {isLast ? (
           <AlertDialog>
             <AlertDialogTrigger asChild>

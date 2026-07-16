@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils'
 import { BackButton } from '@/components/site/back-button'
 import { useAuth } from '@/lib/auth/use-auth'
 
+// Định nghĩa kiểu dữ liệu cho một từ vựng (Vocab)
 type Vocab = {
   id: string
   word: string
@@ -27,7 +28,7 @@ type Vocab = {
   difficulty: number
 }
 
-// CEFR levels config
+// Cấu hình các cấp độ từ vựng theo khung tham chiếu ngôn ngữ chung Châu Âu (CEFR)
 const LEVELS = [
   { code: 'A0', name: 'Pre-Beginner', vn: 'Tiền sơ cấp', color: 'from-slate-400 to-slate-500', badge: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300', desc: 'Từ vựng cơ bản nhất: số, màu, ngày, gia đình' },
   { code: 'A1', name: 'Beginner', vn: 'Sơ cấp', color: 'from-emerald-400 to-emerald-500', badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300', desc: 'Giao tiếp cơ bản, đời sống hàng ngày' },
@@ -38,34 +39,41 @@ const LEVELS = [
   { code: 'C2', name: 'Mastery', vn: 'Thành thạo', color: 'from-rose-400 to-rose-500', badge: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300', desc: 'TOEIC 900+ · Từ vựng chuyên sâu, trang trọng' },
 ] as const
 
-// SR state per vocab (spaced repetition) — localStorage fallback for anonymous users
+// Quản lý trạng thái Ôn tập gián đoạn (Spaced Repetition - SR) cho người dùng ẩn danh qua localStorage
 type SRState = Record<string, { box: number; due: number }>
-const BOX_INTERVALS = [0, 1, 2, 5, 5, 5] // days
+const BOX_INTERVALS = [0, 1, 2, 5, 5, 5] // Số ngày giãn cách tương ứng với từng hộp (hộp càng cao thời gian ôn tập lại càng lâu)
 const STORAGE_KEY = 'toeic_sr_v2'
 
+// Tải trạng thái SR từ localStorage của trình duyệt
 function loadSR(): SRState {
   if (typeof window === 'undefined') return {}
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') } catch { return {} }
 }
+
+// Lưu trạng thái SR mới vào localStorage của trình duyệt
 function saveSR(s: SRState) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s))
 }
 
+// ==========================================
+// GHI CHÚ: Component chính thực hiện học từ vựng qua thẻ Flashcard chuẩn học thuật
+// ==========================================
 export function VocabFlashcards() {
   const { toast } = useToast()
   const { user, isAuthenticated } = useAuth()
   const [selectedLevel, setSelectedLevel] = useState<string>('A0')
-  const [allVocabs, setAllVocabs] = useState<Vocab[]>([]) // all vocabs for this level
-  const [dueVocabs, setDueVocabs] = useState<Vocab[]>([]) // filtered: only due vocabs
-  const [counts, setCounts] = useState<Record<string, number>>({})
+  const [allVocabs, setAllVocabs] = useState<Vocab[]>([]) // Danh sách toàn bộ từ vựng thuộc cấp độ đã chọn
+  const [dueVocabs, setDueVocabs] = useState<Vocab[]>([]) // Danh sách từ vựng cần ôn tập hoặc chưa thuộc
+  const [counts, setCounts] = useState<Record<string, number>>({}) // Đếm tổng số từ vựng của từng cấp độ
   const [loading, setLoading] = useState(true)
-  const [idx, setIdx] = useState(0)
-  const [flipped, setFlipped] = useState(false)
-  const [sr, setSr] = useState<SRState>({}) // localStorage SR (anonymous only)
-  const [knownCount, setKnownCount] = useState(0) // number of mastered words for current level
-  const [grading, setGrading] = useState(false) // prevent double-click
+  const [idx, setIdx] = useState(0) // Vị trí thẻ từ vựng hiện tại đang hiển thị
+  const [flipped, setFlipped] = useState(false) // Trạng thái lật thẻ (Mặt trước/Mặt sau)
+  const [sr, setSr] = useState<SRState>({}) // Trạng thái ôn tập gián đoạn của người dùng ẩn danh
+  const [knownCount, setKnownCount] = useState(0) // Số từ vựng đã ghi nhớ thành công
+  const [grading, setGrading] = useState(false) // Cờ chặn việc nhấp chuột liên tục khi đánh giá từ
   const masteredIdsRef = useRef<Set<string>>(new Set())
 
+  // Tải thống kê tổng số lượng từ vựng của từng cấp độ từ API
   const fetchCounts = useCallback(async () => {
     try {
       const res = await fetch('/api/content/vocab/counts')
@@ -74,7 +82,7 @@ export function VocabFlashcards() {
     } catch {}
   }, [])
 
-  // Fetch progress from server (authenticated) or localStorage (anonymous)
+  // Khôi phục dữ liệu tiến trình học từ Server (nếu đã đăng nhập) hoặc từ LocalStorage (nếu là khách)
   const fetchProgress = useCallback(async (level: string): Promise<Set<string>> => {
     if (isAuthenticated && user) {
       try {
@@ -86,7 +94,6 @@ export function VocabFlashcards() {
         return new Set()
       }
     } else {
-      // Anonymous: use localStorage
       const srData = loadSR()
       const now = Date.now()
       const mastered = new Set<string>()
@@ -102,6 +109,7 @@ export function VocabFlashcards() {
     }
   }, [isAuthenticated, user])
 
+  // Lấy danh sách từ vựng của cấp độ được chọn và lọc bỏ những từ đã thuộc hoàn toàn
   const fetchVocab = useCallback(async (level: string) => {
     setLoading(true)
     try {
@@ -110,7 +118,6 @@ export function VocabFlashcards() {
       const vocabs: Vocab[] = data.vocabs || []
       setAllVocabs(vocabs)
 
-      // Fetch progress and filter
       const mastered = await fetchProgress(level)
       masteredIdsRef.current = mastered
       const due = vocabs.filter((v) => !mastered.has(v.id))
@@ -130,6 +137,7 @@ export function VocabFlashcards() {
 
   const current = dueVocabs[idx]
 
+  // Sử dụng thư viện giọng nói tích hợp sẵn của trình duyệt (Speech Synthesis) để phát âm từ vựng tiếng Anh
   const speak = (text: string) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return
     const u = new SpeechSynthesisUtterance(text)
@@ -139,13 +147,13 @@ export function VocabFlashcards() {
     window.speechSynthesis.speak(u)
   }
 
+  // Ghi nhận kết quả học ("Đã thuộc" hoặc "Chưa thuộc") và cập nhật khoảng thời gian lặp lại của từ vựng
   const grade = async (known: boolean) => {
     if (!current || grading) return
     setGrading(true)
 
     try {
       if (isAuthenticated && user) {
-        // Save to database via API
         const res = await fetch('/api/content/vocab/progress', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -163,23 +171,18 @@ export function VocabFlashcards() {
         })
 
         if (known) {
-          // Update known count
           setKnownCount((c) => c + 1)
-          // Remove this vocab from dueVocabs (it's now mastered)
           setDueVocabs((prev) => {
             const next = prev.filter((v) => v.id !== current.id)
-            // Adjust idx if needed
             if (idx >= next.length && next.length > 0) {
               setIdx(0)
             }
             return next
           })
         } else {
-          // Move to next card
           setIdx((i) => (i + 1) % Math.max(dueVocabs.length, 1))
         }
       } else {
-        // Anonymous: save to localStorage
         const newSr = { ...sr }
         const cur = newSr[current.id] || { box: 0, due: 0 }
         let box = cur.box

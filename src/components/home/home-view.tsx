@@ -15,6 +15,7 @@ import { useAuthUI } from '@/lib/auth/auth-ui-context'
 import { useLanguage } from '@/lib/use-language'
 import Image from 'next/image'
 
+// Git trigger update: Updated UI feature lists spacing 
 const features = [
   { icon: BookOpen, title: 'Complete TOEIC Curriculum', desc: 'Grammar lessons, vocabulary flashcards and proven strategies for all 7 parts of the test.', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
   { icon: ClipboardCheck, title: 'Full Practice Tests', desc: 'Part-specific drills and a 40-question mock test with a realistic timer, just like exam day.', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
