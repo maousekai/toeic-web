@@ -64,6 +64,7 @@ export function TestEngine({ testSetId, mode = 'practice' }: { testSetId: string
   const [loading, setLoading] = useState(true)
   const [current, setCurrent] = useState(0)
   const [answers, setAnswers] = useState<Record<string, number | null>>({})
+  const [marked, setMarked] = useState<Record<string, boolean>>({})
   const [timeLeft, setTimeLeft] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [showWarning5min, setShowWarning5min] = useState(false)
@@ -421,6 +422,16 @@ export function TestEngine({ testSetId, mode = 'practice' }: { testSetId: string
             <Button variant="outline" disabled={current === 0} onClick={() => setCurrent((c) => Math.max(0, c - 1))}>
               <ChevronLeft className="mr-1 h-4 w-4" /> Previous
             </Button>
+            
+            <Button 
+              variant={marked[q.id] ? "default" : "outline"} 
+              size="sm"
+              className={marked[q.id] ? "bg-amber-500 hover:bg-amber-600 text-white" : "text-amber-600 border-amber-500/30 hover:bg-amber-50/50 dark:hover:bg-amber-500/10"}
+              onClick={() => setMarked(m => ({...m, [q.id]: !m[q.id]}))}
+            >
+              <Flag className="mr-1 h-4 w-4" /> {marked[q.id] ? 'Bỏ đánh dấu' : 'Đánh dấu xem lại'}
+            </Button>
+
             {current < questions.length - 1 ? (
               <Button onClick={() => setCurrent((c) => Math.min(questions.length - 1, c + 1))}>
                 Next <ChevronRight className="ml-1 h-4 w-4" />
@@ -472,6 +483,7 @@ export function TestEngine({ testSetId, mode = 'practice' }: { testSetId: string
               <div className="grid grid-cols-5 gap-1.5">
                 {questions.map((qq, i) => {
                   const ans = answers[qq.id]
+                  const isMarked = marked[qq.id]
                   return (
                     <button
                       key={qq.id}
@@ -479,11 +491,10 @@ export function TestEngine({ testSetId, mode = 'practice' }: { testSetId: string
                       className={`flex h-8 items-center justify-center rounded-md text-xs font-medium transition-colors ${
                         i === current
                           ? 'bg-primary text-primary-foreground'
-                          : isExam
-                          // EXAM: không highlight answered (chỉ current) — tăng căng thẳng
-                          ? 'bg-secondary text-muted-foreground hover:bg-accent'
+                          : isMarked
+                          ? 'bg-amber-500 text-white hover:bg-amber-600'
                           : ans !== null && ans !== undefined
-                          ? 'bg-primary/15 text-primary'
+                          ? 'bg-primary/20 text-primary hover:bg-primary/30'
                           : 'bg-secondary text-muted-foreground hover:bg-accent'
                       }`}
                       aria-label={`Go to question ${i + 1}`}
@@ -494,19 +505,10 @@ export function TestEngine({ testSetId, mode = 'practice' }: { testSetId: string
                 })}
               </div>
               <div className="mt-4 space-y-1.5 text-xs text-muted-foreground">
-                {isExam ? (
-                  <>
-                    <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-primary" /> Câu hiện tại</div>
-                    <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-secondary" /> Các câu khác</div>
-                    <p className="mt-2 italic text-[10px]">Ẩn trạng thái đã trả lời để mô phỏng thi thật</p>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-primary" /> Current</div>
-                    <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-primary/30" /> Answered</div>
-                    <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-secondary" /> Unanswered</div>
-                  </>
-                )}
+                <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-primary" /> Câu hiện tại</div>
+                <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-primary/30" /> Đã trả lời</div>
+                <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-amber-500" /> Đánh dấu xem lại</div>
+                <div className="flex items-center gap-2"><span className="h-3 w-3 rounded bg-secondary" /> Chưa trả lời</div>
               </div>
             </CardContent>
           </Card>
