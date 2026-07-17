@@ -99,16 +99,20 @@ async function aiChatWithImage(messages: { role: string; content: string }[], im
   const imageUrl = imageBase64.startsWith('data:') ? imageBase64 : `data:image/jpeg;base64,${imageBase64}`
   const systemText = messages[0]?.content || ''
 
-  // --- Ưu tiên 1: Gemini (nếu có API key) ---
-  if (process.env.GEMINI_API_KEY) {
+  // --- Ưu tiên 1: OpenRouter (nếu có API key) ---
+  if (process.env.OPENROUTER_API_KEY) {
     try {
       const { default: OpenAI } = await import('openai')
       const client = new OpenAI({
-        apiKey: process.env.GEMINI_API_KEY,
-        baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+        apiKey: process.env.OPENROUTER_API_KEY,
+        baseURL: 'https://openrouter.ai/api/v1',
+        defaultHeaders: {
+          'HTTP-Referer': process.env.NEXTAUTH_URL || 'http://localhost:3000',
+          'X-Title': 'TOEIC Ace AI',
+        },
       })
-      // Dùng model vision-capable trên Gemini
-      const visionModel = process.env.GEMINI_VISION_MODEL || 'gemini-2.0-flash'
+      // Dùng model vision-capable trên OpenRouter
+      const visionModel = process.env.OPENROUTER_VISION_MODEL || 'qwen/qwen-2.5-vl-72b-instruct:free'
       const response = await client.chat.completions.create({
         model: visionModel,
         messages: [
@@ -123,7 +127,7 @@ async function aiChatWithImage(messages: { role: string; content: string }[], im
       })
       return response.choices[0]?.message?.content ?? ''
     } catch (orErr: any) {
-      console.error('Gemini vision error, falling back:', orErr?.message)
+      console.error('OpenRouter vision error, falling back:', orErr?.message)
       // Fall through to next provider
     }
   }

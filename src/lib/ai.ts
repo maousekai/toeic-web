@@ -5,17 +5,17 @@ export type Language = 'vi' | 'en' | 'bi'
 // ===================================================================
 //  AI PROVIDER ADAPTER
 //  Thứ tự ưu tiên:
-//  1. Gemini (cloud)     — nếu có GEMINI_API_KEY trong .env
+//  1. OpenRouter (cloud) — nếu có OPENROUTER_API_KEY trong .env
 //  2. Ollama (local)     — nếu Ollama đang chạy trên máy
 //  3. ZAI (legacy)       — fallback cuối cùng
 // ===================================================================
 
-type Provider = 'gemini' | 'ollama' | 'zai'
+type Provider = 'openrouter' | 'ollama' | 'zai'
 
-// Gemini config
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash'
-const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/'
+// OpenRouter config
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || ''
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'tencent/hy3:free,google/gemini-2.0-flash-lite-preview-02-05:free,meta-llama/llama-3.1-8b-instruct:free'
+const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1'
 
 // Ollama config
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434/v1'
@@ -28,7 +28,7 @@ const PROBE_TTL = 30_000 // 30s
 
 /**
  * Tự nhận diện provider:
- *  1. Nếu có GEMINI_API_KEY → dùng Gemini (cloud).
+ *  1. Nếu có OPENROUTER_API_KEY → dùng OpenRouter (cloud).
  *  2. Nếu Ollama đang chạy và có model → dùng Ollama (local).
  *  3. Fallback → ZAI cloud (sandbox).
  */
@@ -36,10 +36,10 @@ async function detectProvider(): Promise<Provider> {
   const now = Date.now()
   if (probed && now - probed.at < PROBE_TTL) return probed.provider
 
-  // Ưu tiên 1: Gemini (nếu có API key)
-  if (GEMINI_API_KEY) {
-    probed = { provider: 'gemini', at: now }
-    return 'gemini'
+  // Ưu tiên 1: OpenRouter (nếu có API key)
+  if (OPENROUTER_API_KEY) {
+    probed = { provider: 'openrouter', at: now }
+    return 'openrouter'
   }
 
   // Ưu tiên 2: Ollama local
@@ -71,18 +71,22 @@ async function detectProvider(): Promise<Provider> {
 // Singleton clients
 let zaiInstance: Awaited<ReturnType<typeof ZAI.create>> | null = null
 let ollamaClient: any = null
-let geminiClient: any = null
+let openrouterClient: any = null
 
-async function getGeminiClient() {
-  if (geminiClient) return geminiClient
+async function getOpenRouterClient() {
+  if (openrouterClient) return openrouterClient
   const { default: OpenAI } = await import('openai')
-  geminiClient = new OpenAI({
-    apiKey: GEMINI_API_KEY,
-    baseURL: GEMINI_BASE_URL,
+  openrouterClient = new OpenAI({
+    apiKey: OPENROUTER_API_KEY,
+    baseURL: OPENROUTER_BASE_URL,
+    defaultHeaders: {
+      'HTTP-Referer': process.env.NEXTAUTH_URL || 'http://localhost:3000',
+      'X-Title': 'TOEIC Ace AI',
+    },
     timeout: 2 * 60 * 1000, // 2 phút
     maxRetries: 2,
   })
-  return geminiClient
+  return openrouterClient
 }
 
 async function getOllamaClient() {
@@ -107,10 +111,10 @@ async function getZAI() {
 export async function aiChat(messages: { role: 'user' | 'assistant'; content: string }[]): Promise<string> {
   const provider = await detectProvider()
 
-  // --- Gemini (cloud) ---
-  if (provider === 'gemini') {
-    const client = await getGeminiClient()
-    const models = GEMINI_MODEL.split(',').map((m) => m.trim()).filter(Boolean)
+  // --- OpenRouter (cloud) ---
+  if (provider === 'openrouter') {
+    const client = await getOpenRouterClient()
+    const models = OPENROUTER_MODEL.split(',').map((m) => m.trim()).filter(Boolean)
     let lastError: any = null
 
     for (const model of models) {
@@ -126,19 +130,19 @@ export async function aiChat(messages: { role: 'user' | 'assistant'; content: st
       } catch (err: any) {
         lastError = err
         const msg = err?.message || String(err)
-        if (msg.includes('401') || msg.includes('Unauthorized') || msg.includes('API key')) {
-          throw new Error('Gemini API Key không hợp lệ. Kiểm tra lại GEMINI_API_KEY trong file .env')
+        if (msg.includes('401') || msg.includes('Unauthorized')) {
+          throw new Error('OpenRouter API Key không hợp lệ. Kiểm tra lại OPENROUTER_API_KEY trong file .env')
         }
-        console.warn(`[Gemini] Lỗi model ${model}: ${msg}. Đang thử model tiếp theo...`)
+        console.warn(`[OpenRouter] Lỗi model ${model}: ${msg}. Đang thử model tiếp theo...`)
         // Tiếp tục vòng lặp để thử model khác
       }
     }
 
     const msg = lastError?.message || String(lastError)
     if (msg.includes('429') || msg.includes('rate')) {
-      throw new Error('Đã vượt giới hạn request của Gemini. Vui lòng thử lại sau vài giây.')
+      throw new Error('Đã vượt giới hạn request của tất cả model OpenRouter. Vui lòng thử lại sau vài giây.')
     }
-    throw new Error(`Lỗi Gemini: ${msg}`)
+    throw new Error(`Lỗi OpenRouter (đã thử tất cả model): ${msg}`)
   }
 
   // --- ZAI (legacy fallback) ---
@@ -181,7 +185,7 @@ export async function getCurrentProvider(): Promise<{ provider: Provider; model:
   const provider = await detectProvider()
   return {
     provider,
-    model: provider === 'gemini' ? GEMINI_MODEL : provider === 'ollama' ? OLLAMA_MODEL : 'zai-default',
+    model: provider === 'openrouter' ? OPENROUTER_MODEL : provider === 'ollama' ? OLLAMA_MODEL : 'zai-default',
   }
 }
 
